@@ -377,7 +377,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       return a;
     },
     toasts, toast, dismissToast, resolvedTheme, justAdded, setJustAdded,
-    show, setShow: setShowState,
+    show, setShow: (on) => { void withViewTransition(() => setShowState(on), 'show'); },
     setTier: (n) => {
       const prev = ownIds();
       setS((x) => ({ ...x, ...CLEAN, dev: { ...x.dev, tier: n, wereadRemoved: false }, connections: connectionsFor(n), ...(n === 0 ? { leadPin: null } : null) }));

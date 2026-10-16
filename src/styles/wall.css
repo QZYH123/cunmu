@@ -249,6 +249,8 @@ html[data-vt-fit]::view-transition-old(hero-cover), html[data-vt-fit]::view-tran
 html[data-vt]::view-transition-old(root) { animation-timing-function: var(--ease-in); }
 /* theme: everything crossfades once, quickly, with no movement (MOTION-SPEC P0-7) */
 html[data-vt="theme"]::view-transition-group(*), html[data-vt="theme"]::view-transition-old(*), html[data-vt="theme"]::view-transition-new(*) { animation-duration: var(--m-quick); animation-timing-function: var(--e-move); }
+/* 给人看 in / out: the owner's bars and the guest's bar trade places in one fade, nothing slides (P0-8) */
+html[data-vt="show"]::view-transition-group(*), html[data-vt="show"]::view-transition-old(*), html[data-vt="show"]::view-transition-new(*) { animation-duration: var(--m-base); animation-timing-function: var(--e-move); }
 ::view-transition-group(searchbox) { animation-duration: var(--dur-pop); animation-timing-function: var(--ease-out); }
 
 .wall-pull { transform-origin: top; transition: transform var(--dur-page) var(--ease-out); }

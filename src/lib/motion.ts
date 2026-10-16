@@ -21,8 +21,8 @@ type VTDoc = Document & { startViewTransition?: (cb: () => void | Promise<void>)
  * wall → entry (520ms), 'back' the return (440ms). Reduced motion: no flight, the page's own
  * 150ms fade does the work.
  */
-/** flight / back: a cover flies; theme: one quick crossfade of the whole page; page: a route change (P1-1). */
-export type VTKind = 'flight' | 'back' | 'theme' | 'page';
+/** flight / back: a cover flies; theme: one quick crossfade of the whole page; show: into / out of 给人看, the bars trade places in one fade (P0-8); page: a route change (P1-1). */
+export type VTKind = 'flight' | 'back' | 'theme' | 'show' | 'page';
 export function withViewTransition(update: () => void | Promise<void>, kind?: VTKind): Promise<void> {
   const d = document as VTDoc;
   if (!d.startViewTransition || reduced()) { const r = update(); return Promise.resolve(r).then(() => undefined); }

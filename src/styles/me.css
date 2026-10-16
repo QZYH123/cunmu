@@ -110,7 +110,7 @@
 .pick-head { margin-top: var(--s-6); }
 .pick-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: var(--s-4); }
 .pick-cell { position: relative; display: flex; align-items: flex-end; justify-content: center; min-height: 100px; border-radius: var(--r-object); }
-.pick-cell.off > :first-child { opacity: .32; transition: opacity var(--dur-fade) var(--ease-standard); }
+.pick-cell.off > :first-child { opacity: .32; transition: opacity var(--m-quick) var(--e-move); }
 .pick-cell i { position: absolute; right: 5px; top: 5px; width: 18px; height: 18px; border-radius: var(--r-full); background: var(--ink); color: var(--on-ink); display: flex; align-items: center; justify-content: center; }
 .pick-cell.off i { background: var(--surface-1); box-shadow: var(--sh-input); }
 .sheet-tall .sheet-body { max-height: 80vh; overflow-y: auto; }
@@ -206,7 +206,7 @@
   white-space: nowrap; font: var(--t-small); color: var(--text-secondary); box-shadow: var(--sh-input); border-radius: var(--r-full);
   padding: var(--s-1) var(--s-4); min-height: var(--btn-text-h); margin-right: var(--s-2);
   -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: none;
-  transition: color var(--dur-press) var(--ease-standard), transform var(--dur-press) var(--ease-out);
+  transition: color var(--m-instant) var(--e-move), transform var(--m-instant) var(--e-out);
 }
 .showbar-x.on { background: var(--ink); color: var(--on-ink); box-shadow: none; transform: scale(var(--press-scale)); }
 .showbar-x:focus-visible { box-shadow: var(--focus-ring); }

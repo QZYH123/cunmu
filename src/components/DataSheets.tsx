@@ -92,7 +92,7 @@ function HoldToDelete({ onDone, busy }: { onDone: () => void; busy: boolean }) {
   const set = (k: number, back = false) => {
     const el = line.current;
     if (!el) return;
-    el.style.transition = back ? 'transform var(--dur-fade) var(--ease-in)' : 'none';
+    el.style.transition = back ? 'transform var(--m-quick) var(--e-in)' : 'none';
     el.style.transform = `scaleX(${k})`;
   };
   const start = () => {

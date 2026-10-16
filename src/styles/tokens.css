@@ -210,7 +210,7 @@
   --accent-glow:none;
   --wall-mast-delay:240ms;
   /* the sheen crosses on a near-even curve: its bright centre is over the cover only in the middle
-     half of the travel, and on --ease-standard (.2,0,0,1) that middle passes in ~150ms — a flash, the
+     half of the travel, and on --e-move (.2,0,0,1) that middle passes in ~150ms — a flash, the
      rest of the 700ms moving it unseen. A gentle S keeps it crossing for ~350ms, entering and leaving
      softly (P2-1) */
   --ease-sheen:cubic-bezier(.35,.1,.65,.9);
@@ -261,16 +261,10 @@
   --e-settle:linear(0, .22 6%, .58 14%, .83 22%, .96 31%, 1.012 40%, 1.016 48%, 1.006 60%, 1);
   --d-rise:8px; --d-nudge:4px; --d-sheet:48px;
   --s-press:.97; --s-pop:.985; --s-lift:1.035;
-  /* one release of the old names, read from the new ones */
-  --ease-out:var(--e-out); --ease-standard:var(--e-move); --ease-in:var(--e-in); --ease-flight:var(--e-out);
-  --dur-press:var(--m-instant); --dur-fade:var(--m-quick); --dur-pop:var(--m-base); --dur-roll:var(--m-base);
-  --dur-page:var(--m-space); --dur-link-in:var(--m-space); --dur-flight-back:var(--m-space);
-  --dur-place:var(--m-sign); --dur-wall-in:var(--m-sign); --dur-flight:var(--m-sign);
-  --dur-sheen:var(--m-sheen); --dur-tint:var(--m-tint); --dur-pointer-light:var(--m-quick);
-  --dur-tip-in:450ms; --dur-tip-out:var(--m-instant);   /* tip-in is a dwell before showing, not a motion */
-  --dur-spin:900ms; --stagger:30ms;
-  --rise:var(--d-rise); --pop-rise:var(--d-nudge); --pop-scale:var(--s-pop); --dialog-scale:.98; --arrive-scale:.96;
-  --hover-rise:-3px; --tile-hover-rise:-2px; --tile-hover-scale:var(--s-lift); --lead-hover-scale:1.01; --cover-press-scale:.98;
+  /* the digit roll stops outright under reduced motion; the tip waits before it shows (a dwell, not a motion) */
+  --dur-roll:var(--m-base); --dur-tip-in:450ms; --stagger:30ms;
+  --dialog-scale:.98; --arrive-scale:.96;
+  --hover-rise:-3px; --tile-hover-rise:-2px; --lead-hover-scale:1.01; --cover-press-scale:.98;
 }
 
 :root[data-theme="dark"] {
@@ -324,9 +318,9 @@
   --m-instant:100ms; --m-quick:150ms; --m-base:150ms; --m-space:150ms; --m-sign:150ms; --m-tint:150ms;
   --stagger:0ms; --dur-roll:0ms;
   --d-rise:0px; --d-nudge:0px; --d-sheet:0px; --s-press:1; --s-pop:1; --s-lift:1;
-  --rise:0px; --pop-rise:0px; --pop-scale:1; --arrive-scale:1; --press-scale:1;
+  --arrive-scale:1; --press-scale:1;
   --plus-press-scale:1; --lift-scale:1;
-  --hover-rise:0px; --tile-hover-rise:0px; --tile-hover-scale:1; --lead-hover-scale:1; --cover-press-scale:1;
+  --hover-rise:0px; --tile-hover-rise:0px; --lead-hover-scale:1; --cover-press-scale:1;
   --rise-flight:0px; --wall-mast-delay:0ms; --late-in:0ms; --dialog-scale:1;
   --cover-lift:0px; --e-settle:var(--e-move);
 }

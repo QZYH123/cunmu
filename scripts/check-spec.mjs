@@ -250,14 +250,19 @@ scan(37, 'no gradients outside the token file (spine light, fades, bar blur + §
 /* ---------- v0.3 tokens, pointer rules, S6 / S7 (§7.7–7.9, §8.5) ---------- */
 {
   const tok = readFileSync(join(ROOT, 'src/styles/tokens.css'), 'utf8');
-  const need = ['sh-lift', 'sh-hero', 'focus-ring', 'hover-tint', 'grain-o', 'wall-fade', 'dur-wall-in', 'dur-flight', 'dur-sheen', 'dur-tint', 'ease-flight', 'wall-mask', 'row-dim'];
+  const need = ['sh-lift', 'sh-hero', 'focus-ring', 'hover-tint', 'grain-o', 'wall-fade', 'm-sign', 'm-space', 'm-sheen', 'm-tint', 'e-out', 'wall-mask', 'row-dim'];
+  // the old v0.3 names (--dur-*, --ease-*, --rise …) were aliases and are gone: nothing may bring one back
+  const OLD = /--(ease-(out|standard|in|flight)|dur-(press|fade|pop|page|link-in|flight-back|place|wall-in|flight|sheen|tint|pointer-light|tip-out|spin)|rise|pop-rise|pop-scale|tile-hover-scale)(?![\w-])/;
+  const olds = [];
+  for (const f of readdirSync(join(ROOT, 'src/styles')).filter((x) => x.endsWith('.css'))) if (OLD.test(readFileSync(join(ROOT, 'src/styles', f), 'utf8'))) olds.push(f);
+  olds.length ? fail(39, `old motion aliases in ${olds.join(', ')}`) : pass(39, 'no old motion aliases (--dur-* / --ease-* / --rise): --m-* / --e-* / --d-* / --s-* only');
   const missing = need.filter((n) => !new RegExp(`--${n}\\s*:`).test(tok));
   missing.length ? fail(39, `missing v0.3 tokens: ${missing.join(', ')}`) : pass(39, `v0.3 tokens present (${need.length})`);
   const dark = tok.match(/:root\[data-theme="dark"\]\s*\{([\s\S]*?)\n\}/)[1];
   /--bg:#0F0F0E/i.test(dark) ? pass(60, 'S7 墨夜: dark --bg is #0F0F0E') : fail(60, 'S7: dark --bg is not #0F0F0E');
   /--wall-filter:brightness\(\.9[5-9]/.test(dark) ? pass(60, 'S7: dark wall top brightness ≥ .95, rows step down') : fail(60, 'S7: dark --wall-filter brightness < .95');
   const red = tok.match(/:root\[data-motion="reduce"\]\s*\{([\s\S]*?)\}/)[1];
-  const still = ['rise-flight', 'tile-hover-rise', 'hover-rise', 'tile-hover-scale', 'dialog-scale'].filter((n) => !new RegExp(`--${n}:(0px|1)\\b`).test(red));
+  const still = ['rise-flight', 'tile-hover-rise', 'hover-rise', 's-lift', 'dialog-scale'].filter((n) => !new RegExp(`--${n}:(0px|1)\\b`).test(red));
   still.length ? fail(62, `reduced motion keeps movement: ${still.join(', ')}`) : pass(62, 'reduced motion zeroes flight rise, hover lift/scale, dialog scale');
 }
 {

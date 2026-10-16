@@ -17,7 +17,7 @@
 }
 .wall {
   position: absolute; inset: 0 0 auto 0; overflow: hidden;
-  transition: opacity var(--dur-fade) var(--ease-standard);
+  transition: opacity var(--m-quick) var(--e-move);
   will-change: transform;
 }
 /* S1 light (§7.2-3): window light top-left, falling into the paper. Wall material only. */
@@ -29,26 +29,26 @@
 .wall-pointer {
   position: absolute; left: 0; top: 0; z-index: 2; width: var(--pointer-size); height: var(--pointer-size);
   pointer-events: none; background: var(--pointer-light); mix-blend-mode: var(--pointer-blend);
-  opacity: 0; transition: opacity var(--dur-pointer-light) var(--ease-standard); will-change: transform, opacity;
+  opacity: 0; transition: opacity var(--m-quick) var(--e-move); will-change: transform, opacity;
 }
 .wall-pointer.on { opacity: 1; }
 :root[data-motion="reduce"] .wall-pointer { display: none; }
 @media not ((hover: hover) and (pointer: fine)) { .wall-pointer { display: none; } }
 .wall.display { -webkit-mask-image: none; mask-image: none; overflow: visible; height: 100%; }
-.wall.ghost { z-index: 2; pointer-events: none; animation: fade-out var(--dur-page) var(--ease-standard) both; }
-.wall.fresh { animation: fade-in var(--dur-page) var(--ease-standard) both; }
+.wall.ghost { z-index: 2; pointer-events: none; animation: fade-out var(--m-space) var(--e-move) both; }
+.wall.fresh { animation: fade-in var(--m-space) var(--e-move) both; }
 
 .tile {
   position: absolute; cursor: pointer;
   -webkit-touch-callout: none; user-select: none; touch-action: manipulation;
-  transition: transform var(--dur-fade) var(--ease-out);
+  transition: transform var(--m-quick) var(--e-out);
 }
 /* the lift shadow lives on its own box and only its opacity animates: a box-shadow transition
    repaints every frame and drags the tile's transform off the compositor with it (trace, polish
    r3). Outer shadows never paint inside their box, so this sits over the image harmlessly. */
 .tile::before {
   content: ""; position: absolute; inset: 0; pointer-events: none; box-shadow: var(--sh-lift); opacity: 0;
-  transition: opacity var(--dur-fade) var(--ease-out);
+  transition: opacity var(--m-quick) var(--e-out);
 }
 .tile > .literal { overflow: hidden; }
 .tile { --row-b: max(var(--row-dim-min), 1 - var(--row-dim) * var(--row, 0)); --shade: calc(1 - var(--row-b)); }
@@ -61,16 +61,16 @@
 }
 .tile img { width: 100%; height: 100%; object-fit: cover; filter: var(--wall-filter); -webkit-user-drag: none; }
 .tile img.loading { opacity: 0; }
-.tile img.loaded { animation: fade-in var(--dur-fade) var(--ease-standard) both; }
+.tile img.loaded { animation: fade-in var(--m-quick) var(--e-move) both; }
 .tile.pressed { --shade: var(--tile-press-shade); }
 /* a lifted tile: one veil over the whole wall, the tile above it (not hundreds of tiles fading) */
 .wall.dimmed::after, .fullwall.dimmed::after {
   content: ""; position: absolute; inset: 0; z-index: 51; pointer-events: none;
-  background: var(--bg); opacity: calc(1 - var(--dim-others)); animation: fade-in var(--dur-fade) var(--ease-standard) both;
+  background: var(--bg); opacity: calc(1 - var(--dim-others)); animation: fade-in var(--m-quick) var(--e-move) both;
 }
 .tile.lifted {
   z-index: 52; transform: scale(var(--lift-scale)); pointer-events: none;
-  animation: lift var(--dur-pop) var(--ease-out) both;
+  animation: lift var(--m-base) var(--e-out) both;
 }
 .tile.lifted::before { box-shadow: var(--sh-float); opacity: 1; }
 .tile.lifted { --shade: 0; }
@@ -81,12 +81,12 @@
 .tile:active { --shade: var(--tile-press-shade); }
 .tile:focus-visible { z-index: 3; border-radius: 0; }
 .tile:focus-visible::after { box-shadow: var(--focus-ring-inset); }
-.display-item .cover { transition: transform var(--dur-fade) var(--ease-out); }
+.display-item .cover { transition: transform var(--m-quick) var(--e-out); }
 .display-item:focus-visible { box-shadow: none; }
 .display-item:focus-visible .cover { transform: translateY(var(--hover-rise)); box-shadow: var(--sh-object), var(--focus-ring); }
 .display-item:focus-visible .cover::before { opacity: 1; }
 @media (hover: hover) and (pointer: fine) {
-  .tile:hover { z-index: 3; transform: translateY(var(--tile-hover-rise)) scale(var(--tile-hover-scale)); }
+  .tile:hover { z-index: 3; transform: translateY(var(--tile-hover-rise)) scale(var(--s-lift)); }
   .tile:hover::before { opacity: 1; }
   .tile.lead:hover { transform: translateY(var(--tile-hover-rise)) scale(var(--lead-hover-scale)); }
   .tile:hover { --shade: 0; }
@@ -101,7 +101,7 @@
   position: fixed; z-index: 45; pointer-events: none; max-width: var(--preview-max);
   display: flex; flex-direction: column; padding: var(--tip-pad);
   background: var(--surface-1); box-shadow: var(--sh-float); border-radius: var(--r-sm);
-  animation: fade-in var(--dur-fade) var(--ease-out) both;
+  animation: fade-in var(--m-quick) var(--e-out) both;
 }
 .tile-tip-title { font: var(--t-small); font-weight: var(--w-strong); color: var(--ink); }
 
@@ -113,11 +113,11 @@
   height: 100%; display: flex; align-items: center; justify-content: center; gap: var(--s-4);
   padding: 0 var(--page-x);
 }
-.display-item { display: block; border-radius: var(--r-object); transition: transform var(--dur-press) var(--ease-out); }
+.display-item { display: block; border-radius: var(--r-object); transition: transform var(--m-instant) var(--e-out); }
 .display-item:active { transform: scale(var(--press-scale)); }
-.display-item.drop .cover { animation: drop var(--dur-place) var(--ease-out) both; }
+.display-item.drop .cover { animation: drop var(--m-sign) var(--e-out) both; }
 @keyframes drop {
-  from { transform: translateY(calc(var(--rise) * -1)); opacity: 0; }   /* its shadow rides along at rest: no shadow animation */
+  from { transform: translateY(calc(var(--d-rise) * -1)); opacity: 0; }   /* its shadow rides along at rest: no shadow animation */
 }
 
 /* ---------- home content ---------- */
@@ -141,7 +141,7 @@
 .home-label { display: block; padding-bottom: var(--s-3); border-bottom: var(--hairline) solid var(--line-1); margin-bottom: var(--s-2); }
 .home-more { display: inline-flex; align-items: center; margin-top: var(--s-2); }
 /* after the first work: the two big ways in, as one quiet line (不用了 sits apart, at the end) */
-.home-import { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: var(--s-2); margin-top: var(--s-6); transition: opacity var(--dur-place) var(--ease-out); }
+.home-import { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: var(--s-2); margin-top: var(--s-6); transition: opacity var(--m-sign) var(--e-out); }
 .home-import.is-fading { opacity: 0; pointer-events: none; }
 .home-import .btn-text { font-size: inherit; color: var(--text-secondary); }
 .home-import .btn-text.home-import-off { margin-left: var(--s-4); color: var(--text-tertiary); }
@@ -171,7 +171,7 @@
 @media (min-width: 1024px) { .home-empty { padding-top: calc(var(--desk-bar) + 10vh); } }
 /* r9: the empty shelf — five blank covers on one baseline, the wall's 陈列 row in miniature */
 .empty-shelf { --shelf-h: 80px; display: flex; align-items: flex-end; gap: var(--s-2); height: var(--shelf-h); margin-bottom: var(--s-8); }
-.empty-shelf .cover { height: 100%; animation: shelf-in var(--dur-page) var(--ease-out) both; }
+.empty-shelf .cover { height: 100%; animation: shelf-in var(--m-space) var(--e-out) both; }
 .empty-shelf .cover:nth-child(2) { animation-delay: var(--stagger); }
 .empty-shelf .cover:nth-child(3) { animation-delay: calc(var(--stagger) * 2); }
 .empty-shelf .cover:nth-child(4) { animation-delay: calc(var(--stagger) * 3); }
@@ -193,7 +193,7 @@
 /* roll digits */
 .roll { display: inline-flex; }
 .roll-digit { display: inline-block; height: 1lh; overflow: hidden; }
-.roll-col { display: flex; flex-direction: column; transition: transform var(--dur-roll) var(--ease-out); }
+.roll-col { display: flex; flex-direction: column; transition: transform var(--dur-roll) var(--e-out); }
 .roll-col > span { height: 1lh; }
 
 /* dev tier switch (prototype only) */
@@ -223,31 +223,31 @@
 }
 .fullwall-bar .seg { gap: var(--s-5); padding-right: var(--s-6); }
 .fullwall { position: relative; }
-.fullwall.switching { animation: fade-in var(--dur-fade) var(--ease-standard) both; }
+.fullwall.switching { animation: fade-in var(--m-quick) var(--e-move) both; }
 .year-float {
   position: fixed; z-index: 21; left: var(--s-4);
   top: calc(env(safe-area-inset-top) + var(--hit) + var(--s-4));
   font: var(--t-year-tag); background: var(--surface-1); box-shadow: var(--sh-float); border-radius: var(--r-full);
-  padding: var(--s-2) 10px; color: var(--ink); opacity: 0; transition: opacity var(--dur-fade) var(--ease-standard);
+  padding: var(--s-2) 10px; color: var(--ink); opacity: 0; transition: opacity var(--m-quick) var(--e-move);
   pointer-events: none;
 }
 .year-float.on { opacity: 1; }
 @media (min-width: 1024px) { .year-float { left: var(--page-x); top: calc(var(--desk-bar) + var(--hit) + var(--s-5)); } }
 
-/* S2 cover flight (§7.3): the tile flies to the hero in 520ms on --ease-flight; back is 440ms. The
+/* S2 cover flight (§7.3): the tile flies to the hero in 520ms on --e-out; back is 440ms. The
    images keep object-fit: cover, so a cropped tile opens into the whole cover without stretching.
-   The rest of the old page leaves in 200ms --ease-in while the new page's paper comes in. */
-::view-transition-group(hero-cover) { animation-duration: var(--dur-flight); animation-timing-function: var(--ease-flight); transform-origin: 0 0; }
-html[data-vt="back"]::view-transition-group(hero-cover) { animation-duration: var(--dur-flight-back); }
+   The rest of the old page leaves in 200ms --e-in while the new page's paper comes in. */
+::view-transition-group(hero-cover) { animation-duration: var(--m-sign); animation-timing-function: var(--e-out); transform-origin: 0 0; }
+html[data-vt="back"]::view-transition-group(hero-cover) { animation-duration: var(--m-space); }
 ::view-transition-old(hero-cover), ::view-transition-new(hero-cover) {
-  height: 100%; width: 100%; object-fit: cover; animation-duration: var(--dur-flight); animation-timing-function: var(--ease-flight);
+  height: 100%; width: 100%; object-fit: cover; animation-duration: var(--m-sign); animation-timing-function: var(--e-out);
 }
 /* the transform-only flight (motion.ts compositeFlight): the group is a clipping window, each image
    sits at its own aspect and is counter-scaled to cover it — no stretch, nothing but transform */
 html[data-vt-fit]::view-transition-group(hero-cover) { overflow: clip; }
 html[data-vt-fit]::view-transition-old(hero-cover), html[data-vt-fit]::view-transition-new(hero-cover) { object-fit: contain; transform-origin: 50% 50%; }
-::view-transition-old(root), ::view-transition-new(root) { animation-duration: var(--dur-fade); }
-html[data-vt]::view-transition-old(root) { animation-timing-function: var(--ease-in); }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: var(--m-quick); }
+html[data-vt]::view-transition-old(root) { animation-timing-function: var(--e-in); }
 /* theme: everything crossfades once, quickly, with no movement (MOTION-SPEC P0-7) */
 html[data-vt="theme"]::view-transition-group(*), html[data-vt="theme"]::view-transition-old(*), html[data-vt="theme"]::view-transition-new(*) { animation-duration: var(--m-quick); animation-timing-function: var(--e-move); }
 /* 给人看 in / out: the owner's bars and the guest's bar trade places in one fade, nothing slides (P0-8) */
@@ -268,11 +268,11 @@ html[data-vt="page"]::view-transition-new(root) { animation-duration: var(--m-qu
 /* 随笔: the title flies from its row to the page's h1 and back; the two sizes crossfade on the way (P1-4) */
 ::view-transition-group(essay-title) { animation-duration: var(--m-space); animation-timing-function: var(--e-move); }
 ::view-transition-old(essay-title), ::view-transition-new(essay-title) { animation-duration: var(--m-space); height: 100%; object-fit: none; object-position: 0 0; }
-::view-transition-group(searchbox) { animation-duration: var(--dur-pop); animation-timing-function: var(--ease-out); }
+::view-transition-group(searchbox) { animation-duration: var(--m-base); animation-timing-function: var(--e-out); }
 
-.wall-pull { transform-origin: top; transition: transform var(--dur-page) var(--ease-out); }
+.wall-pull { transform-origin: top; transition: transform var(--m-space) var(--e-out); }
 /* the year float over the 时间未知 run (v0.4 §3.15): serif 15/600, secondary, cross-faded in */
-.year-float-word { font: var(--t-year-tag); color: var(--text-secondary); animation: fade-in var(--dur-fade) var(--ease-standard) both; }
+.year-float-word { font: var(--t-year-tag); color: var(--text-secondary); animation: fade-in var(--m-quick) var(--e-move) both; }
 .fullwall-bar .pick-toggle { flex: none; margin-right: var(--s-4); }
 @media (min-width: 1024px) { .fullwall-bar .pick-toggle { margin-right: 0; } }
 
@@ -284,11 +284,11 @@ html[data-vt="page"]::view-transition-new(root) { animation-duration: var(--m-qu
   top: calc(env(safe-area-inset-top) + var(--hit) + var(--s-5));
   bottom: calc(var(--bar-tab) + env(safe-area-inset-bottom) + var(--s-5));
   touch-action: none; cursor: pointer; outline: none;
-  opacity: 0; pointer-events: none; transition: opacity var(--dur-fade) var(--ease-standard);
+  opacity: 0; pointer-events: none; transition: opacity var(--m-quick) var(--e-move);
 }
 .core-rail.on { opacity: 1; pointer-events: auto; }
 /* phone: while the finger holds it, a paper strip comes up behind so the years can be read over covers */
-.core-rail::before { content: ''; position: absolute; top: calc(var(--s-3) * -1); bottom: calc(var(--s-3) * -1); right: 0; width: var(--rail-strip); background: var(--bar-bg); -webkit-backdrop-filter: var(--bar-filter); backdrop-filter: var(--bar-filter); opacity: 0; transition: opacity var(--dur-fade) var(--ease-standard); }
+.core-rail::before { content: ''; position: absolute; top: calc(var(--s-3) * -1); bottom: calc(var(--s-3) * -1); right: 0; width: var(--rail-strip); background: var(--bar-bg); -webkit-backdrop-filter: var(--bar-filter); backdrop-filter: var(--bar-filter); opacity: 0; transition: opacity var(--m-quick) var(--e-move); }
 .core-rail.dragging::before { opacity: 1; }
 .core-line { position: absolute; top: 0; bottom: 0; right: var(--rail-line-x); width: var(--hairline); background: var(--line-3); }
 .core-mark { position: absolute; top: 0; right: var(--rail-line-x); width: 0; height: 0; }
@@ -296,7 +296,7 @@ html[data-vt="page"]::view-transition-new(root) { animation-duration: var(--m-qu
 .core-label {
   position: absolute; right: calc(var(--rail-tick) + var(--s-2)); top: 0; transform: translateY(-50%);
   font: var(--t-caption); color: var(--text-tertiary); white-space: nowrap; font-variant-numeric: tabular-nums;
-  opacity: 0; transition: opacity var(--dur-fade) var(--ease-standard), color var(--dur-fade) var(--ease-standard);
+  opacity: 0; transition: opacity var(--m-quick) var(--e-move), color var(--m-quick) var(--e-move);
 }
 .core-rail.dragging .core-label { opacity: 1; }
 .core-mark.is-here .core-label { color: var(--ink); }

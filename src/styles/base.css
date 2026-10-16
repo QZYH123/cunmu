@@ -72,13 +72,13 @@ body::before {
 
 /* page content rises once on first visit (not on back) */
 @keyframes rise {
-  from { opacity: 0; transform: translateY(var(--rise)); }
+  from { opacity: 0; transform: translateY(var(--d-rise)); }
   to { opacity: 1; transform: none; }
 }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
-.enter { animation: rise var(--dur-page) var(--ease-out) both; }
-.stagger > * { animation: rise var(--dur-page) var(--ease-out) both; }
+.enter { animation: rise var(--m-space) var(--e-out) both; }
+.stagger > * { animation: rise var(--m-space) var(--e-out) both; }
 /* inside a route crossfade (motion.ts useEnterClass): move only, the crossfade does the fade */
 @keyframes rise-move { from { transform: translateY(var(--d-rise)); } to { transform: none; } }
 .enter.in-vt, .in-vt .stagger > *, .in-vt.stagger > * { animation-name: rise-move; }
@@ -140,7 +140,7 @@ body::before {
   cursor: pointer;
   -webkit-touch-callout: none;
   user-select: none;
-  transition: text-decoration-color var(--dur-press) var(--ease-standard);
+  transition: text-decoration-color var(--m-instant) var(--e-move);
 }
 .autolink:active, .autolink.pressed { text-decoration-color: var(--link-line-active); background: var(--press-tint); }
 
@@ -152,10 +152,10 @@ body::before {
   text-decoration-color: var(--info-link-line);
   text-underline-offset: .28em;
   text-decoration-skip-ink: none;
-  transition: text-decoration-color var(--dur-press) var(--ease-standard);
+  transition: text-decoration-color var(--m-instant) var(--e-move);
 }
 .infolink:active { text-decoration-color: var(--link-line-active); }
-.infolink.appear { animation: link-in var(--dur-fade) var(--ease-standard) both; }
+.infolink.appear { animation: link-in var(--m-quick) var(--e-move) both; }
 @keyframes link-in { from { text-decoration-color: transparent; color: var(--ink); } }
 
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -164,7 +164,7 @@ body::before {
 .phrase { display: inline-block; }
 
 /* 启动页 (r9): --bg and the app mark, centred (the first rules are inline in index.html, ahead of this file); fades out in 200ms */
-.splash { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; background: var(--bg); pointer-events: none; transition: opacity var(--dur-fade) var(--ease-standard); }
+.splash { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; background: var(--bg); pointer-events: none; transition: opacity var(--m-quick) var(--e-move); }
 .splash svg { display: block; width: 96px; height: 96px; }
 .splash.gone { opacity: 0; }
 

@@ -24,7 +24,7 @@ import { Dateline } from '../components/Dateline';
 import { fileTitle, titleOf } from '../lib/naming';
 import { saveOut, exportTarget } from '../lib/saveOut';
 import { isDesk, useBreakpoint } from '../lib/useWidth';
-import { useEnterClass } from '../lib/motion';
+import { useEnterClass, useSettleNew } from '../lib/motion';
 import { useSheets } from '../App';
 import { DUR, IMPORT_LINE_MAX } from '../tokens';
 import { FlyLink } from '../components/FlyLink';
@@ -193,6 +193,8 @@ export default function MeHome() {
 
 function Favorites({ favs, desk, onEdit }: { favs: { f: { id: string; why?: string }; w: Work }[]; desk: boolean; onEdit: () => void }) {
   const { show } = useStore();
+  const list = useRef<HTMLOListElement>(null);
+  useSettleNew(list, 'home-favs', favs.map((x) => x.w.id));   // a new 最爱 settles in the first time it is seen (P1-6)
   if (!favs.length && show) return null;
   const box = desk ? 270 : 232;
   return (
@@ -204,13 +206,13 @@ function Favorites({ favs, desk, onEdit }: { favs: { f: { id: string; why?: stri
       {favs.length === 0
         ? <p className="t-small c-3 mh-quiet">还没有。在任何一部的页面上点「放进最爱」，它就会在这里。</p>
         : (
-          <ol className="mh-favs">
+          <ol className="mh-favs" ref={list}>
             {favs.map(({ f, w }) => {
               const auto = f.why ? null : whyFor(w);
               const why = f.why || auto?.why;
               const [cw, ch] = fit(w, desk ? 196 : 160, box);
               return (
-                <li key={w.id} className="mh-fav">
+                <li key={w.id} className="mh-fav" data-settle={w.id}>
                   <FlyLink id={w.id} to={`/entry/${w.id}`} data-ctx={w.id} className="mh-fav-link">
                     <span className="mh-fav-box" style={{ height: box }}><Cover work={w} w={cw} h={ch} paperPlaceholder /></span>
                     <span className="mh-fav-t">{w.title}{w.year ? <span className="mh-fav-y">{w.year}</span> : null}</span>

@@ -303,3 +303,32 @@ export function afterAnimations(el: Element | null | undefined, fallback: number
     Promise.all(running.map((a) => a.finished.catch(() => undefined))).then(() => done());
   }));
 }
+
+/**
+ * 落定 (MOTION-SPEC P1-6): the one confirmation move — what just arrived settles from a hair smaller and
+ * fainter (--s-pop, --m-base, e-out), with one light tap on a phone. Nothing flies, nothing bounces.
+ */
+export function settle(el: Element | null | undefined) {
+  if (!el || reduced()) return;
+  el.animate([{ opacity: 0, transform: 'scale(.985)' }, { opacity: 1, transform: 'none' }], { duration: DUR.pop, easing: EASE.out });
+  haptic('light');
+}
+
+/**
+ * The items in a list ([data-settle="<id>"]) that were not there the last time this list was shown —
+ * this session, under `key` — settle in. The first showing settles nothing; nor does a remount.
+ */
+const shownLists = new Map<string, Set<string>>();
+export function useSettleNew(ref: React.RefObject<HTMLElement>, key: string, ids: string[]) {
+  const sig = ids.join('\n');
+  useLayoutEffect(() => {
+    const was = shownLists.get(key);
+    shownLists.set(key, new Set(ids));
+    if (!was || !ref.current) return;
+    const fresh = ids.filter((id) => !was.has(id));
+    fresh.forEach((id, i) => {
+      const el = ref.current!.querySelector(`[data-settle="${CSS.escape(id)}"]`);
+      if (i === 0) settle(el); else if (el && !reduced()) el.animate([{ opacity: 0, transform: 'scale(.985)' }, { opacity: 1, transform: 'none' }], { duration: DUR.pop, easing: EASE.out, delay: Math.min(i, STAGGER_MAX) * DUR.stagger, fill: 'backwards' });
+    });
+  }, [key, sig]); // eslint-disable-line react-hooks/exhaustive-deps
+}

@@ -9,7 +9,7 @@ import { KIND_LABEL, KIND_ORDER } from '../data/types';
 import { creatorLine, fmtNum, whenOf } from '../data/derive';
 import { Avatar, Cover } from '../components/Cover';
 import { ListRow } from '../components/Bits';
-import { useEnterClass } from '../lib/motion';
+import { useEnterClass, useFlip } from '../lib/motion';
 import { isDesk, useBreakpoint } from '../lib/useWidth';
 import { GROUP_CAP, PalettePanel, searchLibrary } from '../components/CommandPalette';
 
@@ -44,6 +44,9 @@ export default function SearchPage() {
     <button className="btn-text quiet search-more" onClick={() => setOpen((x) => new Set([...x, group]))}>展开其余 {n} 条</button>
   );
   const animate = firstResults.current && !!has;
+  // typing: the rows that stay glide to their new place, new ones fade in, nothing is swapped wholesale (P1-9)
+  const resultsBox = useRef<HTMLDivElement>(null);
+  useFlip(resultsBox);
   useEffect(() => { if (has) firstResults.current = false; if (!term) firstResults.current = true; }, [has, term]);
 
   const groups = results ? KIND_ORDER.map((k) => [k, results.works.filter((w) => w.kind === k)] as const).filter(([, ws]) => ws.length) : [];
@@ -51,7 +54,7 @@ export default function SearchPage() {
   const counts = KIND_ORDER.filter((k) => (d.kindCounts.get(k) ?? 0) > 0);
 
   const row = (w: Work) => (
-    <Link key={w.id} to={w.kind === 'essay' ? `/essay/${w.id}` : `/entry/${w.id}`} className="list-row search-row" data-fly-src={w.id} onClick={w.kind === 'essay' ? undefined : (e) => fly(e, w.id)}>
+    <Link key={w.id} to={w.kind === 'essay' ? `/essay/${w.id}` : `/entry/${w.id}`} className="list-row search-row" data-fly-src={w.id} data-flip={w.id} onClick={w.kind === 'essay' ? undefined : (e) => fly(e, w.id)}>
       {w.kind !== 'essay' && <Cover work={w} w={32} h={w.kind === 'music' ? 32 : 48} paperPlaceholder />}
       <div className="list-main">
         <span className="t-ui ellipsis"><Hl text={w.title} q={term} /></span>
@@ -93,12 +96,12 @@ export default function SearchPage() {
           </>
         )}
         {term && has ? (
-          <div className={`results ${animate ? 'results-in' : ''}`} key={animKey}>
+          <div className={`results ${animate ? 'results-in' : ''}`} key={animKey} ref={resultsBox}>
             {results!.people.length > 0 && (
               <section className="result-group">
                 <div className="t-label c-3">人物 · {results!.people.length}</div>
                 {cap('人物', results!.people)[0].map((p) => (
-                  <Link key={p.id} to={`/person/${p.id}`} className="list-row search-row">
+                  <Link key={p.id} to={`/person/${p.id}`} className="list-row search-row" data-flip={`p:${p.id}`}>
                     <Avatar name={p.name} size={32} />
                     <div className="list-main">
                       <span className="t-ui"><Hl text={p.name} q={term} /></span>

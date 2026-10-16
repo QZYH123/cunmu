@@ -265,7 +265,7 @@ export const staggerStyle = (i: number): React.CSSProperties =>
   ({ animationDelay: `calc(var(--stagger) * ${Math.min(i, STAGGER_MAX)})` });
 
 /**
- * FLIP for a list (MOTION-SPEC P0-4, P1-9): children marked data-flip="<key>" that moved since the last
+ * FLIP for a list (MOTION-SPEC P0-4, P1-9): descendants marked data-flip="<key>" that moved since the last
  * render glide from where they were (transform only), so a row leaving or arriving never animates height.
  * Offsets, not viewport rects, so scrolling between renders moves nothing.
  */
@@ -276,7 +276,7 @@ export function useFlip(ref: React.RefObject<HTMLElement>) {
     if (!el) return;
     const now = new Map<string, number>();
     const still = reduced();
-    for (const c of el.querySelectorAll<HTMLElement>(':scope > [data-flip]')) {
+    for (const c of el.querySelectorAll<HTMLElement>('[data-flip]')) {
       const k = c.dataset.flip!, y = c.offsetTop;
       now.set(k, y);
       const was = prev.current.get(k);

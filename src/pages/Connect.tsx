@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader, Lock } from 'lucide-react';
+import { Lock } from 'lucide-react';
 import { useStore } from '../data/store';
 import { DEMO, WEREAD_BATCH, doingFor, masterFor } from '@demo';
 import { fmtNum } from '../data/derive';
@@ -9,7 +9,7 @@ import { todayISO } from '../lib/today';
 import { BgmError, DONE, DOING, KIND_OF, planSync, type BgmCollection, type BgmUser, type SyncResult } from '../lib/bangumi';
 import { bgmClient } from '../lib/bangumiNet';
 import { setBangumiToken } from '../lib/secrets';
-import { Sheet } from '../components/Bits';
+import { Sheet, Dots } from '../components/Bits';
 import { DUR } from '../tokens';
 import { withViewTransition } from '../lib/motion';
 
@@ -123,7 +123,7 @@ export function WereadSheet({ open, onClose, onManual }: { open: boolean; onClos
               autoComplete="off"
               aria-label="微信读书 API Key"
             />
-            {checking && <Loader className="spin" size={16} strokeWidth={1.5} aria-label="正在验证" />}
+            {checking && <Dots label="正在验证" words />}
           </label>
           <p className="t-caption c-3 key-note"><Lock size={12} strokeWidth={1.5} />只存在这台手机上</p>
           {hint && <p className="t-small c-2">{hint}</p>}
@@ -340,7 +340,7 @@ export function BangumiSheet({ open, onClose, start = 'name', user = '' }: { ope
               placeholder="Bangumi 用户名" aria-label="Bangumi 用户名"
               autoCapitalize="off" autoCorrect="off" autoComplete="off" spellCheck={false}
             />
-            {busy && <Loader className="spin" size={16} strokeWidth={1.5} aria-label="正在读取" />}
+            {busy && <Dots label="正在读取" words />}
           </label>
           {err ? <p className="t-small c-2 field-say">{err}</p> : reading ?? <p className="t-caption c-3 field-say">设成私密的收藏读不到。想连私密收藏，用个人令牌。</p>}
           <div className="sheet-actions">
@@ -376,7 +376,7 @@ export function BangumiSheet({ open, onClose, start = 'name', user = '' }: { ope
               onKeyDown={(e) => { if (e.key === 'Enter') verify(); }}
               placeholder="粘贴令牌" spellCheck={false} autoCapitalize="off" autoComplete="off" aria-label="Bangumi 个人令牌"
             />
-            {busy && <Loader className="spin" size={16} strokeWidth={1.5} aria-label="正在验证" />}
+            {busy && <Dots label="正在验证" words />}
           </label>
           <p className="t-caption c-3 key-note"><Lock size={12} strokeWidth={1.5} />只存在这台设备上</p>
           {err ? <p className="t-small c-2 field-say">{err}</p> : reading}

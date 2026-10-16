@@ -302,7 +302,7 @@ scan(37, 'no gradients outside the token file (spine light, fades, bar blur + §
   // toast lifetime / long-press hold / idle delay are waits, not animations; v0.4 §2.9: the delete-all
   // hold (the hand, not an animation) and the date picker's linger are waits too, as is a simulated read
   // (给人看's 「按住退出」 hold, showHold, is the same kind of wait)
-  for (const m of durBlock.matchAll(/(\w+)\s*:\s*(\d+)/g)) if (+m[2] > 600 && !/toast|longPress|Delay|verifyKey|sheen|^hold$|^showHold$|^linger$|readFile/.test(m[1])) long.push(`DUR.${m[1]} ${m[2]}`);
+  for (const m of durBlock.matchAll(/(\w+)\s*:\s*(\d+)/g)) if (+m[2] > 600 && !/toast|longPress|Delay|verifyKey|sheen|^hold$|^showHold$|^linger$|readFile|dotsWords/.test(m[1])) long.push(`DUR.${m[1]} ${m[2]}`);
   long.length ? fail(38, `durations > 600ms: ${long.join(', ')}`) : pass(38, 'all motion tokens ≤ 600ms (spinner is functional; the 700ms cover sheen is set by §7.9)');
 }
 scan(38, 'no shimmer skeletons', /shimmer|skeleton/gi, { skip: (p) => p.endsWith('check-spec.mjs') });

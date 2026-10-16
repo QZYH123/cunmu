@@ -441,3 +441,18 @@ export function Seal() {
     </svg>
   );
 }
+
+/**
+ * Waiting (MOTION-SPEC P1-8): three dots darkening in turn, one step per --m-quick — nothing spins.
+ * Where no words say what is happening, after 3 s it says 「还在读」 instead.
+ */
+export function Dots({ label, words = false }: { label?: string; words?: boolean }) {
+  const [late, setLate] = useState(false);
+  useEffect(() => {
+    if (!words) return;
+    const t = window.setTimeout(() => setLate(true), DUR.dotsWords);
+    return () => window.clearTimeout(t);
+  }, [words]);
+  if (late) return <span className="dots-late t-caption c-3" role="status">还在读</span>;
+  return <span className="dots" {...(label ? { role: 'status', 'aria-label': label } : { 'aria-hidden': true })}><i /><i /><i /></span>;
+}

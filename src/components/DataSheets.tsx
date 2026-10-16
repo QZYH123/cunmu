@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader } from 'lucide-react';
 import { useStore } from '../data/store';
 import type { ImportBatch } from '../data/persist';
 import { fmtNum } from '../data/derive';
-import { Sheet } from './Bits';
+import { Sheet, Dots } from './Bits';
 import { buildExportZip } from '../lib/exportMd';
 import { saveOut } from '../lib/saveOut';
 import { DUR } from '../tokens';
@@ -24,7 +23,7 @@ export function KeyBlocks({ blocks }: { blocks: { k: string; lines: ReactNode[] 
   );
 }
 
-const Spin = () => <Loader className="spin" size={16} strokeWidth={1.5} aria-hidden />;
+const Spin = () => <Dots />;
 
 /** builds and hands over the ZIP (download on the web, the share sheet in the app); the count, 'cancelled', or null when it failed */
 export function useExport() {

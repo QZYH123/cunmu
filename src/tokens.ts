@@ -14,6 +14,8 @@ export const DUR = {
   sheen: M.sheen,      // S3 cover sheen (§7.4-4)
   sheenDelay: 120,     // …starting this long after the cover settles
   stagger: 30,
+  /** a wait with no words of its own says 「还在读」 after this (P1-8) */
+  dotsWords: 3000,
   roll: M.base,
   reduced: M.reduced,
   // waits, not animations

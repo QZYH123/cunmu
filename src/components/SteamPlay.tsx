@@ -1,11 +1,10 @@
 import { useState } from 'react';
-import { Loader } from 'lucide-react';
 import { useStore } from '../data/store';
 import type { Work } from '../data/types';
 import { fmtPlaytime, type AchSummary } from '../lib/steam';
 import { getSecret } from '../lib/secrets';
 import { readAchievements, readAppDetails, steamReachable, SteamError } from '../lib/steamNet';
-import { Section } from './Bits';
+import { Section, Dots } from './Bits';
 
 const SAY: Record<SteamError['kind'], string> = {
   key: 'Steam 没认这个 Key，到「设置 › 来源」换一个',
@@ -99,7 +98,7 @@ export function SteamPlay({ work }: { work: Work }) {
       {canRead && (
         <p className="steam-read">
           <button className="btn-text" onClick={() => void read()} disabled={busy}>
-            {busy ? <><Loader className="spin" size={14} strokeWidth={1.5} aria-hidden /> 正在读取</> : a ? '再读一次成就' : '读取成就'}
+            {busy ? <><Dots /> 正在读取</> : a ? '再读一次成就' : '读取成就'}
           </button>
         </p>
       )}

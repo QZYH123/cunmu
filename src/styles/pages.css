@@ -631,8 +631,11 @@ section:first-child > .group-head { margin-top: 0; }
 .key-field:focus-within { box-shadow: var(--sh-input-focus); }
 .key-field input { flex: 1; min-width: 0; background: transparent; border: 0; outline: 0; color: var(--ink); }
 .key-note { display: flex; align-items: center; gap: var(--s-2); margin-top: var(--s-3); }
-.spin { color: var(--text-tertiary); animation: spin var(--dur-spin) linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
+.dots { display: inline-flex; gap: 3px; align-items: center; flex: none; vertical-align: middle; margin-right: var(--s-1); }
+.dots i { width: 4px; height: 4px; border-radius: var(--r-full); background: var(--text-tertiary); opacity: .3; animation: dot calc(var(--m-quick) * 3) steps(1, end) infinite; }
+.dots i:nth-child(2) { animation-delay: var(--m-quick); }
+.dots i:nth-child(3) { animation-delay: calc(var(--m-quick) * 2); }
+@keyframes dot { 0% { opacity: 1; } 34% { opacity: .3; } }
 .found { text-align: left; }
 .found .t-numeral { margin-top: var(--s-5); }
 .paste {
@@ -658,7 +661,7 @@ section:first-child > .group-head { margin-top: 0; }
 /* full wall dimming while a tile is lifted */
 
 /* reduced motion: hard stop on any transform-based motion */
-:root[data-motion="reduce"] .spin { animation: none; }
+:root[data-motion="reduce"] .dots i { animation: none; opacity: .6; }
 
 /* ---------- pointer, keyboard and touch states (§8.5) ----------
    Covers (grid, strip, collage) rise 3px with --sh-lift; the ring and the same rise mark keyboard focus.
@@ -863,7 +866,7 @@ p.confirm-first { height: auto; }
 .found-more { margin-top: var(--s-2); }
 .bgm-field { margin-top: var(--s-6); }
 .key-field.plain input { font: var(--t-ui); }
-.key-field .spin { flex: none; }
+.key-field .dots { flex: none; }
 .reading-line, .moving-line { display: flex; align-items: center; justify-content: center; gap: var(--s-2); }
 .reading-line { min-height: 160px; }
 .moving-line { height: var(--btn-h); }

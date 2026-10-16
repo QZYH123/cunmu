@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader } from 'lucide-react';
 import { useStore } from '../data/store';
 import { KIND_LABEL, type Kind } from '../data/types';
 import { fmtNum } from '../data/derive';
-import { Sheet } from './Bits';
+import { Sheet, Dots } from './Bits';
 import { ExplainList } from '../pages/Connect';
 import { readXlsx } from '../lib/xlsx';
 import { readZip } from '../lib/zip';
@@ -125,7 +124,7 @@ export function DoubanSheet({ open, onClose, file: given = null }: { open: boole
       {step === 'reading' && (
         <div className="sheet-body weread reading" key="reading">
           <h2 className="t-title"><span className="phrase">导入豆瓣备份之前，</span><span className="phrase">先说清三件事</span></h2>
-          <p className="t-ui c-2 reading-line"><Loader className="spin" size={16} strokeWidth={1.5} aria-hidden />正在读这个文件</p>
+          <p className="t-ui c-2 reading-line"><Dots />正在读这个文件</p>
         </div>
       )}
 
@@ -151,7 +150,7 @@ export function DoubanSheet({ open, onClose, file: given = null }: { open: boole
             </div>
             <div className="sheet-actions">
               {step === 'moving'
-                ? <p className="t-small c-2 moving-line"><Loader className="spin" size={16} strokeWidth={1.5} aria-hidden />正在搬，可以先关掉</p>
+                ? <p className="t-small c-2 moving-line"><Dots />正在搬，可以先关掉</p>
                 : <button className="btn btn-primary" onClick={move}>搬进来</button>}
               <button className="btn-text" onClick={onClose} disabled={step === 'moving'}>先不搬</button>
             </div>

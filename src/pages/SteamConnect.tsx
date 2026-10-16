@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader, Lock } from 'lucide-react';
+import { Lock } from 'lucide-react';
 import { useStore } from '../data/store';
 import { fmtNum } from '../data/derive';
-import { Sheet } from '../components/Bits';
+import { Sheet, Dots } from '../components/Bits';
 import { ExplainList } from './Connect';
 import { getSecret, setSecret } from '../lib/secrets';
 import { parseOwnedGames, type SteamGame } from '../lib/steam';
@@ -104,7 +104,7 @@ export function SteamSheet({ open, onClose }: { open: boolean; onClose: () => vo
                   placeholder="SteamID64 或个人资料链接" aria-label="SteamID64 或个人资料链接"
                   autoCapitalize="off" autoCorrect="off" autoComplete="off" spellCheck={false}
                 />
-                {busy && <Loader className="spin" size={16} strokeWidth={1.5} aria-label="正在读取" />}
+                {busy && <Dots label="正在读取" words />}
               </label>
               {err ? <p className="t-small c-2 field-say" role="alert">{err}</p> : <p className="t-caption c-3 field-say">个人资料页地址里 /profiles/ 后面的 17 位数字，或 /id/ 后面的名字都行。</p>}
               <div className="sheet-actions">

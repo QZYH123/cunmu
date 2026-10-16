@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { exportTarget } from '../src/lib/saveOut';
+import { exportTarget, imageTarget } from '../src/lib/saveOut';
 import { pickAccept } from '../src/lib/native';
 import { exportFileName } from '../src/lib/naming';
 
@@ -10,6 +10,13 @@ test('export: the browser downloads; the phone apps share; the desktop app asks 
   assert.equal(exportTarget('ios'), 'share');
   assert.equal(exportTarget(), 'download');   // under node, Capacitor reports the web
   assert.equal(exportTarget('web', true), 'save-dialog');   // the Windows app: the save dialog
+});
+
+test('long image: Android puts it in the album; the web downloads; Windows asks; iOS still shares', () => {
+  assert.equal(imageTarget('android'), 'album');
+  assert.equal(imageTarget('web'), 'download');
+  assert.equal(imageTarget('web', true), 'save-dialog');
+  assert.equal(imageTarget('ios'), 'share');
 });
 
 test('file inputs: the web and iOS filter by extension (Android takes any file, checked by the page)', () => {

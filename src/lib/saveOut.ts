@@ -38,3 +38,20 @@ export async function saveOut(blob: Blob, name: string): Promise<'done' | 'cance
     throw e;
   }
 }
+
+export type ImageTarget = 'album' | ExportTarget;
+/** where the long image goes: Android's photo library; a download on the web; the save dialog on the
+ *  desktop; iOS, which has no album bridge here yet, keeps the share sheet */
+export const imageTarget = (p: 'ios' | 'android' | 'web' = platform(), desktop = isDesktop()): ImageTarget =>
+  (!desktop && p === 'android' ? 'album' : exportTarget(p, desktop));
+
+interface AlbumPlugin { savePng(o: { data: string; name: string }): Promise<void> }
+let album: AlbumPlugin | null = null;
+
+/** 存成一张长图: into the photo library on Android, and nothing opens afterwards */
+export async function saveImageOut(blob: Blob, name: string): Promise<'done' | 'cancelled'> {
+  if (imageTarget() !== 'album') return saveOut(blob, name);
+  album ??= (await import('@capacitor/core')).registerPlugin<AlbumPlugin>('Album');
+  await album.savePng({ data: await base64Of(blob), name });
+  return 'done';
+}

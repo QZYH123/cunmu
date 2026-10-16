@@ -22,7 +22,7 @@ import { MiniRow } from '../components/YearMini';
 import { chapterNo, CoverPickSheet, FavEditSheet, fit, Lead, LeadText, Pill, Strip, SuggestCard, useMeView } from '../components/MeParts';
 import { Dateline } from '../components/Dateline';
 import { fileTitle, titleOf } from '../lib/naming';
-import { saveOut, exportTarget } from '../lib/saveOut';
+import { imageTarget, saveImageOut } from '../lib/saveOut';
 import { isDesk, useBreakpoint } from '../lib/useWidth';
 import { afterAnimations, transitionIdle, useEnterClass, useSettleNew } from '../lib/motion';
 import { useSheets } from '../App';
@@ -79,10 +79,12 @@ export default function MeHome() {
       // drawn: the page is yours again before the file is handed over (给人看 stops every link, a download's too)
       if (!was) store.setShow(false);
       await frame();
-      const r = await saveOut(blob, `${fileTitle(store.title) || '存目'}.png`);
-      if (r === 'done' && exportTarget() === 'download') store.toast('长图存好了，在下载里');
-    } catch {
-      store.toast('这张图没画出来，再试一次');
+      // into the album on Android, nothing opens after; elsewhere a download or the save dialog
+      const r = await saveImageOut(blob, `${fileTitle(store.title) || '存目'}.png`);
+      const t = imageTarget();
+      if (r === 'done') store.toast(t === 'album' ? '已存入相册' : t === 'download' ? '长图存好了，在下载里' : '长图存好了');
+    } catch (e) {
+      store.toast(/denied/i.test(String((e as Error)?.message ?? e)) ? '没有存进相册：要先允许存储' : '这张图没画出来，再试一次');
     } finally {
       if (!was) store.setShow(false);
       setVeilOut(true);

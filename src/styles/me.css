@@ -228,4 +228,8 @@ html[data-show] .hero-empty, html[data-show] .maybe-same, html[data-show] .pull-
 :root[data-motion="reduce"] .showbar-x.on { transform: none; }
 
 /* the long image being drawn */
-.drawing-veil { position: fixed; inset: 0; z-index: 60; background: var(--bg); display: grid; place-items: center; font: var(--t-small); color: var(--text-tertiary); }
+.drawing-veil { position: fixed; inset: 0; z-index: 60; background: var(--bg); display: grid; place-items: center; font: var(--t-small); color: var(--text-tertiary); animation: fade-in var(--m-quick) var(--e-out) both; }
+.drawing-veil.leaving { animation: fade-out var(--m-quick) var(--e-in) both; }
+/* the drawn image settles in the middle before it is handed over (P1-11) */
+.drawing-thumb { max-width: 60vw; max-height: 70vh; border-radius: var(--r-xs); box-shadow: var(--sh-object-inner); animation: settle-in var(--m-base) var(--e-out) both; }
+@keyframes settle-in { from { opacity: 0; transform: scale(var(--s-pop)); } }

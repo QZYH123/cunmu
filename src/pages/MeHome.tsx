@@ -24,7 +24,7 @@ import { Dateline } from '../components/Dateline';
 import { fileTitle, titleOf } from '../lib/naming';
 import { saveOut, exportTarget } from '../lib/saveOut';
 import { isDesk, useBreakpoint } from '../lib/useWidth';
-import { useEnterClass, useSettleNew } from '../lib/motion';
+import { afterAnimations, transitionIdle, useEnterClass, useSettleNew } from '../lib/motion';
 import { useSheets } from '../App';
 import { DUR, IMPORT_LINE_MAX } from '../tokens';
 import { FlyLink } from '../components/FlyLink';
@@ -48,22 +48,34 @@ export default function MeHome() {
   /* ----- 存成一张长图: drawn exactly as 给人看 shows the page ----- */
   const pageRef = useRef<HTMLDivElement>(null);
   const [drawing, setDrawing] = useState(false);
+  // the veil (P1-11): fades in, says which step it is on, shows the drawn image settling, then fades out
+  const [step, setStep] = useState(1);
+  const [drawn, setDrawn] = useState<string | null>(null);
+  const [veilOut, setVeilOut] = useState(false);
+  const veil = useRef<HTMLDivElement>(null);
   const saveImage = async () => {
     if (drawing || !pageRef.current) return;
-    setDrawing(true);
+    setDrawing(true); setStep(1); setDrawn(null); setVeilOut(false);
+    let url: string | null = null;
     const was = store.show;
     if (!was) store.setShow(true);
     const frame = () => new Promise<void>((r) => requestAnimationFrame(() => r()));
     const wait = (ms: number) => new Promise<void>((r) => window.setTimeout(r, ms));
     try {
       await frame(); await frame();
+      await transitionIdle();   // 给人看 comes in as a view transition: draw the page it lands on
       const el = pageRef.current!;
       // every picture in, not only the ones on screen, and settled past its fade
       await Promise.all([...el.querySelectorAll('img')].map((img) => { img.loading = 'eager'; return img.decode().catch(() => undefined); }));
+      setStep(2);
       await document.fonts.ready;
       await wait(DUR.place);
+      setStep(3);
       const { drawLong } = await import('../lib/longImage');
       const blob = await drawLong(el);
+      url = URL.createObjectURL(blob);
+      setDrawn(url);
+      await afterAnimations(veil.current, DUR.pop);
       // drawn: the page is yours again before the file is handed over (给人看 stops every link, a download's too)
       if (!was) store.setShow(false);
       await frame();
@@ -73,7 +85,10 @@ export default function MeHome() {
       store.toast('这张图没画出来，再试一次');
     } finally {
       if (!was) store.setShow(false);
+      setVeilOut(true);
+      await afterAnimations(veil.current, DUR.fade);
       setDrawing(false);
+      if (url) URL.revokeObjectURL(url);
     }
   };
   const enterShow = () => { store.setShow(true); window.scrollTo(0, 0); };
@@ -186,7 +201,10 @@ export default function MeHome() {
       {menu && <Menu anchor={menu} onClose={() => setMenu(null)} items={menuItems} label="更多" />}
       <CoverPickSheet open={sheet === 'cover'} onClose={() => setSheet(null)} />
       <FavEditSheet open={sheet === 'favs'} onClose={() => setSheet(null)} />
-      {drawing && createPortal(<div className="drawing-veil" role="status"><span>正在画成一张长图…</span></div>, document.body)}
+      {drawing && createPortal(
+        <div className={`drawing-veil ${veilOut ? 'leaving' : ''}`} role="status" ref={veil}>
+          {drawn ? <img className="drawing-thumb" src={drawn} alt="" /> : <span>正在排版 · 第 {step} / 3 步</span>}
+        </div>, document.body)}
     </div>
   );
 }

@@ -21,6 +21,7 @@ import { ScrollRail } from '../components/ScrollRail';
 import { chapterNo, fit, Lead, LeadText, useMeView } from '../components/MeParts';
 import { useEnterClass } from '../lib/motion';
 import { isDesk, useBreakpoint } from '../lib/useWidth';
+import { FlyLink } from '../components/FlyLink';
 
 const segList = (xs: Seg[][]) => xs.flatMap((s, i) => [...(i ? [{ text: '、' }] : []), ...s]);
 
@@ -42,7 +43,7 @@ function Collage({ works }: { works: Work[] }) {
   if (!ws.length) return null;
   return (
     <div className="mp-collage">
-      {ws.map((w) => { const [cw, ch] = fit(w, h * 1.4, h); return <Link key={w.id} to={`/entry/${w.id}`} data-ctx={w.id} aria-label={w.title}><Cover work={w} w={cw} h={ch} paperPlaceholder /></Link>; })}
+      {ws.map((w) => { const [cw, ch] = fit(w, h * 1.4, h); return <FlyLink key={w.id} id={w.id} to={`/entry/${w.id}`} data-ctx={w.id} aria-label={w.title}><Cover work={w} w={cw} h={ch} paperPlaceholder /></FlyLink>; })}
     </div>
   );
 }
@@ -160,10 +161,10 @@ export function InterestPage() {
             <div className="section-head mh-sec-head"><h2 id="mp-favs" className="t-h2">最爱里的</h2></div>
             <ul className="mp-favs">
               {favs.map(({ f, w }) => (
-                <li key={w.id}><Link to={`/entry/${w.id}`} className="mp-fav" data-ctx={w.id}>
+                <li key={w.id}><FlyLink id={w.id} to={`/entry/${w.id}`} className="mp-fav" data-ctx={w.id}>
                   {(() => { const [cw, ch] = fit(w, 64, 92); return <Cover work={w} w={cw} h={ch} paperPlaceholder />; })()}
                   <span><span className="mh-fav-t">{w.title}{w.year ? <span className="mh-fav-y">{w.year}</span> : null}</span><span className="mh-fav-w">{f.why || whyFor(w).why}</span></span>
-                </Link></li>
+                </FlyLink></li>
               ))}
             </ul>
           </section>
@@ -216,7 +217,7 @@ export function PeriodPage() {
         {p.epigraph && <p className="mp-epigraph">{p.epigraph}</p>}
         {/* the stretch itself, in its order: one row of covers that scrolls sideways */}
         <div className="mp-shelf" ref={shelfRef} role="group" aria-label={`这段日子的 ${ms.length} 部`}>
-          {ms.slice(0, 80).map((w) => { const [cw, ch] = fit(w, 150 * 1.4, 150); return <Link key={w.id} to={`/entry/${w.id}`} data-ctx={w.id} aria-label={w.title}><Cover work={w} w={cw} h={ch} paperPlaceholder /></Link>; })}
+          {ms.slice(0, 80).map((w) => { const [cw, ch] = fit(w, 150 * 1.4, 150); return <FlyLink key={w.id} id={w.id} to={`/entry/${w.id}`} data-ctx={w.id} aria-label={w.title}><Cover work={w} w={cw} h={ch} paperPlaceholder /></FlyLink>; })}
         </div>
         <ScrollRail target={shelfRef} />
         {ms.length > 4 && <p className="t-caption c-3 mp-more">按时间排着，往左滑看{ms.length > 80 ? '前 80 部' : '完'}</p>}

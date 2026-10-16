@@ -16,6 +16,7 @@ import { SpineBody } from './Spine';
 import { ScrollRail } from './ScrollRail';
 import { fmtPlaytime } from '../lib/steam';
 import { DUR, SHELF } from '../tokens';
+import { FlyLink } from './FlyLink';
 
 /**
  * 索引 · 年份: one row per year, in one of two layouts (the user's choice, remembered on the device):
@@ -342,9 +343,9 @@ const ShelfRow = memo(function ShelfRow({ row, layout, H, phone, activeId, want 
             const dm = dims[i];
             if (!spines) {
               return (
-                <Link key={w.id} to={`/entry/${w.id}`} className="ycover" {...itemProps(w, i)}>
+                <FlyLink key={w.id} id={w.id} to={`/entry/${w.id}`} className="ycover" {...itemProps(w, i)}>
                   <Cover work={w} w={dm.w} h={dm.h} paperPlaceholder />
-                </Link>
+                </FlyLink>
               );
             }
             const c = spineOf(w);
@@ -422,11 +423,11 @@ const CoverGridRow = memo(function CoverGridRow({ row, cw }: { row: Row; cw: num
           const h = Math.round((cw * d.h) / d.w);
           return (
             <li key={w.id} className={`ygrid-item kind-${w.kind}`}>
-              <Link to={`/entry/${w.id}`} className="ygrid-link" aria-label={`${w.title}，${KIND_LABEL[w.kind]}`}>
+              <FlyLink id={w.id} to={`/entry/${w.id}`} className="ygrid-link" aria-label={`${w.title}，${KIND_LABEL[w.kind]}`}>
                 <span className="ygrid-cover"><Cover work={w} w={cw} h={h} paperPlaceholder /></span>
                 <span className="ygrid-title">{w.title}</span>
                 <span className="ygrid-kind" aria-hidden>{KIND_LABEL[w.kind]}{w.play ? ` · ${fmtPlaytime(w.play.minutes)}` : ""}</span>
-              </Link>
+              </FlyLink>
             </li>
           );
         })}

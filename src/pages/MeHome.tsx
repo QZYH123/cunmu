@@ -27,6 +27,7 @@ import { isDesk, useBreakpoint } from '../lib/useWidth';
 import { useEnterClass } from '../lib/motion';
 import { useSheets } from '../App';
 import { DUR, IMPORT_LINE_MAX } from '../tokens';
+import { FlyLink } from '../components/FlyLink';
 
 export type HomeAct = 'cover' | 'favs' | 'image';
 
@@ -137,9 +138,9 @@ export default function MeHome() {
 
   const plateEl = plate && (
     <figure className="mh-plate">
-      <Link to={`/entry/${plate.w.id}`} aria-label={`《${plate.w.title}》`} data-ctx={plate.w.id} className="mh-plate-cv">
+      <FlyLink id={plate.w.id} to={`/entry/${plate.w.id}`} aria-label={`《${plate.w.title}》`} data-ctx={plate.w.id} className="mh-plate-cv">
         {(() => { const [cw, ch] = fit(plate.w, desk ? 236 : 212, desk ? 340 : 300); return <Cover work={plate.w} w={cw} h={ch} size="medium" />; })()}
-      </Link>
+      </FlyLink>
       <figcaption>
         <span className="mh-plate-t">《{plate.w.title}》{plate.w.year ? `，${plate.w.year}` : ''}</span>
         {plate.why && <span className="mh-plate-q">{plate.why}</span>}
@@ -210,10 +211,10 @@ function Favorites({ favs, desk, onEdit }: { favs: { f: { id: string; why?: stri
               const [cw, ch] = fit(w, desk ? 196 : 160, box);
               return (
                 <li key={w.id} className="mh-fav">
-                  <Link to={`/entry/${w.id}`} data-ctx={w.id} className="mh-fav-link">
+                  <FlyLink id={w.id} to={`/entry/${w.id}`} data-ctx={w.id} className="mh-fav-link">
                     <span className="mh-fav-box" style={{ height: box }}><Cover work={w} w={cw} h={ch} paperPlaceholder /></span>
                     <span className="mh-fav-t">{w.title}{w.year ? <span className="mh-fav-y">{w.year}</span> : null}</span>
-                  </Link>
+                  </FlyLink>
                   {why && <p className="mh-fav-w">{why}{auto?.whyFrom === 'bangumi' && !show && <span className="mh-from">在 Bangumi 写的</span>}</p>}
                 </li>
               );

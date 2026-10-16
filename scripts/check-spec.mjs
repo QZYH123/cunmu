@@ -364,7 +364,12 @@ scan(38, 'no shimmer skeletons', /shimmer|skeleton/gi, { skip: (p) => p.endsWith
   };
   for (const p of files) {
     const t = readFileSync(p, 'utf8'), rel = relative(ROOT, p);
-    for (const m of t.matchAll(/\btransition(Property)?\s*:\s*(`[^`]*`|'[^']*'|"[^"]*")/g)) if (CSSBAD.test(m[2])) bad.push(`${rel}: inline ${m[0].slice(0, 70)}`);
+    // inline transitions: JSX style objects (transition: '...') and assignments (el.style.transition = '...'),
+    // every quoted string on the right-hand side (both arms of a ternary), var() names ignored
+    for (const m of t.matchAll(/(?:\btransition(?:Property)?\s*:|\.style\.transition(?:Property)?\s*=)([^;\n]*)/g)) {
+      const strs = m[1].match(/`[^`]*`|'[^']*'|"[^"]*"/g) || [];
+      if (strs.some((q) => CSSBAD.test(q.replace(/var\([^)]*\)/g, '')))) bad.push(`${rel}: inline ${m[0].slice(0, 70)}`);
+    }
     for (const m of t.matchAll(/\.animate\(/g)) {
       let a = argOf(t, m.index + m[0].length);
       if (/^\w+$/.test(a)) { const d = t.match(new RegExp(`\\b(?:const|let)\\s+${a}\\b[^=]*=\\s*([\\s\\S]*?);\\n`)); a = d ? d[1] : ''; }

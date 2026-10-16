@@ -1,6 +1,7 @@
-// JS-side tokens (durations / thresholds used by scripts). Mirrors tokens.css; keep the two in sync.
-/** MOTION-SPEC v0.1 §5 — the same values as tokens.css (check-spec compares the two). */
-export const M = { instant: 100, quick: 180, base: 260, space: 440, sign: 520, sheen: 700, tint: 600, reduced: 150 } as const;
+// JS-side tokens (durations / thresholds used by scripts). The motion values are not copied here: they are
+// generated from tokens.css (scripts/gen-motion-tokens.mjs → motion.gen.ts; check-spec #76 keeps it current).
+import { E, M, STAGGER } from './motion.gen';
+export { M };
 export const DUR = {
   press: M.instant,
   fade: M.quick,
@@ -13,7 +14,7 @@ export const DUR = {
   tint: M.tint,        // S4 ambient tint fade
   sheen: M.sheen,      // S3 cover sheen (§7.4-4)
   sheenDelay: 120,     // …starting this long after the cover settles
-  stagger: 30,
+  stagger: STAGGER,
   /** a wait with no words of its own says 「还在读」 after this (P1-8) */
   dotsWords: 3000,
   roll: M.base,
@@ -30,11 +31,11 @@ export const DUR = {
 } as const;
 
 export const EASE = {
-  out: 'cubic-bezier(.16,1,.3,1)',
-  standard: 'cubic-bezier(.2,0,0,1)',
-  in: 'cubic-bezier(.4,0,1,1)',
+  out: E.out,
+  standard: E.move,
+  in: E.in,
   /** --e-settle: comes to rest with a hair of overshoot (a sheet let go short of closing) */
-  settle: 'linear(0, .22 6%, .58 14%, .83 22%, .96 31%, 1.012 40%, 1.016 48%, 1.006 60%, 1)',
+  settle: E.settle,
 } as const;
 
 /** a sheet pulled down closes past this share of its height, or when let go faster than SHEET_FLING px/ms (P1-12) */

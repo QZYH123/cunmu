@@ -19,7 +19,7 @@ import { join, relative } from 'node:path';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 const SRC = join(ROOT, 'src');
-const TOKEN_FILES = new Set(['src/styles/tokens.css', 'src/tokens.ts']);
+const TOKEN_FILES = new Set(['src/motion.gen.ts', 'src/styles/tokens.css', 'src/tokens.ts']);
 // Procedural artwork for fake works: these are the *works'* own covers, not UI colors.
 const ARTWORK_FILES = new Set(['src/fake/coverArt.ts']);
 
@@ -310,27 +310,26 @@ scan(38, 'no shimmer skeletons', /shimmer|skeleton/gi, { skip: (p) => p.endsWith
 /* ---------- MOTION-SPEC v0.1 §5.4: one set of motion values ---------- */
 {
   const tok = stripComments(readFileSync(join(ROOT, 'src/styles/tokens.css'), 'utf8'));
-  const tjs = readFileSync(join(ROOT, 'src/tokens.ts'), 'utf8');
-  const root = tok.match(/:root\s*\{([\s\S]*?)\n\}/)[1];
-  const m = Object.fromEntries([...tjs.match(/export const M = \{([^}]*)\}/)[1].matchAll(/(\w+):\s*(\d+)/g)].map((x) => [x[1], +x[2]]));
   const bad = [];
-  for (const k of ['instant', 'quick', 'base', 'space', 'sign', 'sheen', 'tint']) {
-    const c = root.match(new RegExp(`--m-${k}:(\\d+)ms`));
-    if (!c || +c[1] !== m[k]) bad.push(`--m-${k} ${c?.[1]}ms vs M.${k} ${m[k]}`);
-  }
+  // tokens.ts takes M / EASE / stagger from motion.gen.ts, generated from tokens.css: it must be current
+  const { motionTokens, render } = await import('./gen-motion-tokens.mjs');
+  const want = render(motionTokens(tok));
+  let have = ''; try { have = readFileSync(join(ROOT, 'src/motion.gen.ts'), 'utf8'); } catch { /* missing */ }
+  if (have !== want) bad.push('src/motion.gen.ts is out of date: node scripts/gen-motion-tokens.mjs');
+  if (/\b\d+\s*as const/.test(readFileSync(join(ROOT, 'src/tokens.ts'), 'utf8').match(/export const M\b[^;]*;/)?.[0] ?? '')) bad.push('tokens.ts hand-copies M');
   // every other duration in the stylesheets is a token: a literal ms only in tokens.css (keyframe offsets aside)
   for (const f of readdirSync(join(ROOT, 'src/styles')).filter((x) => x.endsWith('.css') && x !== 'tokens.css' && !x.includes('noto') && x !== 'fonts.css')) {
     const t = stripComments(readFileSync(join(ROOT, 'src/styles', f), 'utf8'));
     for (const x of t.matchAll(/\b(transition|animation)(-duration|-delay)?\s*:[^;]*?\b\d+m?s\b/g)) bad.push(`${f}: ${x[0].slice(0, 80)}`);
   }
-  bad.length ? fail(76, `motion values out of step\n    ${bad.join('\n    ')}`) : pass(76, 'MOTION-SPEC §5: tokens.ts M matches tokens.css --m-*; no literal durations in the stylesheets');
+  bad.length ? fail(76, `motion values out of step\n    ${bad.join('\n    ')}`) : pass(76, 'MOTION-SPEC §5: motion.gen.ts is generated from tokens.css and current; no literal durations in the stylesheets');
 }
 
 /* ---------- MOTION-SPEC v0.1 P0-4 / P0-10: nothing animates layout ---------- */
 {
-  // what moves is transform / opacity (paint-only colour and shadow fades allowed); a transition or keyframe
-  // on a box's size or place lays the page out every frame, which Android WebView cannot afford
-  // layout (size, place) and paint (shadow, filter, background): neither stays on the compositor
+  // what moves is transform / opacity (colour fades allowed); a transition or keyframe on a box's size or
+  // place lays the page out every frame, and one on its shadow, filter or background repaints it every
+  // frame: neither stays on the compositor, which Android WebView cannot afford
   const LAYOUT = /\b(width|height|max-height|min-height|max-width|top|left|right|bottom|inset|margin(-\w+)?|padding(-\w+)?|grid-template-\w+|flex-basis|font-size|line-height|box-shadow|filter|backdrop-filter|background(-color|-image|-position|-size)?)\b/;
   const bad = [];
   for (const f of readdirSync(join(ROOT, 'src/styles')).filter((x) => x.endsWith('.css'))) {

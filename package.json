@@ -11,6 +11,7 @@
     "check": "node scripts/check-spec.mjs",
     "check:dist": "node scripts/check-dist.mjs",
     "unit": "node scripts/unit.mjs",
+    "gen:motion": "node scripts/gen-motion-tokens.mjs",
     "smoke": "node scripts/smoke-app.mjs",
     "verify": "npm run build && npm run check && node scripts/check-dist.mjs && node scripts/unit.mjs && node scripts/smoke-app.mjs --no-build",
     "cap:sync": "npm run build && node scripts/check-dist.mjs && cap sync",

@@ -419,3 +419,10 @@
 @media (pointer: coarse) {
   :root { --bar-bg:color-mix(in srgb,var(--bg) 96%,transparent); --bar-filter:none; }
 }
+
+/* Reduce transparency (macOS / Windows setting): where the glass is still on (desktop, fine pointer) the
+   bars become the page itself, opaque and unblurred. Through the shared glass tokens, so every bar,
+   sheet and rail follows. */
+@media (prefers-reduced-transparency: reduce) {
+  :root { --bar-bg:var(--bg); --bar-filter:none; }
+}

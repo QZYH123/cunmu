@@ -48,3 +48,11 @@ test('android back in 给人看: never out of the mode — back among the open p
   // out of the mode, 首页 leaves as before
   assert.equal(backStep({ overlay: false, picking: false, hash: '#/', canGoBack: true }), 'leave');
 });
+
+test('places: 随笔 and its editor are their own place in the navigation', async () => {
+  if (!('navigator' in globalThis)) Object.defineProperty(globalThis, 'navigator', { value: { platform: '', userAgent: '' }, configurable: true });
+  const { placeOf } = await import('../src/components/Shell');
+  assert.equal(placeOf('/writing'), 'writing');
+  assert.equal(placeOf('/write'), 'writing');
+  assert.equal(placeOf('/all'), 'all');
+});

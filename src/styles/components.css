@@ -41,9 +41,9 @@
   position: fixed; z-index: 30; bottom: 0; left: 0; right: 0;
   height: calc(var(--bar-tab) + env(safe-area-inset-bottom));
   padding-bottom: env(safe-area-inset-bottom);
-  /* tablet: the four items sit in a centred ≤ 480 group; the bar itself stays full width */
+  /* tablet: the five items sit in a centred ≤ 480 group; the bar itself stays full width */
   padding-left: max(0px, calc((100% - var(--tabbar-w)) / 2)); padding-right: max(0px, calc((100% - var(--tabbar-w)) / 2));
-  display: grid; grid-template-columns: repeat(4, 1fr);
+  display: grid; grid-template-columns: repeat(5, 1fr);
   background: var(--bar-bg);
   -webkit-backdrop-filter: var(--bar-filter); backdrop-filter: var(--bar-filter);
   box-shadow: var(--sh-bar-top);

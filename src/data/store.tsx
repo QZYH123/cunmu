@@ -1,3 +1,4 @@
+import { normalizeNoteQuotes, normalizeQuotes } from './quotes';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { DEMO, doingFor, masterFor } from '@demo';
 import { SAMPLE_WORKS } from './generate';
@@ -202,7 +203,7 @@ const layerNote = (w: Work, n?: WorkNote): Work => {
     ...(n.coverOverride !== undefined ? { cover: n.coverOverride, coverBroken: false } : null),
     ...(n.kindOverride ? { kind: n.kindOverride } : null),
     ...(n.review !== undefined ? { review: n.review.length ? n.review : undefined } : null),
-    ...(n.quotes?.length ? { quotes: [...n.quotes, ...(w.quotes ?? [])] } : null),
+    ...(n.quotes?.length ? { quotes: [...normalizeQuotes(n.quotes), ...normalizeQuotes(w.quotes)] } : null),
     ...(n.images?.length ? { images: n.images } : null),
     ...(n.rating10 ? { rating10: n.rating10 } : null),
   };
@@ -741,12 +742,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const pullWorks = eb ? j.works.filter(fromPull).map(({ sourceKey: _k, ...w }) => ({ ...w, cover: travels(w.cover), finished: '' } as Work)) : [];
       // works the demo catalogue provides come back with it; the rest are yours and come back as they were
       const extras = j.works.filter((w) => !fromPull(w) && (!catalogue.has(w.id) || w.kind === 'essay'))
-        .map(({ sourceKey: _k, ...w }) => ({ ...w, cover: travels(w.cover), finished: '' } as Work));
+        .map(({ sourceKey: _k, ...w }) => ({ ...w, cover: travels(w.cover), finished: '' } as Work))
+        .map((w) => (w.quotes === undefined ? w : { ...w, quotes: normalizeQuotes(w.quotes) }));
       const prev = ownIds();
       setS((x) => ({
         ...x, ...CLEAN,
         extras,
-        notes: j.notes ?? {},
+        notes: normalizeNoteQuotes<WorkNote>(j.notes),
         removed: j.removed ?? {},
         batches: j.batches ?? [],
         workSources: j.prototype?.workSources ?? [],

@@ -32,6 +32,7 @@ import Organize from './pages/Organize';
 const Privacy = lazy(() => import('./pages/About').then((m) => ({ default: m.Privacy })));
 const Licenses = lazy(() => import('./pages/About').then((m) => ({ default: m.Licenses })));
 import Editor from './pages/Editor';
+import Writing from './pages/Writing';
 import { Doing, Removed, Unknown } from './pages/Lists';
 
 /** bangumi: 'token' opens on the token card, { user } reads that account at once; douban: a dropped backup file */
@@ -57,6 +58,7 @@ function useDocTitle() {
     else if (a === 'doing') name = '在看';
     else if (a === 'unknown') name = '时间未知';
     else if (a === 'write') name = '写';
+    else if (a === 'writing') name = '随笔';
     else if (a === 'me') name = b === 'removed' ? '移出的作品' : b === 'organize' ? '整理方式' : '设置';
     else if (a === 'settings') name = '设置';
     else if (a === 'all') name = '全部';
@@ -171,6 +173,7 @@ const router = createHashRouter([
       { path: '/doing', element: <Doing /> },
       { path: '/unknown', element: <Unknown /> },
       { path: '/write', element: <Editor /> },
+      { path: '/writing', element: <Writing /> },
       { path: '*', element: <HomeRoute /> },
     ],
   },

@@ -287,7 +287,7 @@ function Writing({ essays, photos }: { essays: Work[]; photos: { im: { id: strin
   if (!essays.length && !photos.length) return null;
   return (
     <section className="mh-sec" aria-labelledby="mh-writ">
-      <div className="section-head mh-sec-head"><h2 id="mh-writ" className="t-h2">写过的、拍过的</h2></div>
+      <div className="section-head mh-sec-head"><h2 id="mh-writ" className="t-h2">写过的、拍过的</h2>{!show && essays.length > 0 && <Link to="/writing" className="btn-text quiet mh-sec-act">全部随笔 ›</Link>}</div>
       {essays.slice(0, 3).map((e) => (
         <Link key={e.id} to={`/essay/${e.id}`} className="mh-essay">
           <span className="mh-essay-t">{e.title || '随笔'}{!show && me.onlyMe.includes(e.id) && <Pill>只给自己</Pill>}</span>

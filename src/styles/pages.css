@@ -1256,3 +1256,26 @@ p.confirm-first { height: auto; }
 
 /* r23 an empty page's one quiet line (索引 tabs, 搜索): what will be here, not a call to action */
 .quiet-hint { margin-top: var(--s-6); max-width: var(--read-max, 36em); }
+
+/* ---------- 随笔 (r27): the essays on their own page ---------- */
+.writing-list { border-top: var(--hairline) solid var(--line-inner); }
+.writing-item {
+  display: grid; grid-template-columns: 1fr auto; grid-template-areas: 'text edit'; column-gap: var(--s-5); align-items: start;
+  padding: var(--s-6) 0; border-bottom: var(--hairline) solid var(--line-inner);
+}
+.writing-item.has-img { grid-template-columns: 1fr auto auto; grid-template-areas: 'text img edit'; }
+.writing-link { grid-area: text; display: flex; flex-direction: column; min-width: 0; border-radius: var(--r-sm); }
+.writing-t { font: var(--t-h3); color: var(--ink); display: flex; align-items: center; gap: var(--s-2); }
+.writing-d { font: var(--t-caption); color: var(--text-tertiary); margin-top: 2px; }
+.writing-x { font: var(--t-body); color: var(--text-secondary); margin-top: var(--s-3); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.writing-img { grid-area: img; width: 168px; aspect-ratio: 4 / 3; border-radius: var(--r-sm); overflow: hidden; background: var(--line-inner); }
+.writing-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.writing-edit { grid-area: edit; font: var(--t-caption); color: var(--text-tertiary); }
+.writing-empty { display: flex; flex-direction: column; align-items: flex-start; gap: var(--s-5); }
+@media (max-width: 599px) {
+  .writing-img { width: 88px; }
+  .writing-x { font: var(--t-small); }
+}
+@media (hover: hover) and (pointer: fine) {
+  .writing-link:hover .writing-t { text-decoration: underline; text-decoration-thickness: var(--hairline); text-underline-offset: 4px; }
+}

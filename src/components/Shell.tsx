@@ -52,13 +52,13 @@ export function goBack(nav: ReturnType<typeof useNavigate>) {
 /** 首页 is 「我」 once there is something of yours; before that (and in the sample) the start with its imports */
 export const homeIsWall = (s: { library: unknown[]; sample: { on: boolean } }) => !s.library.length || s.sample.on;
 
-/** which of the four places a path belongs to: 首页 (「我」 and its interests and periods), 全部 (everything else you browse) */
-export function placeOf(p: string): 'home' | 'all' | 'index' | 'search' | 'settings' | 'other' {
+/** which place a path belongs to: 首页 (「我」 and its interests and periods), 随笔 (the list and the editor), 全部 (everything else you browse) */
+export function placeOf(p: string): 'home' | 'all' | 'index' | 'writing' | 'search' | 'settings' | 'other' {
   if (p === '/' || p.startsWith('/interest') || p.startsWith('/period')) return 'home';
   if (p.startsWith('/index')) return 'index';
   if (p.startsWith('/search')) return 'search';
   if (p.startsWith('/settings') || p.startsWith('/me')) return 'settings';
-  if (p.startsWith('/write')) return 'other';
+  if (p.startsWith('/write') || p.startsWith('/writing')) return 'writing';
   return 'all';
 }
 
@@ -76,7 +76,7 @@ export function DesktopBar({ onPlus, onShow }: { onPlus: () => void; onShow?: ()
   const palette = usePalette();
   const p = loc.pathname;
   const place = placeOf(p);
-  const onHome = place === 'home', onAll = place === 'all', onIndex = place === 'index';
+  const onHome = place === 'home', onAll = place === 'all', onIndex = place === 'index', onWriting = place === 'writing';
   const wall = p === '/all' || (p === '/' && homeIsWall(store));
   const [menu, setMenu] = useState<DOMRect | null>(null);
   const [o, setO] = useState(1);
@@ -101,6 +101,7 @@ export function DesktopBar({ onPlus, onShow }: { onPlus: () => void; onShow?: ()
           <nav className="desk-nav" aria-label="主导航">
             <Link to="/" className={onHome ? 'on' : ''} aria-current={onHome ? 'page' : undefined}>首页</Link>
             <Link to="/all" className={onAll ? 'on' : ''} aria-current={onAll ? 'page' : undefined}>全部</Link>
+            <Link to="/writing" className={onWriting ? 'on' : ''} aria-current={onWriting ? 'page' : undefined}>随笔</Link>
             <Link to="/index/people" className={onIndex ? 'on' : ''} aria-current={onIndex ? 'page' : undefined}>索引</Link>
           </nav>
         </div>
@@ -139,17 +140,18 @@ function SectionTicker({ text }: { text: string }) {
   );
 }
 
-/** 首页 · 全部 · ＋ · 搜索 (CONCEPT v1); 设置 is under 首页's ··· */
+/** 首页 · 全部 · ＋ · 随笔 · 搜索 (CONCEPT v1, 随笔 r27); 设置 is under 首页's ··· */
 export function TabBar({ onPlus }: { onPlus: () => void }) {
   const loc = useLocation();
   const place = placeOf(loc.pathname);
-  const home = place === 'home', all = place === 'all' || place === 'index';
+  const home = place === 'home', all = place === 'all' || place === 'index', writing = place === 'writing';
   return (
     // r5 #9: words, not glyphs — a running footer in the serif; the ink ＋ stays the one primary action
     <nav className="tabbar" aria-label="主导航">
       <NavLink to="/" className={() => `tab ${home ? 'on' : ''}`} aria-current={home ? 'page' : undefined}><span>首页</span></NavLink>
       <NavLink to="/all" className={() => `tab ${all ? 'on' : ''}`} aria-current={all ? 'page' : undefined}><span>全部</span></NavLink>
       <button className="tab tab-plus" aria-label="收录" onClick={onPlus}><i><Plus strokeWidth={1.75} size={20} /></i></button>
+      <NavLink to="/writing" className={() => `tab ${writing ? 'on' : ''}`} aria-current={writing ? 'page' : undefined}><span>随笔</span></NavLink>
       <NavLink to="/search" className={({ isActive }) => `tab ${isActive ? 'on' : ''}`}><span>搜索</span></NavLink>
     </nav>
   );

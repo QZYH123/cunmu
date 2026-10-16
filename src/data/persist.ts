@@ -8,6 +8,7 @@ import { DEMO, DEMO_CONNECTIONS } from '@demo';
 import { DEFAULT_SETTINGS, type Settings } from './derive';
 import type { BangumiPull } from '../lib/bangumi';
 import type { Play, SteamConnection } from '../lib/steam';
+import { normalizeNoteQuotes, normalizeQuotes } from './quotes';
 import { EMPTY_ME, fixMe, type MeData } from './me';
 import { KIND_ASPECT, type CoverImage, type DateClaim, type DatePrecision, type Dataset, type Kind, type Quote, type UserImage, type Work, type WorkSource } from './types';
 
@@ -223,7 +224,7 @@ export function migrateV1toV2(v1: any, now: string): PersistedV2 {
   for (const [id, n] of Object.entries<{ review?: string[]; quotes?: Quote[]; finished?: string }>(v1.notes ?? {})) {
     notes[id] = {
       ...(n.review ? { review: n.review } : null),
-      ...(n.quotes ? { quotes: n.quotes.map((x) => ({ id: x.id ?? qid(), ...x })) } : null),
+      ...(n.quotes ? { quotes: normalizeQuotes(n.quotes).map((x) => ({ id: x.id ?? qid(), ...x })) } : null),
       ...(n.finished ? { date: mineClaim('user', n.finished, now) } : null),
       updatedAt: now,
     };
@@ -289,7 +290,7 @@ export function load(text: string | null = null, keepBak?: (raw: string) => void
     if (j) {
       if (j.schemaVersion !== SCHEMA_VERSION && text) keepBak?.(text);
       const m = migrateV1toV2(j, new Date().toISOString());
-      s = forApp({ ...DEFAULTS, ...m, extras: (m.extras ?? []).map(fixCoverAspect), dev: { ...DEFAULTS.dev, ...m.dev }, settings: { ...DEFAULT_SETTINGS, ...fixInf(m.settings as unknown as Record<string, unknown>) } });
+      s = forApp({ ...DEFAULTS, ...m, notes: normalizeNoteQuotes<WorkNote>(m.notes), extras: (m.extras ?? []).map(fixCoverAspect).map((w) => (w.quotes === undefined ? w : { ...w, quotes: normalizeQuotes(w.quotes) })), dev: { ...DEFAULTS.dev, ...m.dev }, settings: { ...DEFAULT_SETTINGS, ...fixInf(m.settings as unknown as Record<string, unknown>) } });
     }
   } catch { /* unreadable: start fresh (storage.ts keeps the unreadable text aside before the first save) */ }
   // URL overrides (?tier=50&data=real&theme=dark&motion=reduce&font=1.5) — the screenshot and smoke scripts;

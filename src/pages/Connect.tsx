@@ -11,6 +11,7 @@ import { bgmClient } from '../lib/bangumiNet';
 import { setBangumiToken } from '../lib/secrets';
 import { Sheet } from '../components/Bits';
 import { DUR } from '../tokens';
+import { withViewTransition } from '../lib/motion';
 
 type Step = 'explain' | 'key' | 'found' | 'manual';
 
@@ -141,12 +142,12 @@ export function WereadSheet({ open, onClose, onManual }: { open: boolean; onClos
           <div className="sheet-actions">
             <button
               className="btn btn-primary"
-              onClick={() => {
+              onClick={() => void withViewTransition(() => {
                 store.connectWeread(key.trim().slice(-4));
                 store.importWorks(WEREAD_BATCH, '搬进来');
                 onClose();
                 nav('/');
-              }}
+              }, 'page')}
             >搬进来</button>
           </div>
         </div>
@@ -289,7 +290,9 @@ export function BangumiSheet({ open, onClose, start = 'name', user = '' }: { ope
       else { setVia('token'); setStep('found'); }
     }, DUR.readFile);
   };
-  const bring = () => {
+  // the first things in: the start page crossfades into 首页, which rises in (MOTION-SPEC P1-7)
+  const bring = () => void withViewTransition(bringNow, 'page');
+  const bringNow = () => {
     if (!DEMO && found) {
       const b = store.connections.bangumi;
       const now = new Date().toISOString();

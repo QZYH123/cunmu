@@ -13,6 +13,7 @@ import { pickAccept } from '../lib/native';
 import type { DoubanError, DoubanRow } from '../lib/douban';
 import { buildDoubanImport, parseDouban, planDouban, type DoubanPlan } from '../lib/douban';
 import { DUR } from '../tokens';
+import { withViewTransition } from '../lib/motion';
 
 type Step = 'explain' | 'reading' | 'error' | 'preview' | 'moving';
 const ERR = {
@@ -83,14 +84,14 @@ export function DoubanSheet({ open, onClose, file: given = null }: { open: boole
     if (!plan) return;
     setStep('moving');
     const n = plan.fresh.length + plan.merge.length;
-    setTimeout(() => {
+    setTimeout(() => void withViewTransition(() => {
       const at = new Date().toISOString();
       const { batch, created, rows, notes, maybe } = buildDoubanImport(plan, store.notes, at, `${MONTH_DAY()} · 豆瓣备份 · ${fmtNum(n)} 条`);
       store.applyImport(batch, created, rows, notes, maybe);
       onClose();
       nav('/');
       setTimeout(() => store.toast(`搬进来 ${fmtNum(n)} 条`), DUR.page + DUR.place);
-    }, DUR.readFile);
+    }, 'page'), DUR.readFile);
   };
 
   const n = plan ? plan.fresh.length + plan.merge.length : 0;

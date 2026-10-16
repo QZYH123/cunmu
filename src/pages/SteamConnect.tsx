@@ -10,6 +10,7 @@ import { parseOwnedGames, type SteamGame } from '../lib/steam';
 import { readAchievements, readAppDetails, readOwnedGames, resolveSteamUser, steamReachable, SteamError } from '../lib/steamNet';
 import { pickAccept } from '../lib/native';
 import { DUR } from '../tokens';
+import { withViewTransition } from '../lib/motion';
 
 /** what went wrong, in plain words (a timeout is the common one from mainland China) */
 const SAY: Record<SteamError['kind'], string> = {
@@ -63,7 +64,9 @@ export function SteamSheet({ open, onClose }: { open: boolean; onClose: () => vo
   };
   const played = found ? found.games.filter((g) => g.playtime_forever > 0).length : 0;
   const unplayed = found ? found.games.length - played : 0;
-  const bring = () => {
+  // the first things in: the start page crossfades into 首页, which rises in (MOTION-SPEC P1-7)
+  const bring = () => void withViewTransition(bringNow, 'page');
+  const bringNow = () => {
     if (!found) return;
     if (live) void setSecret('steam-key', key.trim());
     const r = store.applySteam({

@@ -8,7 +8,7 @@ import { fmtYMD, linkify } from '../data/derive';
 import { TopBar } from '../components/Shell';
 import { Menu, Section } from '../components/Bits';
 import { Colophon, Mentions, Prose } from '../components/Prose';
-import { useEnterClass } from '../lib/motion';
+import { noteEssay, TITLE_VT, useEnterClass } from '../lib/motion';
 import { useFontsFor } from '../lib/fontsReady';
 import { RemovedNote, useSectionSpy } from './Entry';
 import { Marginalia } from '../components/Marginalia';
@@ -51,6 +51,7 @@ export default function Essay() {
   const [lit, setLit] = useState<string>();
   const essay = d.byId.get(id) ?? store.removedWorks.find((w) => w.id === id) ?? ALL_BY_ID.get(id);
   const { h1, h1Gone, section } = useSectionSpy([id]);
+  useEffect(() => noteEssay(id), [id]);
   const unl = useMemo(() => new Set(unlinked), [unlinked]);
   const mentioned = useMemo(() => {
     if (!essay?.body) return [];
@@ -95,7 +96,7 @@ export default function Essay() {
       <article className={`page-x entry essay-wrap entry-body ${enter} ${fontsOk ? '' : 'fonts-wait'}`} {...(removed ? { inert: '' } : null) as object}>
         <div className="essay-col">
         <div className="t-label c-3 entry-tag">随笔</div>
-        <h1 className={`hero-title essay-title ${titled ? '' : 'c-2'}`} ref={h1}>{essay.title || (essay.body?.[0] ?? '').slice(0, 16)}</h1>
+        <h1 className={`hero-title essay-title ${titled ? '' : 'c-2'}`} ref={h1} style={{ viewTransitionName: TITLE_VT }}>{essay.title || (essay.body?.[0] ?? '').slice(0, 16)}</h1>
         <p className="t-caption c-3 entry-by">{fmtYMD(essay.finished)}{mentioned.length ? ` · 提到 ${mentioned.length} 个条目` : ''}</p>
         {essay.cover && (
           <figure className="essay-figure">

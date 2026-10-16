@@ -243,6 +243,12 @@ export function useLongPress(onLong: (el: HTMLElement) => void, onTap?: (el: HTM
 }
 
 /** Stagger delay for the first 6 list items (MOTION-SPEC §5.3 --stagger 30ms), others together. */
+/** 随笔 (P1-4): an essay's title in the list and the essay page's h1 share this name, so it flies between them. */
+export const TITLE_VT = 'essay-title';
+let lastEssay = '';
+export const noteEssay = (id: string) => { lastEssay = id; };
+export const lastEssayOpen = () => lastEssay;
+
 export const STAGGER_MAX = 6;
 export const staggerStyle = (i: number): React.CSSProperties =>
   ({ animationDelay: `calc(var(--stagger) * ${Math.min(i, STAGGER_MAX)})` });

@@ -266,6 +266,9 @@ html[data-vt="page"]::view-transition-new(root) { animation-duration: var(--m-qu
 ::view-transition-group(topbar), ::view-transition-group(tabbar), ::view-transition-group(deskbar), ::view-transition-group(showbar) { animation-duration: var(--m-quick); }
 ::view-transition-old(topbar), ::view-transition-new(topbar), ::view-transition-old(tabbar), ::view-transition-new(tabbar),
 ::view-transition-old(deskbar), ::view-transition-new(deskbar) { animation-duration: var(--m-quick); }
+/* 随笔: the title flies from its row to the page's h1 and back; the two sizes crossfade on the way (P1-4) */
+::view-transition-group(essay-title) { animation-duration: var(--m-space); animation-timing-function: var(--e-move); }
+::view-transition-old(essay-title), ::view-transition-new(essay-title) { animation-duration: var(--m-space); height: 100%; object-fit: none; object-position: 0 0; }
 ::view-transition-group(searchbox) { animation-duration: var(--dur-pop); animation-timing-function: var(--ease-out); }
 
 .wall-pull { transform-origin: top; transition: transform var(--dur-page) var(--ease-out); }

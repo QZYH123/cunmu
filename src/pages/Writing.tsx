@@ -1,10 +1,11 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useNavigationType } from 'react-router-dom';
 import { useStore } from '../data/store';
 import { fmtYMD } from '../data/derive';
 import type { Work } from '../data/types';
 import { TopBar } from '../components/Shell';
 import { Pill } from '../components/MeParts';
-import { useEnterClass } from '../lib/motion';
+import { lastEssayOpen, reduced, staggerStyle, TITLE_VT, transitionIdle, useEnterClass, withViewTransition } from '../lib/motion';
 import { useSectionSpy } from './Entry';
 
 const dayOf = (w: Work) => w.finished || w.collected.slice(0, 10);
@@ -21,6 +22,17 @@ export default function Writing() {
   const { h1, h1Gone } = useSectionSpy([]);
   const essays = library.filter((w) => w.kind === 'essay').sort((a, b) => (dayOf(a) < dayOf(b) ? 1 : dayOf(a) > dayOf(b) ? -1 : 0));
   const write = () => nav('/write', { state: { from: 'writing' } });
+  // coming back from an essay its title lands in its row, then lets the name go (P1-4)
+  const navType = useNavigationType();
+  const [back, setBack] = useState(() => (navType === 'POP' ? lastEssayOpen() : ''));
+  useEffect(() => { if (back) void transitionIdle().then(() => setBack('')); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const open = (ev: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.button !== 0 || reduced()) return;
+    ev.preventDefault();
+    const t = ev.currentTarget.querySelector<HTMLElement>('.writing-t');
+    if (t) t.style.viewTransitionName = TITLE_VT;
+    void withViewTransition(() => nav(`/essay/${id}`), 'page').then(() => { if (t) t.style.viewTransitionName = ''; });
+  };
   return (
     <div className="page under-bar">
       <TopBar back={false} title="随笔" titleOn={h1Gone} right={essays.length > 0 && <button className="btn-text" onClick={write}>写一篇</button>} />
@@ -28,13 +40,13 @@ export default function Writing() {
         <h1 className="t-title page-title" ref={h1}>随笔</h1>
         <p className="t-small c-2 list-lede">{essays.length ? `写过 ${essays.length} 篇。` : '自己写的东西，放在这里。'}</p>
         {essays.length ? (
-          <div className="writing-list">
-            {essays.map((e) => {
+          <div className={`writing-list ${enter ? 'stagger' : ''}`}>
+            {essays.map((e, i) => {
               const img = e.images?.[0];
               return (
-                <article key={e.id} className={`writing-item ${img ? 'has-img' : ''}`}>
-                  <Link to={`/essay/${e.id}`} className="writing-link">
-                    <span className="writing-t">{e.title || '随笔'}{me.onlyMe.includes(e.id) && <Pill>只给自己</Pill>}</span>
+                <article key={e.id} className={`writing-item ${img ? 'has-img' : ''}`} style={enter ? staggerStyle(i) : undefined}>
+                  <Link to={`/essay/${e.id}`} className="writing-link" onClick={(ev) => open(ev, e.id)}>
+                    <span className="writing-t" style={back === e.id ? { viewTransitionName: TITLE_VT } : undefined}>{e.title || '随笔'}{me.onlyMe.includes(e.id) && <Pill>只给自己</Pill>}</span>
                     <span className="writing-d">{fmtYMD(dayOf(e))}</span>
                     {e.body?.[0] && <span className="writing-x">{e.body.slice(0, 2).join(' ')}</span>}
                   </Link>

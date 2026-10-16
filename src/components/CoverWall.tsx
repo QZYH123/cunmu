@@ -7,7 +7,7 @@ import { KIND_ASPECT } from '../data/types';
 import { justifyCached, justifyLead, type Row } from '../lib/justify';
 import { paperVar } from '../lib/hash';
 import { DUR, EASE, TILE_TIP, WALL_CAP_VH, WALL_LEAD, WALL_LITERAL_GAP, WALL_WIDE_SCALE, WALL_INTRO, WALL_PARALLAX, WALL_TIERS, type Breakpoint } from '../tokens';
-import { haptic, markFlight, reduced, useLongPress, withViewTransition } from '../lib/motion';
+import { arrivedByRoute, haptic, inPageFade, markFlight, reduced, useLongPress, withViewTransition } from '../lib/motion';
 import { Preview, WorkPreviewBody } from './Bits';
 import { Cover } from './Cover';
 import { workActions, workMeta } from './ContextPreview';
@@ -442,9 +442,9 @@ export const wallIntroPending = () => introPending;
 const release = (a: Animation) => { a.finished.then(() => a.cancel(), () => undefined); return a; };
 
 /** Diagonal wave: delay = (x / W + y / H) / 2 × spread, each tile .985 → 1 and 0 → 1 (§7.2-5). */
-function playIntro(layer: HTMLElement, W: number, H: number) {
+function playIntro(layer: HTMLElement, W: number, H: number, quiet = false) {
   const tiles = [...layer.querySelectorAll<HTMLElement>('.tile[data-id]')];
-  if (reduced()) {
+  if (quiet || reduced()) {
     release(layer.animate([{ opacity: 0 }, { opacity: 1 }], { duration: DUR.reduced, easing: EASE.standard, fill: 'backwards' }));
     return;
   }
@@ -565,7 +565,9 @@ export function HomeWall({ works, width, vh, bp, mode, newIds, onArrived, pin }:
     const el = layer.current;
     if (intro.current !== null || !el || width <= 0 || !works.length) return;
     intro.current = takeWallIntro();
-    if (intro.current) playIntro(el, width, display ? 1 : Math.max(1, height));
+    // inside a page crossfade the wall is already whole; after a route change it only fades in, quickly,
+    // as under reduced motion (a wave from opacity 0 would show the page empty for its first beats)
+    if (intro.current && !inPageFade()) playIntro(el, width, display ? 1 : Math.max(1, height), arrivedByRoute());
   }, [width, works.length]); // eslint-disable-line react-hooks/exhaustive-deps
   useParallax(layer, wrap, !display);
   const spot = useRef<HTMLDivElement>(null);

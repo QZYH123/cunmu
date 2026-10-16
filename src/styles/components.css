@@ -56,11 +56,13 @@
 .tab.on { color: var(--ink); }
 .tab > span { position: relative; font: var(--t-tab); letter-spacing: var(--track-tab); }
 /* the current item: one hairline under the word (r5 #9) */
-.tab > span::after {
-  content: ''; position: absolute; left: 0; right: 0; bottom: calc(var(--s-1) * -1); height: var(--hairline); background: currentColor;
-  transform: scaleX(0); transition: transform var(--dur-fade) var(--ease-out);
+.tab-line {
+  position: absolute; left: 0; right: 0; bottom: calc(var(--s-1) * -1); height: var(--hairline); background: currentColor;
+  /* a route change is a cut (P1-1): the line draws in under the new tab, a transform only */
+  transform-origin: 50% 50%; animation: tab-line-in var(--m-quick) var(--e-out) both;
 }
-.tab.on > span::after { transform: none; }
+:root[data-motion="reduce"] .tab-line { animation: none; }
+@keyframes tab-line-in { from { transform: scaleX(0); } }
 .tab-plus { display: grid; place-items: center; }
 .tab-plus i {
   width: var(--tab-plus); height: var(--tab-plus); border-radius: var(--r-full); background: var(--ink); color: var(--on-ink);

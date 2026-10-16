@@ -145,18 +145,20 @@ function SectionTicker({ text }: { text: string }) {
 export function TabBar({ onPlus }: { onPlus: () => void }) {
   const loc = useLocation();
   const place = placeOf(loc.pathname);
-  const home = place === 'home', all = place === 'all' || place === 'index', writing = place === 'writing';
+  const home = place === 'home', all = place === 'all' || place === 'index', writing = place === 'writing', search = loc.pathname === '/search';
   return (
     // r5 #9: words, not glyphs — a running footer in the serif; the ink ＋ stays the one primary action
     <nav className="tabbar" aria-label="主导航">
-      <NavLink to="/" className={() => `tab ${home ? 'on' : ''}`} aria-current={home ? 'page' : undefined}><span>首页</span></NavLink>
-      <NavLink to="/all" className={() => `tab ${all ? 'on' : ''}`} aria-current={all ? 'page' : undefined}><span>全部</span></NavLink>
+      <NavLink to="/" className={() => `tab ${home ? 'on' : ''}`} aria-current={home ? 'page' : undefined}><span>首页<TabLine on={home} /></span></NavLink>
+      <NavLink to="/all" className={() => `tab ${all ? 'on' : ''}`} aria-current={all ? 'page' : undefined}><span>全部<TabLine on={all} /></span></NavLink>
       <button className="tab tab-plus" aria-label="收录" onClick={onPlus}><i><Plus strokeWidth={1.75} size={20} /></i></button>
-      <NavLink to="/writing" className={() => `tab ${writing ? 'on' : ''}`} aria-current={writing ? 'page' : undefined}><span>随笔</span></NavLink>
-      <NavLink to="/search" className={({ isActive }) => `tab ${isActive ? 'on' : ''}`}><span>搜索</span></NavLink>
+      <NavLink to="/writing" className={() => `tab ${writing ? 'on' : ''}`} aria-current={writing ? 'page' : undefined}><span>随笔<TabLine on={writing} /></span></NavLink>
+      <NavLink to="/search" className={() => `tab ${search ? 'on' : ''}`}><span>搜索<TabLine on={search} /></span></NavLink>
     </nav>
   );
 }
+
+const TabLine = ({ on }: { on: boolean }) => (on ? <i className="tab-line" aria-hidden /> : null);
 
 export function Toasts() {
   const { toasts, dismissToast } = useStore();

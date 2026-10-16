@@ -21,7 +21,7 @@ type VTDoc = Document & { startViewTransition?: (cb: () => void | Promise<void>)
  * wall → entry (520ms), 'back' the return (440ms). Reduced motion: no flight, the page's own
  * 150ms fade does the work.
  */
-/** flight / back: a cover flies; theme: one quick crossfade of the whole page; show: into / out of 给人看, the bars trade places in one fade (P0-8); page: a route change (P1-1). */
+/** flight / back: a cover flies; theme: one quick crossfade of the whole page; show: into / out of 给人看, the bars trade places in one fade (P0-8); page: a page crossfade (the 随笔 title flight, the first import). */
 export type VTKind = 'flight' | 'back' | 'theme' | 'show' | 'page';
 export function withViewTransition(update: () => void | Promise<void>, kind?: VTKind): Promise<void> {
   const d = document as VTDoc;
@@ -40,9 +40,33 @@ export function withViewTransition(update: () => void | Promise<void>, kind?: VT
   return done;
 }
 
+/** A page is mounting inside a page crossfade (the 随笔 title flight, the first import): the crossfade is
+ *  its entrance, so nothing on it should also start from opacity 0 (that reads as a blank flash). */
+export const inPageFade = () => document.documentElement.dataset.vt === 'page';
+
 /** The view transition in flight, if any: dynamic signatures wait for it (one at a time, §7). */
 let running: Promise<void> | null = null;
 export const transitionIdle = (): Promise<void> => running ?? Promise.resolve();
+
+/**
+ * A route change is a cut, on every device (MOTION-SPEC P1-1, as under reduced motion): no view
+ * transition; the new page fades in once, quickly, without the rise, and the tab line grows under its
+ * tab. Wraps the router's navigate so no call site changes; a navigation inside another transition
+ * (a cover flight, an essay title) is left to it. A page already seen comes back on ‹ as it was.
+ */
+type Nav = (to: unknown, opts?: unknown) => Promise<void>;
+let arriving = false;
+/** A page is mounting because of a route change (not a flight, not the first open). */
+export const arrivedByRoute = () => arriving;
+export function routeArrivals(router: { navigate: Nav }) {
+  const raw = router.navigate.bind(router);
+  router.navigate = (to, opts) => {
+    if (running) return raw(to, opts);
+    arriving = true;
+    // the router settles a beat after its promise: one task later the new page has mounted
+    return raw(to, opts).finally(() => window.setTimeout(() => { arriving = false; }, 0));
+  };
+}
 
 /**
  * The UA flies ::view-transition-group by animating width and height as well as transform, and
@@ -158,7 +182,10 @@ export function useEnterClass(): string {
   const [cls] = useState(() => {
     const seen = seenKeys.has(key);
     seenKeys.add(key);
-    return seen && nav === 'POP' ? '' : 'enter';
+    if (seen && nav === 'POP') return '';
+    // inside a page crossfade the page only rises (the crossfade is its fade); after a route change it
+    // only fades in, quickly (the cut, P1-1)
+    return inPageFade() ? 'enter in-vt' : arrivedByRoute() ? 'enter by-route' : 'enter';
   });
   return cls;
 }
@@ -252,7 +279,9 @@ export function useFlip(ref: React.RefObject<HTMLElement>) {
  */
 export function afterAnimations(el: Element | null | undefined, fallback: number): Promise<void> {
   return new Promise((done) => requestAnimationFrame(() => {
-    const running = el?.isConnected ? el.getAnimations({ subtree: true }).filter((a) => a.playState === 'running') : [];
+    const running = el?.isConnected ? el.getAnimations({ subtree: true })
+      // a loop (a spinner inside) never finishes: only what ends counts
+      .filter((a) => a.playState === 'running' && a.effect?.getTiming().iterations !== Infinity) : [];
     if (!running.length) { window.setTimeout(done, reduced() ? Math.min(fallback, DUR.reduced) : fallback); return; }
     Promise.all(running.map((a) => a.finished.catch(() => undefined))).then(() => done());
   }));

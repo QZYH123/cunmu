@@ -2,6 +2,7 @@ import { PageRail } from './components/PageRail';
 import { SteamSheet } from './pages/SteamConnect';
 import { createContext, lazy, Suspense, useCallback, useContext, useEffect, useState } from 'react';
 import { createHashRouter, Outlet, RouterProvider, ScrollRestoration, useLocation, useNavigate } from 'react-router-dom';
+import { routeArrivals } from './lib/motion';
 import { StoreProvider, useStore } from './data/store';
 import { BangumiAgent } from './data/bangumiAgent';
 import { KIND_LABEL, type Kind } from './data/types';
@@ -178,6 +179,8 @@ const router = createHashRouter([
     ],
   },
 ]);
+
+routeArrivals(router as unknown as Parameters<typeof routeArrivals>[0]);
 
 export default function App() {
   return (

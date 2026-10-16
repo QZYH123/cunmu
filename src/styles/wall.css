@@ -186,6 +186,8 @@
 @media (min-width: 1024px) { .empty-lede { font: var(--t-ui); } }
 .home-empty .actions { display: grid; gap: var(--s-4); margin-top: var(--s-8); }
 .home-empty .empty-field { margin-top: 0; view-transition-name: none; }
+/* the 收录 sheet's field is not the page's search box: two of one name abort every view transition */
+.search-field.add-field { view-transition-name: none; }
 .home-empty .empty-more { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; column-gap: var(--s-2); }
 .home-empty .empty-more .btn-text { min-height: var(--hit); }
 
@@ -251,6 +253,19 @@ html[data-vt]::view-transition-old(root) { animation-timing-function: var(--ease
 html[data-vt="theme"]::view-transition-group(*), html[data-vt="theme"]::view-transition-old(*), html[data-vt="theme"]::view-transition-new(*) { animation-duration: var(--m-quick); animation-timing-function: var(--e-move); }
 /* 给人看 in / out: the owner's bars and the guest's bar trade places in one fade, nothing slides (P0-8) */
 html[data-vt="show"]::view-transition-group(*), html[data-vt="show"]::view-transition-old(*), html[data-vt="show"]::view-transition-new(*) { animation-duration: var(--m-base); animation-timing-function: var(--e-move); }
+/* a page crossfade (the 随笔 title flight, the first import): the old page goes quickly, the new one fades in */
+html[data-vt="page"]::view-transition-old(root) { animation-duration: var(--m-quick); animation-timing-function: var(--e-in); }
+html[data-vt="page"]::view-transition-new(root) { animation-duration: var(--m-quick); animation-timing-function: var(--e-out); }
+/* the bars are named, so they never ride along with a page or a flight; their contents only crossfade */
+.topbar { view-transition-name: topbar; }
+.tabbar { view-transition-name: tabbar; }
+.deskbar { view-transition-name: deskbar; }
+.showbar { view-transition-name: showbar; }
+/* not animation: none — a group with no animation can leave the transition waiting forever (seen with
+   paused timelines); a same-place group at --m-quick moves nothing and always ends */
+::view-transition-group(topbar), ::view-transition-group(tabbar), ::view-transition-group(deskbar), ::view-transition-group(showbar) { animation-duration: var(--m-quick); }
+::view-transition-old(topbar), ::view-transition-new(topbar), ::view-transition-old(tabbar), ::view-transition-new(tabbar),
+::view-transition-old(deskbar), ::view-transition-new(deskbar) { animation-duration: var(--m-quick); }
 ::view-transition-group(searchbox) { animation-duration: var(--dur-pop); animation-timing-function: var(--ease-out); }
 
 .wall-pull { transform-origin: top; transition: transform var(--dur-page) var(--ease-out); }

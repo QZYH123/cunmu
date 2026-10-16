@@ -11,7 +11,7 @@ import { Avatar } from '../components/Cover';
 import { SideYears } from '../components/YearMini';
 import { TopBar } from '../components/Shell';
 import { fmtMD, fmtNum } from '../data/derive';
-import { haptic, reduced, useEnterClass, withViewTransition } from '../lib/motion';
+import { arrivedByRoute, haptic, inPageFade, reduced, useEnterClass, withViewTransition } from '../lib/motion';
 import { DUR, IMPORT_LINE_MAX, PULL_TO_WALL } from '../tokens';
 import { captionOf, titleOf } from '../lib/naming';
 import { isDesk, useBreakpoint, useViewportH, useWidth } from '../lib/useWidth';
@@ -24,7 +24,7 @@ export default function Home({ onWeread, onBangumi, onAdd }: { onWeread: () => v
   const nav = useNavigate();
   const enterCls = useEnterClass();
   // On the session's first home visit the masthead rises 240ms into the wall's S1 wave (§7.2-5).
-  const [enter] = useState(() => (wallIntroPending() && library.length ? 'enter mast-in' : enterCls));
+  const [enter] = useState(() => (wallIntroPending() && library.length && !inPageFade() && !arrivedByRoute() ? 'enter mast-in' : enterCls));
   const [ref, width] = useWidth<HTMLDivElement>();
   const vh = useViewportH();
   const bp = useBreakpoint();

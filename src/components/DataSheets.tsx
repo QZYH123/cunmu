@@ -8,7 +8,7 @@ import { Sheet } from './Bits';
 import { buildExportZip } from '../lib/exportMd';
 import { saveOut } from '../lib/saveOut';
 import { DUR } from '../tokens';
-import { haptic } from '../lib/motion';
+import { afterAnimations, haptic } from '../lib/motion';
 
 /** 「键在上、字在下」 (STYLE v0.4 §0.4): label on top, plain sentences under it, blocks split by --line-inner */
 export function KeyBlocks({ blocks }: { blocks: { k: string; lines: ReactNode[] }[] }) {
@@ -162,7 +162,7 @@ export function DeleteAllSheet({ open, onClose }: { open: boolean; onClose: () =
     const app = document.querySelector('.app');
     await new Promise((r) => setTimeout(r, DUR.place));
     app?.classList.add('app-out');
-    await new Promise((r) => setTimeout(r, DUR.fade));
+    await afterAnimations(app, DUR.fade);
     await store.deleteAll();
     // the one light tick says it is done — after the deleting, not when the hold ends
     haptic('light');

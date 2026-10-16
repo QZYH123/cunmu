@@ -7,7 +7,7 @@ import { KIND_LABEL } from '../data/types';
 import { Cover, thumbSize } from './Cover';
 import { creatorLine, fmtMD } from '../data/derive';
 import { DUR, EASE, INFO_FIT } from '../tokens';
-import { haptic, reduced, STAGGER_MAX, staggerStyle } from '../lib/motion';
+import { afterAnimations, haptic, reduced, STAGGER_MAX, staggerStyle } from '../lib/motion';
 import { workActions, workMeta } from './ContextPreview';
 
 /* ---------- Sheet ---------- */
@@ -21,8 +21,9 @@ export function Sheet({ open, onClose, children, label, className = '', locked =
     if (open) { setMounted(true); setLeaving(false); }
     else if (mounted) {
       setLeaving(true);
-      const t = setTimeout(() => { setMounted(false); setLeaving(false); }, DUR.fade);
-      return () => clearTimeout(t);
+      let live = true;
+      void afterAnimations(box.current, DUR.fade).then(() => { if (live) { setMounted(false); setLeaving(false); } });
+      return () => { live = false; };
     }
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
   // focus moves into the dialog and stays there; Esc closes; focus returns to the opener (§8.5),

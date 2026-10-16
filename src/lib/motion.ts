@@ -243,3 +243,17 @@ export function useFlip(ref: React.RefObject<HTMLElement>) {
     prev.current = now;
   });
 }
+
+/**
+ * Resolves when what `el` is animating (it and its subtree: CSS transitions, keyframes, WAAPI) has
+ * finished — the real end, not a guessed timeout (MOTION-SPEC P0-9). Looks one frame later so a class
+ * just added has started its transition; with nothing running (reduced motion, no element) it waits
+ * `fallback` ms, or the reduced duration.
+ */
+export function afterAnimations(el: Element | null | undefined, fallback: number): Promise<void> {
+  return new Promise((done) => requestAnimationFrame(() => {
+    const running = el?.isConnected ? el.getAnimations({ subtree: true }).filter((a) => a.playState === 'running') : [];
+    if (!running.length) { window.setTimeout(done, reduced() ? Math.min(fallback, DUR.reduced) : fallback); return; }
+    Promise.all(running.map((a) => a.finished.catch(() => undefined))).then(() => done());
+  }));
+}

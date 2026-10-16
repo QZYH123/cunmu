@@ -9,7 +9,7 @@ import { KIND_LABEL, KIND_ORDER } from '../data/types';
 import { creatorLine, whenOf } from '../data/derive';
 import { Avatar, Cover, thumbSize } from './Cover';
 import { HERO } from './CoverWall';
-import { markFlight, reduced, withViewTransition } from '../lib/motion';
+import { afterAnimations, markFlight, reduced, withViewTransition } from '../lib/motion';
 import { BP, DUR } from '../tokens';
 import { isDesktop } from '../lib/native';
 
@@ -192,7 +192,7 @@ export function PaletteProvider({ children, onAdd }: { children: ReactNode; onAd
   const close = (now = false) => {
     if (now) { setOpen(false); setClosing(false); return; }
     setClosing(true);
-    window.setTimeout(() => { setOpen(false); setClosing(false); back.current?.focus?.(); }, reduced() ? 0 : DUR.fade);
+    void afterAnimations(document.querySelector('.palette-scrim'), DUR.fade).then(() => { setOpen(false); setClosing(false); back.current?.focus?.(); });
   };
   useEffect(() => {
     const k = (e: KeyboardEvent) => {

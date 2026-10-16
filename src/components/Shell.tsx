@@ -3,7 +3,7 @@ import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronLeft, MoreHorizontal, Plus, Search } from 'lucide-react';
 import { Menu } from './Bits';
 import { useStore } from '../data/store';
-import { useScrolled } from '../lib/motion';
+import { afterAnimations, useScrolled } from '../lib/motion';
 import { flyBack, flyableHero } from '../lib/backFlight';
 import { DUR } from '../tokens';
 import { usePalette } from './CommandPalette';
@@ -129,8 +129,9 @@ function SectionTicker({ text }: { text: string }) {
     const key = ++k.current;
     setItems((xs) => [...xs.filter((x) => x.s !== 'out').map((x) => ({ ...x, s: 'out' as const })), ...(text ? [{ t: text, k: key, s: 'in-start' as const }] : [])]);
     const r = requestAnimationFrame(() => requestAnimationFrame(() => setItems((xs) => xs.map((x) => (x.k === key ? { ...x, s: '' } : x)))));
-    const t = setTimeout(() => setItems((xs) => xs.filter((x) => x.s !== 'out')), DUR.fade + 40);
-    return () => { cancelAnimationFrame(r); clearTimeout(t); };
+    let live = true;
+    void afterAnimations(document.querySelector('.topbar-sub'), DUR.fade).then(() => { if (live) setItems((xs) => xs.filter((x) => x.s !== 'out')); });
+    return () => { live = false; cancelAnimationFrame(r); };
   }, [text]);
   if (!items.length) return null;
   return (

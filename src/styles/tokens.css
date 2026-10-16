@@ -419,3 +419,10 @@
   --hero-glow:radial-gradient(90% 70% at var(--tint-x, 50%) 28%, var(--hero-tint) 0%, transparent 72%);
 }
 :root[data-theme="dark"] .hero-zone { --hero-tint:oklch(0.22 min(var(--tint-c, 0), 0.04) var(--tint-h, 0)); }
+
+/* Phones: no frosted glass behind the bars (MOTION-SPEC P0-5). A live backdrop blur re-samples the wall
+   on every scrolled frame, which Android WebView pays for; a near-solid bar reads the same at a glance.
+   Revert this block alone to bring the glass back. */
+@media (pointer: coarse) {
+  :root { --bar-bg:color-mix(in srgb,var(--bg) 96%,transparent); --bar-filter:none; }
+}

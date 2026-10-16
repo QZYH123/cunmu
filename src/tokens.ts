@@ -33,7 +33,13 @@ export const EASE = {
   out: 'cubic-bezier(.16,1,.3,1)',
   standard: 'cubic-bezier(.2,0,0,1)',
   in: 'cubic-bezier(.4,0,1,1)',
+  /** --e-settle: comes to rest with a hair of overshoot (a sheet let go short of closing) */
+  settle: 'linear(0, .22 6%, .58 14%, .83 22%, .96 31%, 1.012 40%, 1.016 48%, 1.006 60%, 1)',
 } as const;
+
+/** a sheet pulled down closes past this share of its height, or when let go faster than SHEET_FLING px/ms (P1-12) */
+export const SHEET_PULL = 0.3;
+export const SHEET_FLING = 0.5;
 
 export const PULL_TO_WALL = 72;
 /** home's quiet 「也能一次带进来」 line: offered while the library is still small (fewer works than this) */

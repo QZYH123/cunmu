@@ -144,6 +144,10 @@
   animation: sheet-in var(--dur-pop) var(--ease-out) both;
 }
 .sheet.leaving { animation: sheet-out var(--dur-fade) var(--ease-in) both; }
+/* pulled closed: the release animation (WAAPI) carries it off; the CSS exit must not restart it (P1-12) */
+.sheet.leaving.dragged, .scrim.leaving.dragged { animation: none; }
+.sheet[data-top] { touch-action: pan-x pan-down; }
+.sheet.dragging { touch-action: none; user-select: none; }
 @keyframes sheet-in { from { transform: translateY(calc(var(--rise) * 6)); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes sheet-out { to { transform: translateY(calc(var(--rise) * 3)); opacity: 0; } }
 .sheet-handle { width: var(--sheet-handle-w); height: var(--sheet-handle-h); border-radius: var(--r-full); background: var(--line-3); margin: 0 auto var(--s-6); }

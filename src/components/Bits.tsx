@@ -6,7 +6,7 @@ import type { Work } from '../data/types';
 import { KIND_LABEL } from '../data/types';
 import { Cover, thumbSize } from './Cover';
 import { creatorLine, fmtMD } from '../data/derive';
-import { DUR, EASE, INFO_FIT } from '../tokens';
+import { DUR, EASE, INFO_FIT, SHEET_FLING, SHEET_PULL } from '../tokens';
 import { afterAnimations, haptic, reduced, STAGGER_MAX, staggerStyle } from '../lib/motion';
 import { workActions, workMeta } from './ContextPreview';
 
@@ -51,11 +51,64 @@ export function Sheet({ open, onClose, children, label, className = '', locked =
       if (o?.isConnected && location.hash === openedAt.current) o.focus?.({ preventScroll: true });
     };
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+  // pull down to close (MOTION-SPEC P1-12): touch only, from the top of the sheet's scroll; the sheet follows
+  // the finger with no animation, and on letting go either closes (quick, e-in) or settles back
+  const scrim = useRef<HTMLDivElement>(null);
+  const drag = useRef<{ id: number; y0: number; y: number; t: number; v: number; on: boolean } | null>(null);
+  const [dragged, setDragged] = useState(false);
+  const justDragged = useRef(false);
+  const follow = (dy: number) => {
+    const el = box.current!;
+    el.style.transform = dy ? `translateY(${dy}px)` : '';
+    if (scrim.current) scrim.current.style.opacity = dy ? String(Math.max(0, 1 - dy / el.offsetHeight)) : '';
+  };
+  const pull = {
+    onPointerDown: (e: React.PointerEvent<HTMLDivElement>) => {
+      if (e.pointerType !== 'touch' || lockRef.current || box.current!.scrollTop > 0) return;
+      drag.current = { id: e.pointerId, y0: e.clientY, y: e.clientY, t: e.timeStamp, v: 0, on: false };
+    },
+    onPointerMove: (e: React.PointerEvent<HTMLDivElement>) => {
+      const d = drag.current;
+      if (!d || d.id !== e.pointerId) return;
+      const dy = e.clientY - d.y0;
+      if (!d.on) {
+        if (dy < -4 || box.current!.scrollTop > 0) { drag.current = null; return; }
+        if (dy < 8) return;
+        d.on = true; box.current!.setPointerCapture?.(e.pointerId); box.current!.classList.add('dragging');
+      }
+      d.v = (e.clientY - d.y) / Math.max(1, e.timeStamp - d.t); d.y = e.clientY; d.t = e.timeStamp;
+      follow(Math.max(0, dy - 8));
+    },
+    onPointerUp: (e: React.PointerEvent<HTMLDivElement>) => {
+      const d = drag.current; drag.current = null;
+      if (!d?.on) return;
+      const el = box.current!; el.classList.remove('dragging');
+      justDragged.current = true; window.setTimeout(() => { justDragged.current = false; }, 0);
+      const dy = Math.max(0, e.clientY - d.y0 - 8), h = el.offsetHeight;
+      const from = [{ transform: `translateY(${dy}px)` }];
+      follow(0);
+      if (dy > h * SHEET_PULL || d.v > SHEET_FLING) {
+        setDragged(true);
+        el.animate([...from, { transform: `translateY(${h}px)` }], { duration: DUR.fade, easing: EASE.in, fill: 'forwards' });
+        scrim.current?.animate([{ opacity: Math.max(0, 1 - dy / h) }, { opacity: 0 }], { duration: DUR.fade, easing: EASE.in, fill: 'forwards' });
+        onClose();
+      } else if (!reduced()) {
+        el.animate([...from, { transform: 'none' }], { duration: DUR.pop, easing: EASE.settle });
+        scrim.current?.animate([{ opacity: Math.max(0, 1 - dy / h) }, { opacity: 1 }], { duration: DUR.pop, easing: EASE.out });
+      }
+    },
+    // at the top of its scroll the sheet keeps the downward pull for itself; scrolled, the browser has it
+    onScroll: (e: React.UIEvent<HTMLDivElement>) => { e.currentTarget.toggleAttribute('data-top', e.currentTarget.scrollTop <= 0); },
+    // a pull that ends over a button is not a tap on it
+    onClickCapture: (e: React.MouseEvent) => { if (justDragged.current) { e.preventDefault(); e.stopPropagation(); } },
+    onPointerCancel: () => { if (drag.current?.on) { box.current!.classList.remove('dragging'); follow(0); } drag.current = null; },
+  };
+  useEffect(() => { if (open) setDragged(false); }, [open]);
   if (!mounted) return null;
   return createPortal(
     <>
-      <div className={`scrim ${leaving ? 'leaving' : ''}`} onClick={() => { if (!lockRef.current) onClose(); }} />
-      <div className={`sheet ${className} ${leaving ? 'leaving' : ''}`} role="dialog" aria-modal="true" aria-label={label} ref={box}>
+      <div className={`scrim ${leaving ? 'leaving' : ''} ${dragged ? 'dragged' : ''}`} ref={scrim} onClick={() => { if (!lockRef.current) onClose(); }} />
+      <div data-top="" className={`sheet ${className} ${leaving ? 'leaving' : ''} ${dragged ? 'dragged' : ''}`} role="dialog" aria-modal="true" aria-label={label} ref={box} {...pull}>
         <div className="sheet-handle" />
         {children}
       </div>

@@ -654,7 +654,6 @@ section:first-child > .group-head { margin-top: 0; }
 .editor-bar { position: fixed; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-between; align-items: center; padding: 0 max(var(--s-3), calc((100% - var(--read-col)) / 2)) env(safe-area-inset-bottom); height: calc(var(--bar-tab) + env(safe-area-inset-bottom)); background: var(--bar-bg); -webkit-backdrop-filter: var(--bar-filter); backdrop-filter: var(--bar-filter); box-shadow: var(--sh-bar-top); }
 
 /* full wall dimming while a tile is lifted */
-.fullwall.dimmed .tile { opacity: var(--dim-others); }
 
 /* reduced motion: hard stop on any transform-based motion */
 :root[data-motion="reduce"] .spin { animation: none; }
@@ -782,7 +781,8 @@ section:first-child > .group-head { margin-top: 0; }
 
 /* 「选几部」 (STYLE v0.4 §3.14.3): a picked cover is only dimmed — no tick, no outline, no number */
 .pick-toggle { height: var(--hit); font-weight: var(--w-strong); color: var(--text-secondary); }
-.picked .cover, .picked .tile-dim, .tile.picked > * { filter: var(--select-dim); transition: filter var(--dur-press) var(--ease-standard), transform var(--dur-press) var(--ease-standard); }
+.picked .cover, .picked .tile-dim { filter: var(--select-dim); transition: transform var(--dur-press) var(--ease-standard); }
+.tile.picked { --shade: var(--pick-shade); }
 .cat-cell.picked .cover { transform: scale(.96); }
 .pick-bar {
   position: fixed; z-index: 35; left: var(--s-4); right: var(--s-4); bottom: calc(var(--bar-tab) + env(safe-area-inset-bottom) + var(--s-4));

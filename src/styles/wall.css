@@ -4,7 +4,8 @@
 @media (min-width: 1024px) { .home-top { padding-top: var(--desk-bar); } }
 .wall-wrap {
   position: relative; transform-origin: top center;
-  transition: height var(--dur-page) var(--ease-out);
+  /* no height transition: it relaid the whole page every frame (MOTION-SPEC P0-3); a change of rows
+     arrives with the ghost crossfade instead */
 }
 /* The fade lives on the wrap, not the wall, so the S1 parallax can move the wall inside a fade that
    stays put: the masthead always sits on ≤ 15% wall (§7.2-2). */
@@ -40,8 +41,7 @@
 .tile {
   position: absolute; cursor: pointer;
   -webkit-touch-callout: none; user-select: none; touch-action: manipulation;
-  transition: filter var(--dur-press) var(--ease-standard), opacity var(--dur-fade) var(--ease-standard),
-              transform var(--dur-fade) var(--ease-out);
+  transition: transform var(--dur-fade) var(--ease-out);
 }
 /* the lift shadow lives on its own box and only its opacity animates: a box-shadow transition
    repaints every frame and drags the tile's transform off the compositor with it (trace, polish
@@ -51,26 +51,34 @@
   transition: opacity var(--dur-fade) var(--ease-out);
 }
 .tile > .literal { overflow: hidden; }
-.tile::after { content: ""; position: absolute; inset: 0; box-shadow: var(--wall-seam); pointer-events: none; }
-.tile { --row-b: max(var(--row-dim-min), 1 - var(--row-dim) * var(--row, 0)); }
-/* S1 row depth (§7.2-4): every row down sinks a little further into the paper */
-.tile img { width: 100%; height: 100%; object-fit: cover; filter: var(--wall-filter) brightness(var(--row-b)); -webkit-user-drag: none; }
-.tile > .literal { filter: brightness(var(--row-b)); }
+.tile { --row-b: max(var(--row-dim-min), 1 - var(--row-dim) * var(--row, 0)); --shade: calc(1 - var(--row-b)); }
+/* S1 row depth (§7.2-4): every row down sinks a little further into the paper. The depth, the press, the
+   pick and the hover lift are one ink layer over the tile (its seam box) instead of a filter on every image:
+   hundreds of filtered images were re-rastered at once on a press or a pick (MOTION-SPEC P0-6) */
+.tile::after {
+  content: ""; position: absolute; inset: 0; box-shadow: var(--wall-seam); pointer-events: none;
+  background-color: color-mix(in srgb, var(--shade-ink) calc(var(--shade) * 100%), transparent); transition: background-color var(--dur-press) var(--ease-standard);
+}
+.tile img { width: 100%; height: 100%; object-fit: cover; filter: var(--wall-filter); -webkit-user-drag: none; }
 .tile img.loading { opacity: 0; }
 .tile img.loaded { animation: fade-in var(--dur-fade) var(--ease-standard) both; }
-.tile.pressed { filter: var(--tile-press-filter); }
-.wall.dimmed .tile { opacity: var(--dim-others); }
+.tile.pressed { --shade: var(--tile-press-shade); }
+/* a lifted tile: one veil over the whole wall, the tile above it (not hundreds of tiles fading) */
+.wall.dimmed::after, .fullwall.dimmed::after {
+  content: ""; position: absolute; inset: 0; z-index: 51; pointer-events: none;
+  background: var(--bg); opacity: calc(1 - var(--dim-others)); animation: fade-in var(--dur-fade) var(--ease-standard) both;
+}
 .tile.lifted {
   z-index: 52; transform: scale(var(--lift-scale)); pointer-events: none;
   animation: lift var(--dur-pop) var(--ease-out) both;
 }
 .tile.lifted::before { box-shadow: var(--sh-float); opacity: 1; }
-.tile.lifted img { filter: none; }
+.tile.lifted { --shade: 0; }
 @keyframes lift { from { transform: none; } }
 
 /* pointer & keyboard (§7.2-7, §8.5): the tile under the pointer rises out of the wall at full
    brightness; keyboard focus is an inset ring so it survives the wall's clipping */
-.tile:active { filter: var(--tile-press-filter); }
+.tile:active { --shade: var(--tile-press-shade); }
 .tile:focus-visible { z-index: 3; border-radius: 0; }
 .tile:focus-visible::after { box-shadow: var(--focus-ring-inset); }
 .display-item .cover { transition: transform var(--dur-fade) var(--ease-out); }
@@ -81,8 +89,8 @@
   .tile:hover { z-index: 3; transform: translateY(var(--tile-hover-rise)) scale(var(--tile-hover-scale)); }
   .tile:hover::before { opacity: 1; }
   .tile.lead:hover { transform: translateY(var(--tile-hover-rise)) scale(var(--lead-hover-scale)); }
-  .tile:hover img, .tile:hover > .literal { filter: none; }
-  .tile:hover:active { filter: var(--tile-press-filter); }
+  .tile:hover { --shade: 0; }
+  .tile:hover:active { --shade: var(--tile-press-shade); }
   .wall.dimmed .tile:hover, .fullwall.dimmed .tile:hover { transform: none; }
   .wall.dimmed .tile:hover::before, .fullwall.dimmed .tile:hover::before { opacity: 0; }
   .display-item:hover .cover { transform: translateY(var(--hover-rise)); }

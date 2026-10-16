@@ -250,7 +250,7 @@
   --accent-selection:color-mix(in srgb,var(--accent) 18%,transparent);
   --cover-filter:none;                    /* dark: brightness(.92) */
   --wall-filter:brightness(1);            /* dark: brightness(.95) saturate(1.04); row depth is added on top */
-  --tile-press-filter:brightness(.9);
+  --tile-press-filter:brightness(.9); --tile-press-shade:.1; --pick-shade:.38; --shade-ink:#000;
   --tile-arrive-filter:brightness(1.08);
   --dim-others:.55; --disabled:.4; --press-scale:var(--s-press); --plus-press-scale:.94; --lift-scale:var(--s-lift);
 
@@ -275,7 +275,7 @@
 }
 
 :root[data-theme="dark"] {
-  --select-dim:brightness(.5);
+  --select-dim:brightness(.5); --pick-shade:.5;
   color-scheme: dark;
   /* S7 墨夜 (§7.8): a desk at night with one lamp — deeper paper, brighter covers, lit surface edges */
   --bg:#0F0F0E; --surface-1:#181816; --surface-2:#1F1F1D; --surface-3:#2A2927;

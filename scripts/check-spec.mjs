@@ -326,6 +326,22 @@ scan(38, 'no shimmer skeletons', /shimmer|skeleton/gi, { skip: (p) => p.endsWith
   bad.length ? fail(76, `motion values out of step\n    ${bad.join('\n    ')}`) : pass(76, 'MOTION-SPEC §5: tokens.ts M matches tokens.css --m-*; no literal durations in the stylesheets');
 }
 
+/* ---------- MOTION-SPEC v0.1 P0-4 / P0-10: nothing animates layout ---------- */
+{
+  // what moves is transform / opacity (paint-only colour and shadow fades allowed); a transition or keyframe
+  // on a box's size or place lays the page out every frame, which Android WebView cannot afford
+  const LAYOUT = /\b(width|height|max-height|min-height|max-width|top|left|right|bottom|inset|margin(-\w+)?|padding(-\w+)?|grid-template-\w+|flex-basis|font-size|line-height)\b/;
+  const bad = [];
+  for (const f of readdirSync(join(ROOT, 'src/styles')).filter((x) => x.endsWith('.css'))) {
+    const t = stripComments(readFileSync(join(ROOT, 'src/styles', f), 'utf8'));
+    for (const x of t.matchAll(/\btransition(-property)?\s*:([^;}]*)/g)) if (LAYOUT.test(x[2].replace(/var\([^)]*\)/g, ''))) bad.push(`${f}: ${x[0].trim().slice(0, 80)}`);
+    for (const k of t.matchAll(/@keyframes\s+([\w-]+)\s*\{((?:[^{}]*\{[^}]*\})*)[^{}]*\}/g)) {
+      for (const d of k[2].matchAll(/([\w-]+)\s*:/g)) if (LAYOUT.test(d[1]) && LAYOUT.exec(d[1])[0] === d[1]) bad.push(`${f}: @keyframes ${k[1]} animates ${d[1]}`);
+    }
+  }
+  bad.length ? fail(77, `layout animated\n    ${bad.join('\n    ')}`) : pass(77, 'MOTION-SPEC P0-4: transitions and keyframes move transform / opacity, never size or place');
+}
+
 /* ---------- report ---------- */
 let failed = 0;
 for (const r of results.sort((a, b) => a.item - b.item)) {

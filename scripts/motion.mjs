@@ -14,7 +14,7 @@ const OUT = process.env.OUT || join(new URL('..', import.meta.url).pathname, 'mo
 const CHROME = process.env.CHROME || '/usr/bin/google-chrome';
 mkdirSync(OUT, { recursive: true });
 const report = {};
-const browser = await chromium.launch({ executablePath: CHROME });
+const browser = await chromium.launch({ executablePath: CHROME, args: ['--disable-dev-shm-usage'] });
 
 // time-based animations only: the parallax runs on a scroll timeline (polish r4) and has no clock
 const freeze = (page) => page.evaluate(() => { for (const a of document.getAnimations()) if (a.timeline === document.timeline) a.pause(); });
@@ -31,7 +31,7 @@ async function frames(page, name, times) {
 for (const [vw, vh] of [[1440, 900], [390, 844]]) {
   const ctx = await browser.newContext({ viewport: { width: vw, height: vh }, deviceScaleFactor: 1 });
   const page = await ctx.newPage();
-  await page.goto(`${BASE}/?tier=500&data=real&theme=light&reset=1&font=1&motion=normal#/`);
+  await page.goto(`${BASE}/?tier=500&data=real&theme=light&reset=1&font=1&motion=normal#/all`);
   await page.waitForSelector('.wall .tile');
   await freeze(page);
   const t = await page.evaluate(() => {
@@ -54,7 +54,7 @@ for (const [vw, vh] of [[1440, 900], [390, 844]]) {
 for (const [vw, vh, mobile] of [[1440, 900, false], [390, 844, true]]) {
   const ctx = await browser.newContext({ viewport: { width: vw, height: vh }, deviceScaleFactor: 1, isMobile: mobile, hasTouch: mobile });
   const page = await ctx.newPage();
-  await page.goto(`${BASE}/?tier=500&data=real&theme=light&reset=1&font=1&motion=normal#/`);
+  await page.goto(`${BASE}/?tier=500&data=real&theme=light&reset=1&font=1&motion=normal#/all`);
   await page.waitForSelector('.wall .tile img');
   await page.waitForTimeout(1200);
   const tile = page.locator('.wall .tile:has(img)').nth(3);
@@ -90,7 +90,7 @@ for (const [vw, vh, mobile] of [[1440, 900, false], [390, 844, true]]) {
 }
 
 /* ---------- CLS (#63) and parallax frame pacing (#55) ---------- */
-for (const [name, path] of [['home', '/'], ['entry', '/entry/bgm-9585'], ['essay', '/essay/essay-scifi'], ['year', '/year/2024']]) {
+for (const [name, path] of [['home', '/all'], ['entry', '/entry/bgm-9585'], ['essay', '/essay/essay-scifi'], ['year', '/year/2024']]) {
   for (const [vw, vh] of [[1440, 900], [390, 844]]) {
     const ctx = await browser.newContext({ viewport: { width: vw, height: vh } });
     const page = await ctx.newPage();

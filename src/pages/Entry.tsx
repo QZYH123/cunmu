@@ -20,7 +20,7 @@ import { CoverViewer, InfoBox, Menu, Preview, Section, type InfoRow, type MenuIt
 import { Colophon, Mentions, Prose, SideMentions, kindTag, useMentions } from '../components/Prose';
 import { HeroZone, type Epigraph, type StripItem } from '../components/HeroZone';
 import { TocRail, type TocItem } from '../components/TocRail';
-import { reduced, takeFlight, useEnterClass } from '../lib/motion';
+import { reduced, takeFlight, useEnterClass, useFlip } from '../lib/motion';
 import { isDesk, useBreakpoint, useViewportW } from '../lib/useWidth';
 import { BP, DUR, ENTRY_COVER, ENTRY_TOC_MIN, EPIGRAPH_MAX, HERO_COVER, SIDE_STICKY_SLACK, SPY_OFFSET, type Breakpoint } from '../tokens';
 import Essay from './Essay';
@@ -456,6 +456,8 @@ function MaybeSame({ work }: { work: Work }) {
   const store = useStore();
   const [going, setGoing] = useState<string | null>(null);
   const nav = useNavigate();
+  const box = useRef<HTMLElement>(null);
+  useFlip(box);
   const others = store.maybeFor(work.id);
   if (!others.length) return null;
   const decide = (o: Work, v: 'merged' | 'not') => {
@@ -470,13 +472,13 @@ function MaybeSame({ work }: { work: Work }) {
     }, DUR.fade);
   };
   return (
-    <section className="maybe-same" aria-label="可能是同一部">
+    <section className="maybe-same" aria-label="可能是同一部" ref={box}>
       <div className="t-label c-3">可能是同一部</div>
       {others.map((o) => {
         const [tw, th] = [28, 42];
         const from = o.sources?.some((r) => r.provider === 'douban_xlsx') ? '来自豆瓣备份' : sourceLabelOf(o);
         return (
-          <div key={o.id} className={`maybe-row${going === o.id ? ' going' : ''}`}>
+          <div key={o.id} data-flip={o.id} className={`maybe-row${going === o.id ? ' going' : ''}`}>
             <Link to={`/entry/${o.id}`} className="maybe-main">
               <Cover work={o} w={tw} h={th} paperPlaceholder />
               <span className="maybe-text">

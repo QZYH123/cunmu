@@ -63,8 +63,9 @@ export function Slider({ values, value, defaultValue, onChange, leftLabel, right
         }}
       >
         <div className="slider-track" ref={track}>
-          <div className="slider-fill" style={{ width: `${pct(idx)}%` }} />
-          <div className="slider-thumb" style={{ left: `${pct(idx)}%` }} />
+          {/* position as transforms (MOTION-SPEC P0-4): the fill scales, the thumb's full-width carrier slides */}
+          <div className="slider-fill" style={{ transform: `scaleX(${pct(idx) / 100})` }} />
+          <div className="slider-carry" style={{ transform: `translateX(${pct(idx)}%)` }}><div className="slider-thumb" /></div>
           {defIdx >= 0 && (
             <div className="slider-default" style={{ left: `${pct(defIdx)}%` }}>
               <i />

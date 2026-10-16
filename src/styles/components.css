@@ -199,8 +199,9 @@
 .seg button.on { color: var(--ink); font-weight: var(--w-strong); }
 .seg-bar {
   /* 6px below the text baseline box: half the 22px ui line-height + 6 */
-  position: absolute; top: calc(50% + 0.6875rem + 6px); height: var(--rule-tab); background: var(--ink);
-  transition: left var(--dur-pop) var(--ease-out), width var(--dur-pop) var(--ease-out);
+  position: absolute; left: 0; width: 1px; transform-origin: 0 50%;
+  top: calc(50% + 0.6875rem + 6px); height: var(--rule-tab); background: var(--ink);
+  transition: transform var(--dur-pop) var(--ease-out);   /* x and width as one transform (P0-4) */
 }
 .seg-dots { display: inline; color: var(--text-quaternary); }
 
@@ -212,7 +213,7 @@
 .info-row dd { flex: 1; min-width: 0; font: var(--t-ui); color: var(--ink); overflow-wrap: anywhere; }
 .info-row dd.isbn { font: var(--t-mono); }
 .info-more { font: var(--t-ui); color: var(--text-secondary); }
-.info-expand { overflow: hidden; transition: height var(--dur-pop) var(--ease-out); }
+.info-expand { overflow: hidden; }
 
 /* ---------- list row (§3.5 #3) ---------- */
 .list-row {
@@ -545,11 +546,12 @@
 .srail-thumb {
   position: absolute; left: 0; top: 50%; height: var(--rail-thumb); transform-origin: 0 50%;
   border-radius: var(--r-full); background: var(--rail-thumb-ink); translate: 0 -50%;
-  transition: height var(--dur-fade) var(--ease-standard), background-color var(--dur-fade) var(--ease-standard);
+  transition: scale var(--dur-fade) var(--ease-standard), background-color var(--dur-fade) var(--ease-standard);
 }
-.srail.is-dragging .srail-thumb { height: var(--rail-thumb-active); background: var(--rail-thumb-ink-active); }
+/* thicker while held or pointed at: a scale, not a height (P0-4); 3 / 2 = --rail-thumb-active / --rail-thumb */
+.srail.is-dragging .srail-thumb { scale: 1 1.5; background: var(--rail-thumb-ink-active); }
 @media (hover: hover) and (pointer: fine) {
-  .srail:hover .srail-thumb { height: var(--rail-thumb-active); background: var(--rail-thumb-ink-active); }
+  .srail:hover .srail-thumb { scale: 1 1.5; background: var(--rail-thumb-ink-active); }
 }
 @media (pointer: coarse) { .srail.is-awake { pointer-events: none; } }
 
@@ -573,12 +575,12 @@ html[data-show] .prail { top: var(--s-2); bottom: var(--s-2); }
 .prail.is-awake .prail-thumb { pointer-events: auto; }
 .prail-thumb::after {
   content: ''; position: absolute; top: 0; bottom: 0; right: 0; width: var(--rail-thumb);
-  border-radius: var(--r-full); background: var(--rail-thumb-ink);
-  transition: width var(--dur-fade) var(--ease-standard), background-color var(--dur-fade) var(--ease-standard);
+  border-radius: var(--r-full); background: var(--rail-thumb-ink); transform-origin: 100% 50%;
+  transition: scale var(--dur-fade) var(--ease-standard), background-color var(--dur-fade) var(--ease-standard);
 }
-.prail.is-dragging .prail-thumb::after { width: var(--rail-thumb-active); background: var(--rail-thumb-ink-active); }
+.prail.is-dragging .prail-thumb::after { scale: 1.5 1; background: var(--rail-thumb-ink-active); }
 @media (hover: hover) and (pointer: fine) {
-  .prail-thumb:hover::after { width: var(--rail-thumb-active); background: var(--rail-thumb-ink-active); }
+  .prail-thumb:hover::after { scale: 1.5 1; background: var(--rail-thumb-ink-active); }
 }
 .prail-label {
   position: absolute; right: calc(100% + var(--s-1)); top: 50%; transform: translateY(-50%);

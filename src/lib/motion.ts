@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { useLocation, useNavigationType } from 'react-router-dom';
-import { DUR } from '../tokens';
+import { DUR, EASE } from '../tokens';
 import { tick } from './shell';
 
 export const reduced = () =>
@@ -217,3 +217,27 @@ export function useLongPress(onLong: (el: HTMLElement) => void, onTap?: (el: HTM
 export const STAGGER_MAX = 6;
 export const staggerStyle = (i: number): React.CSSProperties =>
   ({ animationDelay: `calc(var(--stagger) * ${Math.min(i, STAGGER_MAX)})` });
+
+/**
+ * FLIP for a list (MOTION-SPEC P0-4, P1-9): children marked data-flip="<key>" that moved since the last
+ * render glide from where they were (transform only), so a row leaving or arriving never animates height.
+ * Offsets, not viewport rects, so scrolling between renders moves nothing.
+ */
+export function useFlip(ref: React.RefObject<HTMLElement>) {
+  const prev = useRef(new Map<string, number>());
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const now = new Map<string, number>();
+    const still = reduced();
+    for (const c of el.querySelectorAll<HTMLElement>(':scope > [data-flip]')) {
+      const k = c.dataset.flip!, y = c.offsetTop;
+      now.set(k, y);
+      const was = prev.current.get(k);
+      if (!still && was !== undefined && Math.abs(was - y) > 1) {
+        c.animate([{ transform: `translateY(${was - y}px)` }, { transform: 'none' }], { duration: DUR.pop, easing: EASE.out });
+      }
+    }
+    prev.current = now;
+  });
+}

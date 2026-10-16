@@ -6,8 +6,8 @@ import type { Work } from '../data/types';
 import { KIND_LABEL } from '../data/types';
 import { Cover, thumbSize } from './Cover';
 import { creatorLine, fmtMD } from '../data/derive';
-import { DUR, INFO_FIT } from '../tokens';
-import { haptic, reduced, staggerStyle } from '../lib/motion';
+import { DUR, EASE, INFO_FIT } from '../tokens';
+import { haptic, reduced, STAGGER_MAX, staggerStyle } from '../lib/motion';
 import { workActions, workMeta } from './ContextPreview';
 
 /* ---------- Sheet ---------- */
@@ -212,7 +212,7 @@ export function Seg<T extends string>({ options, value, onChange, className = ''
           {o.label}
         </button>
       ))}
-      {bar && <span className="seg-bar" style={{ left: bar.left, width: bar.width }} />}
+      {bar && <span className="seg-bar" style={{ transform: `translateX(${bar.left}px) scaleX(${bar.width})` }} />}
     </div>
   );
 }
@@ -286,16 +286,16 @@ export function InfoBox({ rows, fold = Infinity, foldLabel, hide, fit }: {
   const toggle = () => {
     const el = inner.current;
     if (!el) return;
-    const from = el.offsetHeight;
+    // MOTION-SPEC P0-4: no height animation — the box opens at once and the rows it gained rise in
+    const had = el.querySelectorAll('.info-row').length - 1;
     setOpen(true);
+    setH('auto');
     if (reduced()) return;
-    setH(from);
     requestAnimationFrame(() => {
-      const to = el.scrollHeight;
-      requestAnimationFrame(() => {
-        setH(to);
-        setTimeout(() => setH('auto'), DUR.pop);
-      });
+      [...el.querySelectorAll<HTMLElement>('.info-row')].slice(had).forEach((r, i) => r.animate(
+        [{ opacity: 0, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }],
+        { duration: DUR.pop, delay: Math.min(i, STAGGER_MAX) * DUR.stagger, easing: EASE.out, fill: 'backwards' },
+      ));
     });
   };
   if (!visible.length) return null;

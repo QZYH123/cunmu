@@ -35,7 +35,7 @@ export function TocRail({ items, current, onJump, footer }: {
               </button>
             </li>
           ))}
-          {bar && <li className="toc-bar" style={{ top: bar.top, height: bar.height }} aria-hidden />}
+          {bar && <li className="toc-bar" style={{ transform: `translateY(${bar.top}px) scaleY(${bar.height})` }} aria-hidden />}
         </ol>
         {footer && <div className="toc-foot">{footer}</div>}
       </div>

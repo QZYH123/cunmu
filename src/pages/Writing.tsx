@@ -5,6 +5,7 @@ import { fmtYMD } from '../data/derive';
 import type { Work } from '../data/types';
 import { TopBar } from '../components/Shell';
 import { Pill } from '../components/MeParts';
+import { RollingNumber } from '../components/Bits';
 import { lastEssayOpen, noteOpenFrom, reduced, takeLanding, staggerStyle, TITLE_VT, transitionIdle, useEnterClass, withViewTransition } from '../lib/motion';
 import { useSectionSpy } from './Entry';
 
@@ -40,7 +41,7 @@ export default function Writing() {
       <TopBar back={false} title="随笔" titleOn={h1Gone} right={essays.length > 0 && <button className="btn-text" onClick={(ev) => write(ev)}>写一篇</button>} />
       <div className={`page-x read-x list-page writing-page ${enter}`}>
         <h1 className="t-title page-title" ref={h1}>随笔</h1>
-        <p className="t-small c-2 list-lede">{essays.length ? `写过 ${essays.length} 篇。` : '自己写的东西，放在这里。'}</p>
+        <p className="t-small c-2 list-lede">{essays.length ? <>写过 <RollingNumber value={String(essays.length)} /> 篇。</> : '自己写的东西，放在这里。'}</p>
         {essays.length ? (
           <div className={`writing-list ${enter ? 'stagger' : ''}`}>
             {essays.map((e, i) => {

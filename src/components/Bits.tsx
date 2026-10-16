@@ -386,7 +386,9 @@ export function ListRow({ work, meta, date, index = 0, to, onPick, picked, aside
   );
 }
 
-/* ---------- Rolling number: each digit rolls on its own, only when it changes ---------- */
+/* ---------- Rolling number: each digit rolls on its own, only when it changes (MOTION-SPEC P1-10) ----------
+ * The one way a count changes anywhere. Digits are keyed from the right, so 99 → 100 rolls the ones and
+ * tens in place and the new hundreds digit comes in, instead of every digit being replaced. */
 export function RollingNumber({ value, className = '' }: { value: string; className?: string }) {
   const first = useRef(true);
   useEffect(() => { first.current = false; }, []);
@@ -396,7 +398,7 @@ export function RollingNumber({ value, className = '' }: { value: string; classN
         const d = Number(ch);
         if (Number.isNaN(d) || ch === ' ') return <span key={i} aria-hidden>{ch}</span>;
         return (
-          <span key={`${value.length}-${i}`} className="roll-digit" aria-hidden>
+          <span key={`r${value.length - i}`} className="roll-digit" aria-hidden>
             <span className="roll-col" style={{ transform: `translateY(${-d * 10}%)`, transition: first.current ? 'none' : undefined }}>
               {'0123456789'.split('').map((x) => <span key={x}>{x}</span>)}
             </span>

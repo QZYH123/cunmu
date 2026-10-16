@@ -8,7 +8,7 @@ import type { Work } from '../data/types';
 import { KIND_LABEL, KIND_ORDER } from '../data/types';
 import { creatorLine, fmtNum, whenOf } from '../data/derive';
 import { Avatar, Cover } from '../components/Cover';
-import { ListRow } from '../components/Bits';
+import { ListRow, RollingNumber } from '../components/Bits';
 import { useEnterClass, useFlip } from '../lib/motion';
 import { isDesk, useBreakpoint } from '../lib/useWidth';
 import { GROUP_CAP, PalettePanel, searchLibrary } from '../components/CommandPalette';
@@ -99,7 +99,7 @@ export default function SearchPage() {
           <div className={`results ${animate ? 'results-in' : ''}`} key={animKey} ref={resultsBox}>
             {results!.people.length > 0 && (
               <section className="result-group">
-                <div className="t-label c-3">人物 · {results!.people.length}</div>
+                <div className="t-label c-3">人物 · <RollingNumber value={String(results!.people.length)} /></div>
                 {cap('人物', results!.people)[0].map((p) => (
                   <Link key={p.id} to={`/person/${p.id}`} className="list-row search-row" data-flip={`p:${p.id}`}>
                     <Avatar name={p.name} size={32} />
@@ -116,7 +116,7 @@ export default function SearchPage() {
               const [shown, rest] = cap(k, ws);
               return (
                 <section className="result-group" key={k}>
-                  <div className="t-label c-3">{KIND_LABEL[k]} · {fmtNum(ws.length)}</div>
+                  <div className="t-label c-3">{KIND_LABEL[k]} · <RollingNumber value={fmtNum(ws.length)} /></div>
                   {shown.map(row)}
                   {more(k, rest)}
                 </section>
@@ -124,7 +124,7 @@ export default function SearchPage() {
             })}
             {results!.interests.length > 0 && (
               <section className="result-group">
-                <div className="t-label c-3">兴趣 · {results!.interests.length}</div>
+                <div className="t-label c-3">兴趣 · <RollingNumber value={String(results!.interests.length)} /></div>
                 {results!.interests.slice(0, GROUP_CAP).map(([g, ws]) => (
                   <Link key={g} to={`/index/interests?g=${encodeURIComponent(g)}`} className="list-row search-row no-thumb">
                     <div className="list-main"><span className="t-ui"><Hl text={g} q={term} /></span><span className="list-meta c-3">{fmtNum(ws.length)} 条</span></div>
@@ -134,7 +134,7 @@ export default function SearchPage() {
             )}
             {results!.years.length > 0 && (
               <section className="result-group">
-                <div className="t-label c-3">年份 · {results!.years.length}</div>
+                <div className="t-label c-3">年份 · <RollingNumber value={String(results!.years.length)} /></div>
                 {results!.years.map((y) => (
                   <Link key={y} to={`/year/${y}`} className="list-row search-row no-thumb">
                     <div className="list-main"><span className="t-ui"><Hl text={String(y)} q={term} /></span><span className="list-meta c-3">{d.years.get(y)!.works.length} 条</span></div>

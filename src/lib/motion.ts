@@ -21,7 +21,9 @@ type VTDoc = Document & { startViewTransition?: (cb: () => void | Promise<void>)
  * wall → entry (520ms), 'back' the return (440ms). Reduced motion: no flight, the page's own
  * 150ms fade does the work.
  */
-export function withViewTransition(update: () => void | Promise<void>, kind?: 'flight' | 'back'): Promise<void> {
+/** flight / back: a cover flies; theme: one quick crossfade of the whole page; page: a route change (P1-1). */
+export type VTKind = 'flight' | 'back' | 'theme' | 'page';
+export function withViewTransition(update: () => void | Promise<void>, kind?: VTKind): Promise<void> {
   const d = document as VTDoc;
   if (!d.startViewTransition || reduced()) { const r = update(); return Promise.resolve(r).then(() => undefined); }
   const root = document.documentElement;
@@ -31,7 +33,7 @@ export function withViewTransition(update: () => void | Promise<void>, kind?: 'f
     flushSync(() => { r = update(); });
     return r;
   });
-  if (kind) vt.ready.then(() => { const f = compositeFlight(); if (f) vt.finished.finally(() => f.cancel()); }, () => undefined);
+  if (kind === 'flight' || kind === 'back') vt.ready.then(() => { const f = compositeFlight(); if (f) vt.finished.finally(() => f.cancel()); }, () => undefined);
   const done = vt.finished.catch(() => undefined).then(() => { if (root.dataset.vt === kind) delete root.dataset.vt; });
   running = done;
   done.then(() => { if (running === done) running = null; });

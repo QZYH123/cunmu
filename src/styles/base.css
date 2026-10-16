@@ -21,8 +21,7 @@ html, body { margin: 0; padding: 0; background: var(--bg); }
 body {
   font: var(--t-ui);
   color: var(--ink);
-  min-height: 100dvh;
-  transition: background-color var(--dur-fade) var(--ease-standard);
+  min-height: 100dvh;   /* a theme change is one root crossfade (wall.css), not a background transition */
 }
 
 ::selection { background: var(--accent-selection); }

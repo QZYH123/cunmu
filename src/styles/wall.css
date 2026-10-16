@@ -247,6 +247,8 @@ html[data-vt-fit]::view-transition-group(hero-cover) { overflow: clip; }
 html[data-vt-fit]::view-transition-old(hero-cover), html[data-vt-fit]::view-transition-new(hero-cover) { object-fit: contain; transform-origin: 50% 50%; }
 ::view-transition-old(root), ::view-transition-new(root) { animation-duration: var(--dur-fade); }
 html[data-vt]::view-transition-old(root) { animation-timing-function: var(--ease-in); }
+/* theme: everything crossfades once, quickly, with no movement (MOTION-SPEC P0-7) */
+html[data-vt="theme"]::view-transition-group(*), html[data-vt="theme"]::view-transition-old(*), html[data-vt="theme"]::view-transition-new(*) { animation-duration: var(--m-quick); animation-timing-function: var(--e-move); }
 ::view-transition-group(searchbox) { animation-duration: var(--dur-pop); animation-timing-function: var(--ease-out); }
 
 .wall-pull { transform-origin: top; transition: transform var(--dur-page) var(--ease-out); }

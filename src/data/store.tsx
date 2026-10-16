@@ -1,5 +1,5 @@
 import { normalizeNoteQuotes, normalizeQuotes } from './quotes';
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { DEMO, doingFor, masterFor } from '@demo';
 import { SAMPLE_WORKS } from './generate';
 import { derive, type Derived, type Settings } from './derive';
@@ -11,6 +11,7 @@ import {
 import { withKnown, type BangumiPull } from '../lib/bangumi';
 import { planSteam, withStoreFacts, type AchSummary, type Play, type SteamConnection, type SteamGame, type StoreFacts } from '../lib/steam';
 import { setBangumiToken, setSecret } from '../lib/secrets';
+import { withViewTransition } from '../lib/motion';
 import { clearCoverCache } from '../lib/coverCache';
 import type { CoverImage, Credit, Dataset, DateClaim, Quote, Work } from './types';
 import { makerOf, sourceKeyOf, withMaker } from './types';
@@ -263,7 +264,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return () => mq.removeEventListener('change', f);
   }, []);
   const resolvedTheme = s.theme === 'system' ? (sysDark ? 'dark' : 'light') : s.theme;
-  useEffect(() => {
+  // layout effect: the theme lands inside the view transition's update, so the crossfade sees it (P0-7)
+  useLayoutEffect(() => {
     const el = document.documentElement;
     el.dataset.theme = resolvedTheme;
     applyLook(s.theme, resolvedTheme);
@@ -387,7 +389,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       announce({ kind: 'batch', ids: [], prevIds: prev });
     },
     setDataset: (ds) => { const prev = library.map((w) => w.id); setS((x) => ({ ...x, dev: { ...x.dev, dataset: ds } })); announce({ kind: 'batch', ids: [], prevIds: prev }); },
-    setTheme: (t) => setS((x) => ({ ...x, theme: t })),
+    setTheme: (t) => { void withViewTransition(() => setS((x) => ({ ...x, theme: t })), 'theme'); },
     setReduceMotion: (b) => setS((x) => ({ ...x, reduceMotion: b })),
     setFontScale: (n) => setS((x) => ({ ...x, fontScale: n })),
     setSettings: (st) => setS((x) => ({ ...x, settings: st })),

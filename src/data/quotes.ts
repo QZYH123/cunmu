@@ -40,11 +40,3 @@ export function normalizeNoteQuotes<N extends { quotes?: Quote[] }>(notes: unkno
   }
   return out;
 }
-
-/**
- * The quote shown under an entry's title: the starred one; else the earliest dated one. An undated quote
- * (a bare string from a file) is never picked on its own — with no starred and no dated quote, none.
- */
-export function epigraphOf(quotes: Quote[]): Quote | undefined {
-  return quotes.find((q) => q.starred) ?? quotes.filter((q) => !!q.date).sort((a, b) => a.date.localeCompare(b.date))[0];
-}

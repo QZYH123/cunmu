@@ -1,27 +1,30 @@
 // JS-side tokens (durations / thresholds used by scripts). Mirrors tokens.css; keep the two in sync.
+/** MOTION-SPEC v0.1 §5 — the same values as tokens.css (check-spec compares the two). */
+export const M = { instant: 100, quick: 180, base: 260, space: 440, sign: 520, sheen: 700, tint: 600, reduced: 150 } as const;
 export const DUR = {
-  press: 120,
-  fade: 200,
-  pop: 280,
-  page: 440,
-  place: 560,
-  wallIn: 520,     // S1 per-tile entrance (§7.2-5)
-  flight: 520,     // S2 cover flight (§7.3)
-  flightBack: 440, // S2 return flight
-  tint: 600,       // S4 ambient tint fade
-  sheen: 700,      // S3 cover sheen (§7.4-4)
-  sheenDelay: 120, // …starting this long after the cover settles
-  stagger: 40,
-  roll: 240,
-  reduced: 150,
+  press: M.instant,
+  fade: M.quick,
+  pop: M.base,
+  page: M.space,
+  place: M.sign,
+  wallIn: M.sign,      // S1 per-tile entrance (§7.2-5)
+  flight: M.sign,      // S2 cover flight (§7.3)
+  flightBack: M.space, // S2 return flight
+  tint: M.tint,        // S4 ambient tint fade
+  sheen: M.sheen,      // S3 cover sheen (§7.4-4)
+  sheenDelay: 120,     // …starting this long after the cover settles
+  stagger: 30,
+  roll: M.base,
+  reduced: M.reduced,
+  // waits, not animations
   longPress: 350,
   toast: 4000,
-  verifyKey: 1200,   // simulated key check in the WeRead sheet (a wait, not an animation)
-  idleDelay: 1200,   // wait before hiding the year float / index rail (a delay, not an animation)
+  verifyKey: 1200,   // simulated key check in the WeRead sheet
+  idleDelay: 1200,   // wait before hiding the year float / index rail
   linger: 2000,      // date picker: closes itself this long after the last tap (STYLE v0.4 §2.9 --dur-linger)
   hold: 1500,        // 删除全部内容: how long to hold (STYLE v0.4 §2.9 --dur-hold) — the hand, not an animation
-  showHold: 1000,    // 给人看: how long to hold 「按住退出」 (the hand too; no ink line — that is 删除全部's)
-  readFile: 900,     // simulated reading / fetching in the import & connect sheets (a wait, not an animation)
+  showHold: 1000,    // 给人看: how long to hold 「按住退出」
+  readFile: 900,     // simulated reading / fetching in the import & connect sheets
 } as const;
 
 export const EASE = {

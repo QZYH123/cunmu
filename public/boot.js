@@ -6,4 +6,6 @@
     if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     document.documentElement.setAttribute('data-theme', t);
   } catch (e) { /* storage blocked: the stylesheet's media query decides */ }
+  // reduced motion is one attribute for every rule (MOTION-SPEC §8); the store keeps it after this
+  try { if (matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.setAttribute('data-motion', 'reduce'); } catch (e) { /* no matchMedia */ }
 })();

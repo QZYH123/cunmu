@@ -254,14 +254,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return { ...w, cover: url ? { ...w.cover!, thumb: url, medium: url } : null };
   }), [s.extras, blobUrls]);
 
+  // the system's reduced-motion setting and the app's own switch are one attribute (MOTION-SPEC §8)
+  const [sysReduce, setSysReduce] = useState(() => typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  useEffect(() => {
+    const mq = matchMedia('(prefers-reduced-motion: reduce)');
+    const f = () => setSysReduce(mq.matches);
+    mq.addEventListener('change', f);
+    return () => mq.removeEventListener('change', f);
+  }, []);
   const resolvedTheme = s.theme === 'system' ? (sysDark ? 'dark' : 'light') : s.theme;
   useEffect(() => {
     const el = document.documentElement;
     el.dataset.theme = resolvedTheme;
     applyLook(s.theme, resolvedTheme);
-    if (s.reduceMotion) el.dataset.motion = 'reduce'; else delete el.dataset.motion;
+    if (s.reduceMotion || sysReduce) el.dataset.motion = 'reduce'; else delete el.dataset.motion;
     el.style.fontSize = s.fontScale === 1 ? '' : `${s.fontScale * 100}%`;
-  }, [resolvedTheme, s.theme, s.reduceMotion, s.fontScale]);
+  }, [resolvedTheme, s.theme, s.reduceMotion, sysReduce, s.fontScale]);
 
   const { tier, dataset, wereadRemoved } = s.dev;
   const bgm = s.connections.bangumi;

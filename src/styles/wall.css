@@ -32,7 +32,7 @@
 }
 .wall-pointer.on { opacity: 1; }
 :root[data-motion="reduce"] .wall-pointer { display: none; }
-@media (prefers-reduced-motion: reduce), not ((hover: hover) and (pointer: fine)) { .wall-pointer { display: none; } }
+@media not ((hover: hover) and (pointer: fine)) { .wall-pointer { display: none; } }
 .wall.display { -webkit-mask-image: none; mask-image: none; overflow: visible; height: 100%; }
 .wall.ghost { z-index: 2; pointer-events: none; animation: fade-out var(--dur-page) var(--ease-standard) both; }
 .wall.fresh { animation: fade-in var(--dur-page) var(--ease-standard) both; }
@@ -171,7 +171,6 @@
 .empty-shelf .cover:nth-child(5) { animation-delay: calc(var(--stagger) * 4); }
 .empty-shelf .literal-title { top: 12%; font-size: calc(var(--shelf-h) * .16); opacity: .78; }
 @keyframes shelf-in { from { opacity: 0; transform: translateY(var(--s-2)); } }
-@media (prefers-reduced-motion: reduce) { .empty-shelf .cover { animation-name: fade-in; } }
 :root[data-motion="reduce"] .empty-shelf .cover { animation-name: fade-in; }
 @media (min-width: 480px) { .empty-shelf { --shelf-h: 112px; gap: var(--s-3); } }
 @media (min-width: 1024px) { .empty-shelf { --shelf-h: 152px; gap: var(--s-4); margin-bottom: var(--s-9); } }

@@ -297,7 +297,7 @@ scan(37, 'no gradients outside the token file (spine light, fades, bar blur + §
   const tok = readFileSync(join(ROOT, 'src/styles/tokens.css'), 'utf8');
   const tjs = readFileSync(join(ROOT, 'src/tokens.ts'), 'utf8');
   const long = [];
-  for (const m of tok.matchAll(/--(dur-[\w-]+)\s*:\s*(\d+)ms/g)) if (+m[2] > 600 && !['dur-spin', 'dur-sheen', 'dur-hold', 'dur-linger'].includes(m[1])) long.push(`--${m[1]} ${m[2]}ms`);
+  for (const m of tok.matchAll(/--((?:dur|m)-[\w-]+)\s*:\s*(\d+)ms/g)) if (+m[2] > 600 && !['dur-spin', 'dur-sheen', 'm-sheen', 'dur-hold', 'dur-linger'].includes(m[1])) long.push(`--${m[1]} ${m[2]}ms`);
   const durBlock = tjs.match(/export const DUR = \{([\s\S]*?)\}/)[1];
   // toast lifetime / long-press hold / idle delay are waits, not animations; v0.4 §2.9: the delete-all
   // hold (the hand, not an animation) and the date picker's linger are waits too, as is a simulated read
@@ -306,6 +306,25 @@ scan(37, 'no gradients outside the token file (spine light, fades, bar blur + §
   long.length ? fail(38, `durations > 600ms: ${long.join(', ')}`) : pass(38, 'all motion tokens ≤ 600ms (spinner is functional; the 700ms cover sheen is set by §7.9)');
 }
 scan(38, 'no shimmer skeletons', /shimmer|skeleton/gi, { skip: (p) => p.endsWith('check-spec.mjs') });
+
+/* ---------- MOTION-SPEC v0.1 §5.4: one set of motion values ---------- */
+{
+  const tok = stripComments(readFileSync(join(ROOT, 'src/styles/tokens.css'), 'utf8'));
+  const tjs = readFileSync(join(ROOT, 'src/tokens.ts'), 'utf8');
+  const root = tok.match(/:root\s*\{([\s\S]*?)\n\}/)[1];
+  const m = Object.fromEntries([...tjs.match(/export const M = \{([^}]*)\}/)[1].matchAll(/(\w+):\s*(\d+)/g)].map((x) => [x[1], +x[2]]));
+  const bad = [];
+  for (const k of ['instant', 'quick', 'base', 'space', 'sign', 'sheen', 'tint']) {
+    const c = root.match(new RegExp(`--m-${k}:(\\d+)ms`));
+    if (!c || +c[1] !== m[k]) bad.push(`--m-${k} ${c?.[1]}ms vs M.${k} ${m[k]}`);
+  }
+  // every other duration in the stylesheets is a token: a literal ms only in tokens.css (keyframe offsets aside)
+  for (const f of readdirSync(join(ROOT, 'src/styles')).filter((x) => x.endsWith('.css') && x !== 'tokens.css' && !x.includes('noto') && x !== 'fonts.css')) {
+    const t = stripComments(readFileSync(join(ROOT, 'src/styles', f), 'utf8'));
+    for (const x of t.matchAll(/\b(transition|animation)(-duration|-delay)?\s*:[^;]*?\b\d+m?s\b/g)) bad.push(`${f}: ${x[0].slice(0, 80)}`);
+  }
+  bad.length ? fail(76, `motion values out of step\n    ${bad.join('\n    ')}`) : pass(76, 'MOTION-SPEC §5: tokens.ts M matches tokens.css --m-*; no literal durations in the stylesheets');
+}
 
 /* ---------- report ---------- */
 let failed = 0;

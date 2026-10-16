@@ -215,7 +215,6 @@
   position: absolute; left: calc(var(--hairline) * -1); width: var(--toc-indicator); background: var(--ink); pointer-events: none;
   transition: top var(--dur-pop) var(--ease-flight), height var(--dur-pop) var(--ease-flight);
 }
-@media (prefers-reduced-motion: reduce) { .toc-bar { transition: none; } }
 :root[data-motion="reduce"] .toc-bar { transition: none; }
 .toc-foot { margin-top: var(--s-8); padding-left: var(--s-5); }
 .toc-foot .colophon { justify-content: flex-start; text-align: left; margin-top: 0; }
@@ -658,9 +657,6 @@ section:first-child > .group-head { margin-top: 0; }
 .fullwall.dimmed .tile { opacity: var(--dim-others); }
 
 /* reduced motion: hard stop on any transform-based motion */
-@media (prefers-reduced-motion: reduce) {
-  .spin { animation: none; }
-}
 :root[data-motion="reduce"] .spin { animation: none; }
 
 /* ---------- pointer, keyboard and touch states (§8.5) ----------
@@ -1230,7 +1226,6 @@ p.confirm-first { height: auto; }
 .lic-text { font: var(--t-caption); color: var(--text-secondary); white-space: pre-wrap; overflow-wrap: anywhere; margin-top: var(--s-2); }
 .diag-text { display: block; width: 100%; margin-top: var(--s-4); padding: var(--s-3); font: var(--t-caption); color: var(--text-secondary); background: var(--surface-2); border-radius: var(--r-sm); resize: none; }
 /* reduced motion: the light never crosses the cover, even if a sweep was already on its way */
-@media (prefers-reduced-motion: reduce) { .cover-sheen { display: none; } }
 :root[data-motion="reduce"] .cover-sheen { display: none; }
 
 /* r19 从 Steam 搬进来: the one choice under the count */

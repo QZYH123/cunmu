@@ -186,7 +186,7 @@
 }
 .mh-int-link:focus-visible, .mh-ch-link:focus-visible, .mh-essay:focus-visible, .mp-yr:focus-visible, .mp-fav:focus-visible, .mh-all-link:focus-visible, .mp-chapnav a:focus-visible,
 .pick-cell:focus-visible, .mh-fav-link:focus-visible, .mh-plate-cv:focus-visible { box-shadow: var(--focus-ring); }
-@media (prefers-reduced-motion: reduce) { .pick-cell.off > :first-child { transition: none; } }
+:root[data-motion="reduce"] .pick-cell.off > :first-child { transition: none; }
 .mh-import { margin-top: var(--s-5); }
 .ask-field, .fav-why-field, .mh-rewrite-field { border: 0; -webkit-appearance: none; appearance: none; }
 .fav-why-field { box-shadow: var(--sh-underline); border-radius: 0; }
@@ -224,7 +224,8 @@ html[data-show] .hero-empty, html[data-show] .maybe-same, html[data-show] .pull-
 @media (hover: hover) and (pointer: fine) {
   .showbar-x:hover { color: var(--ink); }
 }
-@media (prefers-reduced-motion: reduce) { .showbar-x { transition: none; } .showbar-x.on { transform: none; } }
+:root[data-motion="reduce"] .showbar-x { transition: none; }
+:root[data-motion="reduce"] .showbar-x.on { transform: none; }
 
 /* the long image being drawn */
 .drawing-veil { position: fixed; inset: 0; z-index: 60; background: var(--bg); display: grid; place-items: center; font: var(--t-small); color: var(--text-tertiary); }

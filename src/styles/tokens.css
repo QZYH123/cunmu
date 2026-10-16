@@ -208,7 +208,7 @@
   /* S6 paper grain (§7.7) */
   --grain-o:.045; --grain-blend:multiply;
   --accent-glow:none;
-  --dur-sheen:700ms; --wall-mast-delay:240ms; --dur-pointer-light:300ms;
+  --wall-mast-delay:240ms;
   /* the sheen crosses on a near-even curve: its bright centre is over the cover only in the middle
      half of the travel, and on --ease-standard (.2,0,0,1) that middle passes in ~150ms — a flash, the
      rest of the 700ms moving it unseen. A gentle S keeps it crossing for ~350ms, entering and leaving
@@ -252,20 +252,26 @@
   --wall-filter:brightness(1);            /* dark: brightness(.95) saturate(1.04); row depth is added on top */
   --tile-press-filter:brightness(.9);
   --tile-arrive-filter:brightness(1.08);
-  --dim-others:.55; --disabled:.4; --press-scale:.97; --plus-press-scale:.94; --lift-scale:1.04;
+  --dim-others:.55; --disabled:.4; --press-scale:var(--s-press); --plus-press-scale:.94; --lift-scale:var(--s-lift);
 
-  /* motion */
-  --ease-out:cubic-bezier(.16,1,.3,1); --ease-standard:cubic-bezier(.2,0,0,1);
-  --ease-in:cubic-bezier(.4,0,1,1);
-  --dur-press:120ms; --dur-fade:200ms; --dur-pop:280ms; --dur-page:440ms;
-  --dur-place:560ms; --stagger:40ms; --dur-roll:240ms; --dur-link-in:400ms;
-  --dur-spin:900ms;
-  --rise:8px; --pop-rise:4px; --pop-scale:.985; --dialog-scale:.98; --arrive-scale:.96;
-  /* v0.3 (§7.9, §8.5) */
-  --dur-wall-in:520ms; --dur-flight:520ms; --dur-flight-back:440ms; --dur-tint:600ms;
-  --ease-flight:cubic-bezier(.16,1,.3,1);
-  --dur-tip-in:450ms; --dur-tip-out:120ms;   /* wall hover label: show after dwell, hide after leave */
-  --hover-rise:-3px; --tile-hover-rise:-2px; --tile-hover-scale:1.035; --lead-hover-scale:1.01; --cover-press-scale:.98;
+  /* motion (MOTION-SPEC v0.1 §5): five durations, two for one material each, three curves and a settle */
+  --m-instant:100ms; --m-quick:180ms; --m-base:260ms; --m-space:440ms; --m-sign:520ms;
+  --m-sheen:700ms; --m-tint:600ms;
+  --e-out:cubic-bezier(.16,1,.3,1); --e-move:cubic-bezier(.2,0,0,1); --e-in:cubic-bezier(.4,0,1,1);
+  /* after a release (sheet drag, pull, slider reset): stiffness 380, damping 34, mass 1, sampled */
+  --e-settle:linear(0, .22 6%, .58 14%, .83 22%, .96 31%, 1.012 40%, 1.016 48%, 1.006 60%, 1);
+  --d-rise:8px; --d-nudge:4px; --d-sheet:48px;
+  --s-press:.97; --s-pop:.985; --s-lift:1.035;
+  /* one release of the old names, read from the new ones */
+  --ease-out:var(--e-out); --ease-standard:var(--e-move); --ease-in:var(--e-in); --ease-flight:var(--e-out);
+  --dur-press:var(--m-instant); --dur-fade:var(--m-quick); --dur-pop:var(--m-base); --dur-roll:var(--m-base);
+  --dur-page:var(--m-space); --dur-link-in:var(--m-space); --dur-flight-back:var(--m-space);
+  --dur-place:var(--m-sign); --dur-wall-in:var(--m-sign); --dur-flight:var(--m-sign);
+  --dur-sheen:var(--m-sheen); --dur-tint:var(--m-tint); --dur-pointer-light:var(--m-quick);
+  --dur-tip-in:450ms; --dur-tip-out:var(--m-instant);   /* tip-in is a dwell before showing, not a motion */
+  --dur-spin:900ms; --stagger:30ms;
+  --rise:var(--d-rise); --pop-rise:var(--d-nudge); --pop-scale:var(--s-pop); --dialog-scale:.98; --arrive-scale:.96;
+  --hover-rise:-3px; --tile-hover-rise:-2px; --tile-hover-scale:var(--s-lift); --lead-hover-scale:1.01; --cover-press-scale:.98;
 }
 
 :root[data-theme="dark"] {
@@ -312,23 +318,18 @@
   --spine-plastic:rgba(255,255,255,.1); --spine-plastic-edge:rgba(255,255,255,.18);
 }
 
-/* Reduced motion: no translate / scale anywhere, only ≤150ms opacity (§2.7). data-motion lets the
-   prototype force it for review without touching OS settings. */
-@media (prefers-reduced-motion: reduce) {
-  :root { --dur-pop:150ms; --dur-page:150ms; --dur-place:150ms; --stagger:0ms; --dur-roll:0ms;
-          --rise:0px; --pop-rise:0px; --pop-scale:1; --arrive-scale:1; --press-scale:1;
-          --plus-press-scale:1; --lift-scale:1; --tile-arrive-filter:none;
-          --hover-rise:0px; --tile-hover-rise:0px; --tile-hover-scale:1; --lead-hover-scale:1; --cover-press-scale:1;
-          --rise-flight:0px; --wall-mast-delay:0ms; --late-in:0ms; --dialog-scale:1;
-          --cover-lift:0px; }
-}
+/* Reduced motion (§2.7, MOTION-SPEC §8): no translate / scale anywhere, only ≤150ms opacity. One rule:
+   <html data-motion="reduce"> is set before the first paint by boot.js when the system asks for it and kept
+   by the store (system or the app's own switch), so every rule reads the attribute and nothing else. */
 :root[data-motion="reduce"] {
-  --dur-pop:150ms; --dur-page:150ms; --dur-place:150ms; --stagger:0ms; --dur-roll:0ms;
+  --m-instant:100ms; --m-quick:150ms; --m-base:150ms; --m-space:150ms; --m-sign:150ms; --m-tint:150ms;
+  --stagger:0ms; --dur-roll:0ms;
+  --d-rise:0px; --d-nudge:0px; --d-sheet:0px; --s-press:1; --s-pop:1; --s-lift:1;
   --rise:0px; --pop-rise:0px; --pop-scale:1; --arrive-scale:1; --press-scale:1;
   --plus-press-scale:1; --lift-scale:1; --tile-arrive-filter:none;
   --hover-rise:0px; --tile-hover-rise:0px; --tile-hover-scale:1; --lead-hover-scale:1; --cover-press-scale:1;
   --rise-flight:0px; --wall-mast-delay:0ms; --late-in:0ms; --dialog-scale:1;
-  --cover-lift:0px;
+  --cover-lift:0px; --e-settle:var(--e-move);
 }
 
 @media (max-width: 360px) {

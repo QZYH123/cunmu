@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeNoteQuotes, normalizeQuotes } from '../src/data/quotes';
+import { epigraphOf, normalizeNoteQuotes, normalizeQuotes } from '../src/data/quotes';
 import { load } from '../src/data/persist';
 
 test('quotes: a bare string becomes a quote, bad items are skipped, nothing throws', () => {
@@ -25,4 +25,13 @@ test('quotes: a saved library with malformed quotes loads', () => {
   const s = load(JSON.stringify({ schemaVersion: 4, notes: { w1: { quotes: ['摘一句', { nope: 1 }] } }, extras: [{ id: 'm1', kind: 'book', title: 't', credits: [], finished: '', collected: '2024-01-01', source: 'manual', cover: null, genres: [], info: [], quotes: 'x' }] }));
   assert.deepEqual(s.notes.w1.quotes, [{ text: '摘一句', date: '' }]);
   assert.deepEqual(s.extras[0].quotes, [{ text: 'x', date: '' }]);
+});
+
+test('quotes: the one under the title is starred, else the earliest dated; undated alone gives none', () => {
+  const u = { text: '没日期', date: '' }, a = { text: 'a', date: '2024-05-01' }, b = { text: 'b', date: '2023-01-01' };
+  assert.equal(epigraphOf([u, a, b]), b);
+  assert.equal(epigraphOf([u]), undefined);
+  assert.equal(epigraphOf([]), undefined);
+  const s = { ...u, starred: true };
+  assert.equal(epigraphOf([a, s]), s);
 });

@@ -6,9 +6,9 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { MoreHorizontal } from 'lucide-react';
 import { FAV_MAX } from '../data/me';
 import { useStore } from '../data/store';
-import { normalizeQuotes } from '../data/quotes';
+import { epigraphOf, normalizeQuotes } from '../data/quotes';
 import { ALL_BY_ID } from '@demo';
-import type { Credit, Kind, Quote, Work } from '../data/types';
+import type { Credit, Kind, Work } from '../data/types';
 import { KIND_ASPECT, KIND_LABEL, SOURCE_LABEL, sourceLabelOf } from '../data/types';
 import { Cover } from '../components/Cover';
 import { cnMonth, personId } from '../data/derive';
@@ -37,9 +37,6 @@ function heroCover(kind: Kind, bp: Breakpoint, vw: number): [number, number] {
   return [w, Math.round(w / KIND_ASPECT[kind])];
 }
 
-function epigraphOf(quotes: Quote[]): Quote | undefined {
-  return quotes.find((q) => q.starred) ?? [...quotes].sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''))[0];
-}
 const clip = (s: string) => {
   const cs = Array.from(s);
   return cs.length > EPIGRAPH_MAX ? `${cs.slice(0, EPIGRAPH_MAX).join('')}……` : s;

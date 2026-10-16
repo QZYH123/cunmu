@@ -213,6 +213,7 @@ export function useLongPress(onLong: (el: HTMLElement) => void, onTap?: (el: HTM
   };
 }
 
-/** Stagger delay for the first 8 list items (§2.7 --stagger), others together. */
+/** Stagger delay for the first 6 list items (MOTION-SPEC §5.3 --stagger 30ms), others together. */
+export const STAGGER_MAX = 6;
 export const staggerStyle = (i: number): React.CSSProperties =>
-  ({ animationDelay: `calc(var(--stagger) * ${Math.min(i, 8)})` });
+  ({ animationDelay: `calc(var(--stagger) * ${Math.min(i, STAGGER_MAX)})` });

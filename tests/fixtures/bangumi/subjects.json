@@ -1,0 +1,246 @@
+{
+ "9585": {
+  "date": "2008-01-01",
+  "platform": "小说",
+  "images": {
+   "small": "https://lain.bgm.tv/r/200/pic/cover/l/da/52/9585_ZhcrW.jpg",
+   "grid": "https://lain.bgm.tv/r/100/pic/cover/l/da/52/9585_ZhcrW.jpg",
+   "large": "https://lain.bgm.tv/pic/cover/l/da/52/9585_ZhcrW.jpg",
+   "medium": "https://lain.bgm.tv/r/800/pic/cover/l/da/52/9585_ZhcrW.jpg",
+   "common": "https://lain.bgm.tv/r/400/pic/cover/l/da/52/9585_ZhcrW.jpg"
+  },
+  "summary": "（示例简介）",
+  "name": "三体",
+  "name_cn": "",
+  "tags": [
+   {
+    "name": "刘慈欣",
+    "count": 471,
+    "total_count": 1940
+   },
+   {
+    "name": "科幻",
+    "count": 352,
+    "total_count": 19248
+   },
+   {
+    "name": "三体",
+    "count": 324,
+    "total_count": 1117
+   },
+   {
+    "name": "硬科幻",
+    "count": 258,
+    "total_count": 862
+   },
+   {
+    "name": "小说",
+    "count": 237,
+    "total_count": 59933
+   },
+   {
+    "name": "国产科幻",
+    "count": 139,
+    "total_count": 240
+   },
+   {
+    "name": "地球往事三部曲",
+    "count": 124,
+    "total_count": 546
+   },
+   {
+    "name": "国产",
+    "count": 109,
+    "total_count": 5433
+   },
+   {
+    "name": "地球往事",
+    "count": 64,
+    "total_count": 88
+   },
+   {
+    "name": "2008",
+    "count": 56,
+    "total_count": 2170
+   },
+   {
+    "name": "SF",
+    "count": 48,
+    "total_count": 2435
+   },
+   {
+    "name": "外星人",
+    "count": 39,
+    "total_count": 411
+   },
+   {
+    "name": "三部曲",
+    "count": 39,
+    "total_count": 45
+   },
+   {
+    "name": "脑洞",
+    "count": 25,
+    "total_count": 1533
+   },
+   {
+    "name": "大刘",
+    "count": 20,
+    "total_count": 23
+   },
+   {
+    "name": "中国",
+    "count": 19,
+    "total_count": 12160
+   },
+   {
+    "name": "单行本",
+    "count": 9,
+    "total_count": 35622
+   },
+   {
+    "name": "悬疑",
+    "count": 4,
+    "total_count": 16397
+   },
+   {
+    "name": "小说分卷",
+    "count": 3,
+    "total_count": 381
+   },
+   {
+    "name": "文革",
+    "count": 2,
+    "total_count": 2
+   },
+   {
+    "name": "科幻小说",
+    "count": 2,
+    "total_count": 412
+   },
+   {
+    "name": "玄幻",
+    "count": 2,
+    "total_count": 1161
+   },
+   {
+    "name": "神作",
+    "count": 2,
+    "total_count": 3976
+   },
+   {
+    "name": "11星",
+    "count": 2,
+    "total_count": 7
+   },
+   {
+    "name": "重庆出版社",
+    "count": 2,
+    "total_count": 11
+   },
+   {
+    "name": "8分",
+    "count": 2,
+    "total_count": 359
+   },
+   {
+    "name": "国产科幻，",
+    "count": 2,
+    "total_count": 2
+   },
+   {
+    "name": "中国文学",
+    "count": 2,
+    "total_count": 186
+   },
+   {
+    "name": "2022",
+    "count": 1,
+    "total_count": 5405
+   },
+   {
+    "name": "战争",
+    "count": 1,
+    "total_count": 1430
+   }
+  ],
+  "infobox": [
+   {
+    "key": "别名",
+    "value": [
+     {
+      "v": "地球往事：三体"
+     },
+     {
+      "v": "The Three-Body Problem"
+     }
+    ]
+   },
+   {
+    "key": "作者",
+    "value": "刘慈欣"
+   },
+   {
+    "key": "出版社",
+    "value": "重庆出版社"
+   },
+   {
+    "key": "价格",
+    "value": "￥23.00"
+   },
+   {
+    "key": "发售日",
+    "value": "2008-01-01"
+   },
+   {
+    "key": "页数",
+    "value": "302"
+   },
+   {
+    "key": "话数",
+    "value": "36"
+   },
+   {
+    "key": "ISBN",
+    "value": "9787536692930"
+   }
+  ],
+  "rating": {
+   "rank": 150,
+   "total": 1703,
+   "count": {
+    "1": 11,
+    "2": 1,
+    "3": 3,
+    "4": 9,
+    "5": 11,
+    "6": 49,
+    "7": 179,
+    "8": 543,
+    "9": 624,
+    "10": 273
+   },
+   "score": 8.4
+  },
+  "total_episodes": 0,
+  "collection": {
+   "on_hold": 25,
+   "dropped": 10,
+   "wish": 136,
+   "collect": 2420,
+   "doing": 62
+  },
+  "id": 9585,
+  "eps": 36,
+  "meta_tags": [
+   "小说",
+   "中国",
+   "单行本"
+  ],
+  "volumes": 0,
+  "series": false,
+  "locked": false,
+  "nsfw": false,
+  "type": 1
+ }
+}

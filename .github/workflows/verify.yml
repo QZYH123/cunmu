@@ -1,0 +1,23 @@
+name: verify
+# type-check, build, style-guide checks, unit tests and the browser smoke tests — the same gate as the pre-commit hook
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium-headless-shell
+      - run: npm run verify
+        env:
+          TZ: Asia/Shanghai

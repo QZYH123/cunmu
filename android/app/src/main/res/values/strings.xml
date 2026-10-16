@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Cunmu</string>
+    <string name="title_activity_main">Cunmu</string>
+    <string name="package_name">com.qzyh123.cunmu</string>
+    <string name="custom_url_scheme">com.qzyh123.cunmu</string>
+</resources>

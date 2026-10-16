@@ -1,0 +1,8 @@
+{
+  "//": "The app's identity, in one place. appId is permanent once the app is uploaded to TestFlight / Google Play / 蒲公英 — decide it before the first upload. After a change run `npm run app:id` (rewrites the native projects).",
+  "appId": "com.qzyh123.cunmu",
+  "appName": "存目",
+  "appNameEn": "Cunmu",
+  "//names": "appName: what a Chinese system shows under the icon and what the app calls itself. appNameEn: the name on any other system and in file names. 存目: in the Siku catalogue, the books whose full text was not taken in, kept by title and a short abstract only.",
+  "userAgent": "QZYH123/cunmu/{version} (https://github.com/QZYH123/cunmu)"
+}

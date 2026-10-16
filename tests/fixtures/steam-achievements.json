@@ -1,0 +1,19 @@
+{
+  "player": {"playerstats":{"steamID":"76561197960435530","gameName":"Disco Elysium","achievements":[
+    {"apiname":"ACH_A","achieved":1,"unlocktime":1576051200},
+    {"apiname":"ACH_B","achieved":1,"unlocktime":1577836800},
+    {"apiname":"ACH_C","achieved":0,"unlocktime":0},
+    {"apiname":"ACH_D","achieved":1,"unlocktime":1580515200}],"success":true}},
+  "schema": {"game":{"gameName":"Disco Elysium","availableGameStats":{"achievements":[
+    {"name":"ACH_A","displayName":"警探","description":"醒来","icon":"https://cdn.akamai.steamstatic.com/a.jpg","icongray":"https://cdn.akamai.steamstatic.com/a_g.jpg","hidden":0},
+    {"name":"ACH_B","displayName":"领带","description":"","icon":"https://cdn.akamai.steamstatic.com/b.jpg","hidden":0},
+    {"name":"ACH_C","displayName":"全知","description":"看完一切","icon":"https://cdn.akamai.steamstatic.com/c.jpg","icongray":"https://cdn.akamai.steamstatic.com/c_g.jpg","hidden":1},
+    {"name":"ACH_D","displayName":"海岸","description":"走到海边","icon":"https://cdn.akamai.steamstatic.com/d.jpg","hidden":0}]}}},
+  "global": {"achievementpercentages":{"achievements":[
+    {"name":"ACH_A","percent":"91.3"},{"name":"ACH_B","percent":42.04},{"name":"ACH_C","percent":"1.9"},{"name":"ACH_D","percent":"3.27"}]}},
+  "appdetails": {"632470":{"success":true,"data":{"name":"极乐迪斯科","developers":["ZA/UM"],"publishers":["ZA/UM"],
+    "genres":[{"id":"25","description":"冒险"},{"id":"3","description":"角色扮演"}],
+    "release_date":{"coming_soon":false,"date":"2019 年 10 月 15 日"},
+    "platforms":{"windows":true,"mac":true,"linux":false},"metacritic":{"score":91}}}},
+  "noApp": {"999":{"success":false}}
+}

@@ -1,0 +1,295 @@
+/* ---------- home cover wall (§3.9, v0.3 §7.2 / §8.3.1) ---------- */
+/* Full viewport width; on desktop it starts under the top bar, never behind it. */
+.home-top { padding-top: env(safe-area-inset-top); }
+@media (min-width: 1024px) { .home-top { padding-top: var(--desk-bar); } }
+.wall-wrap {
+  position: relative; transform-origin: top center;
+  transition: height var(--dur-page) var(--ease-out);
+}
+/* The fade lives on the wrap, not the wall, so the S1 parallax can move the wall inside a fade that
+   stays put: the masthead always sits on ≤ 15% wall (§7.2-2). */
+.wall-wrap:not(.is-display) { overflow: hidden; }
+/* the crisp lower edge: a hairline on the paper side, so a pale cover in the last row still ends on a line */
+.wall-wrap:not(.is-display)::after {
+  content: ""; position: absolute; z-index: 3; left: 0; right: 0; bottom: 0; height: var(--hairline);
+  background: var(--line-2); pointer-events: none;
+}
+.wall {
+  position: absolute; inset: 0 0 auto 0; overflow: hidden;
+  transition: opacity var(--dur-fade) var(--ease-standard);
+  will-change: transform;
+}
+/* S1 light (§7.2-3): window light top-left, falling into the paper. Wall material only. */
+.wall-light {
+  position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background: var(--wall-light); mix-blend-mode: var(--wall-light-blend);
+}
+/* S1 pointer light (§7.2-8): pre-rendered, moved by transform only (CoverWall usePointerLight) */
+.wall-pointer {
+  position: absolute; left: 0; top: 0; z-index: 2; width: var(--pointer-size); height: var(--pointer-size);
+  pointer-events: none; background: var(--pointer-light); mix-blend-mode: var(--pointer-blend);
+  opacity: 0; transition: opacity var(--dur-pointer-light) var(--ease-standard); will-change: transform, opacity;
+}
+.wall-pointer.on { opacity: 1; }
+:root[data-motion="reduce"] .wall-pointer { display: none; }
+@media (prefers-reduced-motion: reduce), not ((hover: hover) and (pointer: fine)) { .wall-pointer { display: none; } }
+.wall.display { -webkit-mask-image: none; mask-image: none; overflow: visible; height: 100%; }
+.wall.ghost { z-index: 2; pointer-events: none; animation: fade-out var(--dur-page) var(--ease-standard) both; }
+.wall.fresh { animation: fade-in var(--dur-page) var(--ease-standard) both; }
+
+.tile {
+  position: absolute; cursor: pointer;
+  -webkit-touch-callout: none; user-select: none; touch-action: manipulation;
+  transition: filter var(--dur-press) var(--ease-standard), opacity var(--dur-fade) var(--ease-standard),
+              transform var(--dur-fade) var(--ease-out);
+}
+/* the lift shadow lives on its own box and only its opacity animates: a box-shadow transition
+   repaints every frame and drags the tile's transform off the compositor with it (trace, polish
+   r3). Outer shadows never paint inside their box, so this sits over the image harmlessly. */
+.tile::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none; box-shadow: var(--sh-lift); opacity: 0;
+  transition: opacity var(--dur-fade) var(--ease-out);
+}
+.tile > .literal { overflow: hidden; }
+.tile::after { content: ""; position: absolute; inset: 0; box-shadow: var(--wall-seam); pointer-events: none; }
+.tile { --row-b: max(var(--row-dim-min), 1 - var(--row-dim) * var(--row, 0)); }
+/* S1 row depth (§7.2-4): every row down sinks a little further into the paper */
+.tile img { width: 100%; height: 100%; object-fit: cover; filter: var(--wall-filter) brightness(var(--row-b)); -webkit-user-drag: none; }
+.tile > .literal { filter: brightness(var(--row-b)); }
+.tile img.loading { opacity: 0; }
+.tile img.loaded { animation: fade-in var(--dur-fade) var(--ease-standard) both; }
+.tile.pressed { filter: var(--tile-press-filter); }
+.wall.dimmed .tile { opacity: var(--dim-others); }
+.tile.lifted {
+  z-index: 52; transform: scale(var(--lift-scale)); pointer-events: none;
+  animation: lift var(--dur-pop) var(--ease-out) both;
+}
+.tile.lifted::before { box-shadow: var(--sh-float); opacity: 1; }
+.tile.lifted img { filter: none; }
+@keyframes lift { from { transform: none; } }
+
+/* pointer & keyboard (§7.2-7, §8.5): the tile under the pointer rises out of the wall at full
+   brightness; keyboard focus is an inset ring so it survives the wall's clipping */
+.tile:active { filter: var(--tile-press-filter); }
+.tile:focus-visible { z-index: 3; border-radius: 0; }
+.tile:focus-visible::after { box-shadow: var(--focus-ring-inset); }
+.display-item .cover { transition: transform var(--dur-fade) var(--ease-out); }
+.display-item:focus-visible { box-shadow: none; }
+.display-item:focus-visible .cover { transform: translateY(var(--hover-rise)); box-shadow: var(--sh-object), var(--focus-ring); }
+.display-item:focus-visible .cover::before { opacity: 1; }
+@media (hover: hover) and (pointer: fine) {
+  .tile:hover { z-index: 3; transform: translateY(var(--tile-hover-rise)) scale(var(--tile-hover-scale)); }
+  .tile:hover::before { opacity: 1; }
+  .tile.lead:hover { transform: translateY(var(--tile-hover-rise)) scale(var(--lead-hover-scale)); }
+  .tile:hover img, .tile:hover > .literal { filter: none; }
+  .tile:hover:active { filter: var(--tile-press-filter); }
+  .wall.dimmed .tile:hover, .fullwall.dimmed .tile:hover { transform: none; }
+  .wall.dimmed .tile:hover::before, .fullwall.dimmed .tile:hover::before { opacity: 0; }
+  .display-item:hover .cover { transform: translateY(var(--hover-rise)); }
+  .display-item:hover .cover::before { opacity: 1; }
+}
+/* title + year label 8px under the hovered / focused tile, after a 450ms dwell */
+.tile-tip {
+  position: fixed; z-index: 45; pointer-events: none; max-width: var(--preview-max);
+  display: flex; flex-direction: column; padding: var(--tip-pad);
+  background: var(--surface-1); box-shadow: var(--sh-float); border-radius: var(--r-sm);
+  animation: fade-in var(--dur-fade) var(--ease-out) both;
+}
+.tile-tip-title { font: var(--t-small); font-weight: var(--w-strong); color: var(--ink); }
+
+.literal-center { display: grid; place-items: center; color: var(--paper-ink); font-family: var(--font-serif); font-weight: var(--w-bold); line-height: 1.1; }
+.literal-center .vertical { writing-mode: vertical-rl; }
+
+/* 陈列: objects on paper */
+.display-row {
+  height: 100%; display: flex; align-items: center; justify-content: center; gap: var(--s-4);
+  padding: 0 var(--page-x);
+}
+.display-item { display: block; border-radius: var(--r-object); transition: transform var(--dur-press) var(--ease-out); }
+.display-item:active { transform: scale(var(--press-scale)); }
+.display-item.drop .cover { animation: drop var(--dur-place) var(--ease-out) both; }
+@keyframes drop {
+  from { transform: translateY(calc(var(--rise) * -1)); box-shadow: none; opacity: 0; }
+  to { transform: none; box-shadow: var(--sh-object); opacity: 1; }
+}
+
+/* ---------- home content ---------- */
+/* The masthead is pulled up into the wall's fade, where the wall is ≤ 15% opaque (§7.2-2). */
+.home-head { position: relative; z-index: 1; margin-top: var(--masthead-gap); }
+.home-head.mast-in { animation-delay: var(--wall-mast-delay); }
+.home-head.no-overlap { margin-top: var(--s-6); }
+.masthead {
+  display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-5);
+  padding-bottom: var(--s-7); border-bottom: var(--hairline) solid var(--line-1);
+}
+.masthead-title { font: var(--t-masthead); color: var(--ink); white-space: nowrap; }
+.masthead-name { min-width: 0; }
+.masthead-caption { margin-top: var(--s-2); }
+.masthead-count { display: flex; flex-direction: column; align-items: flex-end; text-align: right; gap: var(--s-1); min-width: 0; }
+.masthead-num { display: inline-flex; align-items: baseline; gap: var(--s-2); font: var(--t-count); letter-spacing: var(--track-count); color: var(--ink); white-space: nowrap; }
+.masthead-unit { letter-spacing: var(--track-caption); }
+.home-index { display: flex; align-items: center; gap: var(--s-5); margin-top: var(--s-3); }
+.home-index .type-index { flex: 1; min-width: 0; margin-top: 0; }
+.home-index .wall-link { flex: none; display: inline-flex; align-items: center; }
+.home-label { display: block; padding-bottom: var(--s-3); border-bottom: var(--hairline) solid var(--line-1); margin-bottom: var(--s-2); }
+.home-more { display: inline-flex; align-items: center; margin-top: var(--s-2); }
+/* after the first work: the two big ways in, as one quiet line (不用了 sits apart, at the end) */
+.home-import { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: var(--s-2); margin-top: var(--s-6); transition: opacity var(--dur-place) var(--ease-out); }
+.home-import.is-fading { opacity: 0; pointer-events: none; }
+.home-import .btn-text { font-size: inherit; color: var(--text-secondary); }
+.home-import .btn-text.home-import-off { margin-left: var(--s-4); color: var(--text-tertiary); }
+@media (max-width: 599px) {
+  /* a phone: the words on one line, the ways in under them, 不用了 at the far end */
+  .home-import > span:first-child { flex-basis: 100%; }
+  .home-import .btn-text.home-import-off { margin-left: auto; }
+}
+.home-lower { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--s-7); margin-top: var(--s-10); }
+.home-lower .home-recent { grid-column: 1 / span 7; margin-top: 0; }
+.home-side { grid-column: 9 / span 4; display: flex; flex-direction: column; gap: var(--s-9); min-width: 0; }
+.home-person { min-height: var(--row-compact); }
+.searchbox {
+  height: var(--input-h); border-radius: var(--r-full); background: var(--surface-2); margin-top: var(--s-5);
+  display: flex; align-items: center; gap: var(--s-3); padding: 0 var(--s-5); color: var(--text-tertiary); width: 100%;
+  font: var(--t-ui); view-transition-name: searchbox;
+}
+.searchbox svg { width: var(--icon-sm); height: var(--icon-sm); color: var(--text-tertiary); flex: none; }
+.type-index { margin-top: var(--s-5); gap: var(--s-6); padding-right: var(--s-9); }
+.type-index a { display: inline-flex; align-items: baseline; gap: var(--s-2); white-space: nowrap; min-height: var(--hit); align-items: center; }
+.type-index a span:first-child { font: var(--t-ui); color: var(--text-secondary); }
+.type-index a span:last-child { font: var(--t-caption); color: var(--text-tertiary); }
+.home-recent { margin-top: var(--s-8); }
+
+/* empty home (§3.9.6) */
+.home-empty { padding-top: 14vh; }
+@media (min-width: 1024px) { .home-empty { padding-top: calc(var(--desk-bar) + 10vh); } }
+/* r9: the empty shelf — five blank covers on one baseline, the wall's 陈列 row in miniature */
+.empty-shelf { --shelf-h: 80px; display: flex; align-items: flex-end; gap: var(--s-2); height: var(--shelf-h); margin-bottom: var(--s-8); }
+.empty-shelf .cover { height: 100%; animation: shelf-in var(--dur-page) var(--ease-out) both; }
+.empty-shelf .cover:nth-child(2) { animation-delay: var(--stagger); }
+.empty-shelf .cover:nth-child(3) { animation-delay: calc(var(--stagger) * 2); }
+.empty-shelf .cover:nth-child(4) { animation-delay: calc(var(--stagger) * 3); }
+.empty-shelf .cover:nth-child(5) { animation-delay: calc(var(--stagger) * 4); }
+.empty-shelf .literal-title { top: 12%; font-size: calc(var(--shelf-h) * .16); opacity: .78; }
+@keyframes shelf-in { from { opacity: 0; transform: translateY(var(--s-2)); } }
+@media (prefers-reduced-motion: reduce) { .empty-shelf .cover { animation-name: fade-in; } }
+:root[data-motion="reduce"] .empty-shelf .cover { animation-name: fade-in; }
+@media (min-width: 480px) { .empty-shelf { --shelf-h: 112px; gap: var(--s-3); } }
+@media (min-width: 1024px) { .empty-shelf { --shelf-h: 152px; gap: var(--s-4); margin-bottom: var(--s-9); } }
+.empty-lede { margin-top: var(--s-3); font: var(--t-small); color: var(--text-secondary); }
+@media (min-width: 1024px) { .empty-lede { font: var(--t-ui); } }
+.home-empty .actions { display: grid; gap: var(--s-4); margin-top: var(--s-8); }
+.home-empty .empty-field { margin-top: 0; view-transition-name: none; }
+.home-empty .empty-more { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; column-gap: var(--s-2); }
+.home-empty .empty-more .btn-text { min-height: var(--hit); }
+
+/* roll digits */
+.roll { display: inline-flex; }
+.roll-digit { display: inline-block; height: 1lh; overflow: hidden; }
+.roll-col { display: flex; flex-direction: column; transition: transform var(--dur-roll) var(--ease-out); }
+.roll-col > span { height: 1lh; }
+
+/* dev tier switch (prototype only) */
+.dev-pill {
+  position: fixed; z-index: 40; left: 0; right: 0;
+  bottom: calc(var(--bar-tab) + env(safe-area-inset-bottom) + var(--s-4));
+  display: flex; justify-content: center; pointer-events: none;
+}
+@media (min-width: 1024px) { .dev-pill { bottom: var(--s-7); } }
+.dev-pill > div {
+  pointer-events: auto; display: flex; align-items: center; gap: var(--s-1); padding: 0 var(--s-2);
+  background: var(--surface-1); box-shadow: var(--sh-float); border-radius: var(--r-full); height: var(--toast-h);
+}
+.dev-pill button { font: var(--t-caption); color: var(--text-tertiary); min-width: 34px; height: var(--hit); border-radius: var(--r-full); }
+.dev-pill button.on { color: var(--ink); font-weight: var(--w-bold); }
+
+/* ---------- 整面墙 ---------- */
+.fullwall-bar {
+  position: sticky; top: 0; z-index: 20; display: flex; align-items: center;
+  padding: env(safe-area-inset-top) var(--s-2) 0 var(--s-1);
+  background: var(--bar-bg); -webkit-backdrop-filter: var(--bar-filter); backdrop-filter: var(--bar-filter);
+}
+@media (min-width: 1024px) {
+  .fullwall-page { padding-top: var(--desk-bar); }
+  .fullwall-bar { top: var(--desk-bar); padding-left: var(--page-x); padding-right: var(--page-x); }
+  .fullwall-bar > .icon-btn { display: none; }
+}
+.fullwall-bar .seg { gap: var(--s-5); padding-right: var(--s-6); }
+.fullwall { position: relative; }
+.fullwall.switching { animation: fade-in var(--dur-fade) var(--ease-standard) both; }
+.year-float {
+  position: fixed; z-index: 21; left: var(--s-4);
+  top: calc(env(safe-area-inset-top) + var(--hit) + var(--s-4));
+  font: var(--t-year-tag); background: var(--surface-1); box-shadow: var(--sh-float); border-radius: var(--r-full);
+  padding: var(--s-2) 10px; color: var(--ink); opacity: 0; transition: opacity var(--dur-fade) var(--ease-standard);
+  pointer-events: none;
+}
+.year-float.on { opacity: 1; }
+@media (min-width: 1024px) { .year-float { left: var(--page-x); top: calc(var(--desk-bar) + var(--hit) + var(--s-5)); } }
+
+/* S2 cover flight (§7.3): the tile flies to the hero in 520ms on --ease-flight; back is 440ms. The
+   images keep object-fit: cover, so a cropped tile opens into the whole cover without stretching.
+   The rest of the old page leaves in 200ms --ease-in while the new page's paper comes in. */
+::view-transition-group(hero-cover) { animation-duration: var(--dur-flight); animation-timing-function: var(--ease-flight); transform-origin: 0 0; }
+html[data-vt="back"]::view-transition-group(hero-cover) { animation-duration: var(--dur-flight-back); }
+::view-transition-old(hero-cover), ::view-transition-new(hero-cover) {
+  height: 100%; width: 100%; object-fit: cover; animation-duration: var(--dur-flight); animation-timing-function: var(--ease-flight);
+}
+/* the transform-only flight (motion.ts compositeFlight): the group is a clipping window, each image
+   sits at its own aspect and is counter-scaled to cover it — no stretch, nothing but transform */
+html[data-vt-fit]::view-transition-group(hero-cover) { overflow: clip; }
+html[data-vt-fit]::view-transition-old(hero-cover), html[data-vt-fit]::view-transition-new(hero-cover) { object-fit: contain; transform-origin: 50% 50%; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: var(--dur-fade); }
+html[data-vt]::view-transition-old(root) { animation-timing-function: var(--ease-in); }
+::view-transition-group(searchbox) { animation-duration: var(--dur-pop); animation-timing-function: var(--ease-out); }
+
+.wall-pull { transform-origin: top; transition: transform var(--dur-page) var(--ease-out); }
+/* the year float over the 时间未知 run (v0.4 §3.15): serif 15/600, secondary, cross-faded in */
+.year-float-word { font: var(--t-year-tag); color: var(--text-secondary); animation: fade-in var(--dur-fade) var(--ease-standard) both; }
+.fullwall-bar .pick-toggle { flex: none; margin-right: var(--s-4); }
+@media (min-width: 1024px) { .fullwall-bar .pick-toggle { margin-right: 0; } }
+
+/* ---------- the year rail (r5 #1): the full wall's edge as a core sample ---------- */
+.fullwall.with-rail { margin-right: var(--rail-gutter); }
+.core-rail {
+  --rail-line-x: var(--s-3);
+  position: fixed; z-index: 22; right: 0; width: var(--rail-hit);
+  top: calc(env(safe-area-inset-top) + var(--hit) + var(--s-5));
+  bottom: calc(var(--bar-tab) + env(safe-area-inset-bottom) + var(--s-5));
+  touch-action: none; cursor: pointer; outline: none;
+  opacity: 0; pointer-events: none; transition: opacity var(--dur-fade) var(--ease-standard);
+}
+.core-rail.on { opacity: 1; pointer-events: auto; }
+/* phone: while the finger holds it, a paper strip comes up behind so the years can be read over covers */
+.core-rail::before { content: ''; position: absolute; top: calc(var(--s-3) * -1); bottom: calc(var(--s-3) * -1); right: 0; width: var(--rail-strip); background: var(--bar-bg); -webkit-backdrop-filter: var(--bar-filter); backdrop-filter: var(--bar-filter); opacity: 0; transition: opacity var(--dur-fade) var(--ease-standard); }
+.core-rail.dragging::before { opacity: 1; }
+.core-line { position: absolute; top: 0; bottom: 0; right: var(--rail-line-x); width: var(--hairline); background: var(--line-3); }
+.core-mark { position: absolute; top: 0; right: var(--rail-line-x); width: 0; height: 0; }
+.core-mark::before { content: ''; position: absolute; right: 0; top: 0; width: var(--rail-tick); height: var(--hairline); background: var(--text-tertiary); }
+.core-label {
+  position: absolute; right: calc(var(--rail-tick) + var(--s-2)); top: 0; transform: translateY(-50%);
+  font: var(--t-caption); color: var(--text-tertiary); white-space: nowrap; font-variant-numeric: tabular-nums;
+  opacity: 0; transition: opacity var(--dur-fade) var(--ease-standard), color var(--dur-fade) var(--ease-standard);
+}
+.core-rail.dragging .core-label { opacity: 1; }
+.core-mark.is-here .core-label { color: var(--ink); }
+.core-thumb { position: absolute; top: 0; right: calc(var(--rail-line-x) - var(--hairline)); width: var(--rail-thumb); border-radius: var(--r-full); background: var(--ink); }
+.core-rail:focus-visible .core-line { box-shadow: var(--focus-ring); }
+@media (min-width: 640px) {
+  /* beside the wall, in its own margin: always there, labels always read */
+  .core-rail { width: var(--rail-gutter); --rail-line-x: var(--s-5); bottom: var(--s-6); }
+  .core-rail::before { display: none; }
+  .core-label { opacity: 1; }
+}
+@media (min-width: 1024px) { .core-rail { top: calc(var(--desk-bar) + var(--hit) + var(--s-5)); } }
+@media (hover: hover) and (pointer: fine) {
+  .core-rail:hover .core-label { color: var(--text-secondary); }
+  .core-rail:hover .core-mark.is-here .core-label { color: var(--ink); }
+}
+/* r7 sim: on a phone the type index wraps onto a second line instead of running off the edge — 年份, 人物
+   and 在看 were out of sight behind the fade, and the phone has no 索引 tab to find them by */
+@media (max-width: 639px) {
+  .home-index { align-items: flex-start; }
+  .home-index .type-index { flex-wrap: wrap; column-gap: var(--s-5); row-gap: 0; overflow: visible; padding-right: 0; -webkit-mask-image: none; mask-image: none; }
+  .home-index .type-index::after { display: none; }
+  .home-index .wall-link { min-height: var(--hit); }
+}

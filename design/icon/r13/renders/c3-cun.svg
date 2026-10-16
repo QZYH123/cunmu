@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024"><defs><linearGradient id="bg" x1="0" y1="0" x2="0.25" y2="1"><stop offset="0" stop-color="#F4ECDF"/><stop offset="1" stop-color="#EADFCC"/></linearGradient>
+  <radialGradient id="sheen" cx="0.3" cy="0.15" r="0.9"><stop offset="0" stop-color="#fff" stop-opacity="0.18"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+  <filter id="drop" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur in="SourceAlpha" stdDeviation="14"/><feOffset dy="12"/><feComponentTransfer><feFuncA type="linear" slope="0.22"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs><rect width="1024" height="1024" fill="url(#bg)"/><rect width="1024" height="1024" fill="url(#sheen)"/><g filter="url(#drop)"><g transform="translate(512 520) scale(1) translate(-512 -520)">
+      <path d="M250 352 H786" stroke="#2A2522" stroke-width="72" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      <path d="M546 226 C 500 380 420 520 270 650" stroke="#2A2522" stroke-width="72" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      <path d="M394 540 V818" stroke="#2A2522" stroke-width="72" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      <path d="M514 492 H754 L640 600" stroke="#2A2522" stroke-width="72" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      <path d="M640 600 V770 Q640 828 584 828 H560" stroke="#2A2522" stroke-width="72" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      <path d="M494 676 H800" stroke="#C8442C" stroke-width="72" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </g></g></svg>

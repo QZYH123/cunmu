@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- the page colour (the bg token in src/styles/tokens.css): the launch screen and the window under the WebView -->
+<resources>
+    <color name="cunmu_bg">#F8F7F5</color>
+</resources>

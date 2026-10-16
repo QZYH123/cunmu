@@ -1,0 +1,182 @@
+:root {
+  font-kerning: normal;
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "kern", "tnum", "lnum";
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  line-break: strict;
+  text-spacing-trim: trim-start;
+  text-autospace: normal;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+/* Every type token is applied with the `font` shorthand, which resets font-variant-numeric and
+   font-feature-settings on that element; tabular figures must hold everywhere (§6 #5). */
+*, *::before, *::after { font-variant-numeric: tabular-nums lining-nums !important; }
+
+html, body { margin: 0; padding: 0; background: var(--bg); }
+
+body {
+  font: var(--t-ui);
+  color: var(--ink);
+  min-height: 100dvh;
+  transition: background-color var(--dur-fade) var(--ease-standard);
+}
+
+::selection { background: var(--accent-selection); }
+
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; margin: 0; cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+h1, h2, h3, p, dl, dd, dt, ol, ul, figure, blockquote { margin: 0; padding: 0; }
+ol, ul { list-style: none; }
+img { display: block; }
+input, textarea { font: inherit; color: inherit; }
+
+/* S6 paper grain (§7.7): only on --bg. Everything in .app paints above it, and covers, photos,
+   overlays and inputs are opaque, so the grain never sits on them. It never moves. */
+body::before {
+  content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: url(/grain.png) repeat; background-size: 192px 192px;
+  opacity: var(--grain-o); mix-blend-mode: var(--grain-blend);
+}
+
+/* The app spans the whole viewport (§8.1). Full-width pieces (home wall, collage, full wall) sit
+   directly in it; everything else lives in .page-x (container) or .read-x (reading column). */
+.app {
+  position: relative; z-index: 1;
+  min-height: 100dvh;
+  container-type: inline-size;
+  container-name: app;
+}
+
+.page {
+  position: relative;
+  padding-bottom: calc(var(--s-11) + var(--bar-tab) + env(safe-area-inset-bottom));
+}
+.page-x {
+  padding-left: var(--page-x); padding-right: var(--page-x);
+  max-width: calc(var(--container) + var(--page-x) * 2); margin-left: auto; margin-right: auto;
+}
+.read-x { max-width: calc(var(--read-col) + var(--page-x) * 2); }
+.under-bar { padding-top: calc(var(--bar-top) + env(safe-area-inset-top)); }
+.under-bar-lite { padding-top: calc(var(--s-9) + env(safe-area-inset-top)); }
+@media (min-width: 1024px) {
+  .page { padding-bottom: var(--s-11); }
+  .under-bar, .under-bar-lite { padding-top: calc(var(--desk-bar) + var(--s-10)); }
+}
+
+/* Keyboard focus: one ring everywhere (§8.5); pointer focus shows nothing. */
+:focus { outline: none; }
+:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: var(--r-xs); }
+
+/* page content rises once on first visit (not on back) */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(var(--rise)); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
+.enter { animation: rise var(--dur-page) var(--ease-out) both; }
+.stagger > * { animation: rise var(--dur-page) var(--ease-out) both; }
+
+/* ---------- type roles ---------- */
+.t-numeral { font: var(--t-numeral); letter-spacing: var(--track-numeral); }
+.t-display { font: var(--t-display); letter-spacing: 0; text-wrap: balance; }
+/* Negative tracking is for Latin only: Chinese tracking must never go below 0 (§2.3). */
+.t-display.is-latin { letter-spacing: var(--track-display); }
+.t-title { font: var(--t-title); text-wrap: balance; }
+.t-h2 { font: var(--t-h2); }
+.t-h3 { font: var(--t-h3); }
+.t-body { font: var(--t-body); color: var(--text-reading); }
+.t-quote { font: var(--t-quote); }
+.t-ui { font: var(--t-ui); }
+.t-small { font: var(--t-small); }
+.t-caption { font: var(--t-caption); letter-spacing: var(--track-caption); }
+.t-label { font: var(--t-label); letter-spacing: var(--track-label); }
+.t-micro { font: var(--t-micro); letter-spacing: var(--track-micro); }
+.key-mono { font: var(--t-mono); }
+
+.c-ink { color: var(--ink); }
+.c-reading { color: var(--text-reading); }
+.c-2 { color: var(--text-secondary); }
+.c-3 { color: var(--text-tertiary); }
+.c-4 { color: var(--text-quaternary); }
+.w-500 { font-weight: var(--w-strong); }
+.w-600 { font-weight: var(--w-bold); }
+.ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+.prose p + p { margin-top: var(--s-4); }
+
+/* ---------- section heading (h2 + 7% hairline) ---------- */
+.section { margin-top: var(--space-h2); scroll-margin-top: calc(var(--bar-top) + env(safe-area-inset-top) + var(--s-2)); }
+@media (min-width: 1024px) { .section { scroll-margin-top: calc(var(--sticky-top) + var(--s-2)); } }
+.section-head {
+  display: flex; align-items: baseline; gap: var(--s-2);
+  padding-bottom: var(--s-3);
+  border-bottom: var(--hairline) solid var(--line-1);
+  margin-bottom: var(--s-5);
+}
+.section-head .count { font: var(--t-h2); font-weight: var(--w-regular); color: var(--text-tertiary); }
+.label-head { font: var(--t-label); letter-spacing: var(--track-label); color: var(--text-tertiary); }
+
+/* ---------- autolink (§3.4) ---------- */
+.autolink {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: var(--hairline);
+  text-decoration-color: var(--link-line);
+  text-underline-offset: .28em;
+  text-decoration-skip-ink: none;
+  border-radius: var(--r-xs);
+  cursor: pointer;
+  -webkit-touch-callout: none;
+  user-select: none;
+  transition: text-decoration-color var(--dur-press) var(--ease-standard),
+              background-color var(--dur-press) var(--ease-standard);
+}
+.autolink:active, .autolink.pressed { text-decoration-color: var(--link-line-active); background: var(--press-tint); }
+
+/* infobox links: link colour text, 30% underline */
+.infolink {
+  color: var(--link);
+  text-decoration: underline;
+  text-decoration-thickness: var(--hairline);
+  text-decoration-color: var(--info-link-line);
+  text-underline-offset: .28em;
+  text-decoration-skip-ink: none;
+  transition: text-decoration-color var(--dur-press) var(--ease-standard);
+}
+.infolink:active { text-decoration-color: var(--link-line-active); }
+.infolink.appear { animation: link-in var(--dur-fade) var(--ease-standard) both; }
+@keyframes link-in { from { text-decoration-color: transparent; color: var(--ink); } }
+
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Keep a short Chinese phrase on one line; wraps happen between phrases. */
+.phrase { display: inline-block; }
+
+/* 启动页 (r9): --bg and the app mark, centred (the first rules are inline in index.html, ahead of this file); fades out in 200ms */
+.splash { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; background: var(--bg); pointer-events: none; transition: opacity var(--dur-fade) var(--ease-standard); }
+.splash svg { display: block; width: 96px; height: 96px; }
+.splash.gone { opacity: 0; }
+
+/* the page's landmark: no box of its own, so every page lays out as before */
+.page-main { display: contents; }
+
+/* r17 inner scrollers on a mouse-driven screen keep a thin, trackless system bar that firms up under the
+   pointer. r18 the page's own bar is hidden everywhere (desktop, WebView2, Android WebView): PageRail draws
+   the page's position instead. */
+html { scrollbar-width: none; }
+html::-webkit-scrollbar { display: none; width: 0; height: 0; }
+@media (pointer: fine) {
+  ::-webkit-scrollbar { width: var(--scrollbar-w); height: var(--scrollbar-w); }
+  ::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: var(--r-full); }
+}
+@media (hover: hover) and (pointer: fine) {
+  ::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-active); }
+}

@@ -1,0 +1,4 @@
+#!/bin/sh
+# Type-check, build, style-guide checks and the render smoke test (a white screen can't be committed).
+# Enabled by `npm install` (the prepare script sets core.hooksPath); skip once with `git commit --no-verify`.
+exec npm run --silent verify

@@ -1,0 +1,611 @@
+/* ---------- top bar (§3.1) ---------- */
+.topbar {
+  position: fixed; z-index: 30; top: 0; left: 0; right: 0;
+  height: calc(var(--bar-top) + env(safe-area-inset-top));
+  padding: env(safe-area-inset-top) var(--s-2) 0;
+  display: grid; grid-template-columns: var(--hit) 1fr auto; align-items: center;
+  background: var(--bar-bg);
+  -webkit-backdrop-filter: var(--bar-filter); backdrop-filter: var(--bar-filter);
+  box-shadow: none;
+  transition: box-shadow var(--dur-fade) var(--ease-standard), opacity var(--dur-fade) var(--ease-standard);
+}
+.topbar.scrolled { box-shadow: var(--sh-bar-bottom); }
+.topbar.hidden { opacity: 0; pointer-events: none; }
+.topbar.clear { background: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; }
+.topbar-mid { min-width: 0; text-align: center; position: relative; height: var(--bar-top); display: flex; flex-direction: column; justify-content: center; }
+.topbar-title { font: var(--t-ui); font-weight: var(--w-strong); opacity: 0; transition: opacity var(--dur-fade) var(--ease-standard); }
+.topbar-title.on { opacity: 1; }
+.topbar-sub { position: relative; height: var(--s-6); overflow: hidden; }
+.topbar-sub span {
+  position: absolute; inset: 0; font: var(--t-caption); letter-spacing: var(--track-caption); color: var(--text-tertiary);
+  transition: opacity var(--dur-fade) var(--ease-standard), transform var(--dur-fade) var(--ease-standard);
+}
+.topbar-sub span.out { opacity: 0; transform: translateY(calc(var(--rise) * -0.6)); }
+.topbar-sub span.in-start { opacity: 0; transform: translateY(var(--rise)); }
+.topbar-right { display: flex; justify-content: flex-end; min-width: var(--hit); }
+
+/* ---------- icon button ---------- */
+.icon-btn {
+  width: var(--hit); height: var(--hit); display: inline-grid; place-items: center; position: relative;
+  color: var(--ink); border-radius: var(--r-full);
+}
+.icon-btn::before {
+  content: ""; position: absolute; width: var(--icon-press); height: var(--icon-press); border-radius: var(--r-full);
+  background: var(--surface-2); opacity: 0; transition: opacity var(--dur-press) var(--ease-standard);
+}
+.icon-btn:active::before { opacity: 1; }
+.icon-btn svg { position: relative; width: var(--icon); height: var(--icon); }
+
+/* ---------- tab bar (§3.1) ---------- */
+.tabbar {
+  position: fixed; z-index: 30; bottom: 0; left: 0; right: 0;
+  height: calc(var(--bar-tab) + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  /* tablet: the four items sit in a centred ≤ 480 group; the bar itself stays full width */
+  padding-left: max(0px, calc((100% - var(--tabbar-w)) / 2)); padding-right: max(0px, calc((100% - var(--tabbar-w)) / 2));
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  background: var(--bar-bg);
+  -webkit-backdrop-filter: var(--bar-filter); backdrop-filter: var(--bar-filter);
+  box-shadow: var(--sh-bar-top);
+}
+.tab {
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-tertiary); transition: color var(--dur-fade) var(--ease-standard);
+  min-height: var(--hit);
+}
+.tab.on { color: var(--ink); }
+.tab > span { position: relative; font: var(--t-tab); letter-spacing: var(--track-tab); }
+/* the current item: one hairline under the word (r5 #9) */
+.tab > span::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: calc(var(--s-1) * -1); height: var(--hairline); background: currentColor;
+  transform: scaleX(0); transition: transform var(--dur-fade) var(--ease-out);
+}
+.tab.on > span::after { transform: none; }
+.tab-plus { display: grid; place-items: center; }
+.tab-plus i {
+  width: var(--tab-plus); height: var(--tab-plus); border-radius: var(--r-full); background: var(--ink); color: var(--on-ink);
+  display: grid; place-items: center; transition: transform var(--dur-press) var(--ease-out);
+}
+.tab-plus:active i { transform: scale(var(--plus-press-scale)); }
+
+/* ---------- buttons (§3.1) ---------- */
+.btn {
+  height: var(--btn-h); border-radius: var(--r-md); padding: 0 var(--s-6);
+  font: var(--t-button); display: inline-flex; align-items: center; justify-content: center; gap: var(--s-3);
+  transition: transform var(--dur-press) var(--ease-out), opacity var(--dur-fade) var(--ease-standard);
+  width: 100%;
+}
+.btn:active { transform: scale(var(--press-scale)); }
+.btn-primary { background: var(--ink); color: var(--on-ink); }
+.btn-secondary { background: var(--surface-1); color: var(--ink); box-shadow: var(--sh-btn-secondary); }
+.btn-text {
+  height: var(--btn-text-h); padding: 0 var(--s-2); width: auto;
+  font: var(--t-ui); font-weight: var(--w-strong); color: var(--text-secondary);
+  transition: color var(--dur-press) var(--ease-standard), transform var(--dur-press) var(--ease-out), opacity var(--dur-fade) var(--ease-standard);
+}
+.btn-text:active { color: var(--ink); }
+.btn-text.quiet { color: var(--text-tertiary); font-weight: var(--w-regular); }
+.btn:disabled, .btn-text:disabled { opacity: var(--disabled); pointer-events: none; }
+.btn-danger-text { color: var(--danger); }
+
+/* ---------- 页脚注 (r5 #6, replaces the pill toast): a footnote over the bar, not a floating chip.
+   A short rule like a book's footnote separator, one line of small type, the action as underlined ink.
+   Fades only; no shadow, no radius. ---------- */
+.toast-wrap {
+  position: fixed; z-index: 60; left: 0; right: 0;
+  bottom: calc(var(--bar-tab) + env(safe-area-inset-bottom));
+  pointer-events: none;
+}
+@media (min-width: 1024px) { .toast-wrap { bottom: 0; right: auto; width: var(--note-w); } }
+.toast {
+  pointer-events: auto; position: relative; min-height: var(--toast-h); padding: var(--s-3) var(--page-x);
+  display: flex; align-items: center; justify-content: space-between; gap: var(--s-4);
+  font: var(--t-small); color: var(--text-secondary);
+  background: var(--bar-bg); -webkit-backdrop-filter: var(--bar-filter); backdrop-filter: var(--bar-filter);
+  animation: fade-in var(--dur-fade) var(--ease-standard) both;
+}
+.toast::before { content: ''; position: absolute; left: var(--page-x); top: 0; width: var(--note-rule); height: var(--hairline); background: var(--line-2); }
+.toast.leaving { animation: fade-out var(--dur-fade) var(--ease-in) both; }
+.toast .btn-text { height: var(--hit); color: var(--ink); font: var(--t-small); padding: 0; text-decoration: underline; text-decoration-thickness: var(--hairline); text-underline-offset: var(--underline-offset); flex: none; }
+
+/* 原地 (r5 #5): 「移出了」 under the bar, the page behind it faded */
+.removed-note {
+  position: sticky; z-index: 25; top: calc(env(safe-area-inset-top) + var(--bar-top));
+  display: flex; align-items: center; justify-content: space-between; gap: var(--s-4);
+  padding: 0 var(--page-x); min-height: var(--hit);
+  font: var(--t-small); color: var(--text-secondary);
+  background: var(--bar-bg); -webkit-backdrop-filter: var(--bar-filter); backdrop-filter: var(--bar-filter);
+  box-shadow: var(--sh-bar-bottom);
+  animation: fade-in var(--dur-fade) var(--ease-standard) both;
+}
+.removed-note .btn-text { color: var(--ink); text-decoration: underline; text-decoration-thickness: var(--hairline); text-underline-offset: var(--underline-offset); }
+@media (min-width: 1024px) { .removed-note { top: var(--desk-bar); padding: 0 var(--page-x); } }
+.is-removed .entry-body { animation: none; opacity: var(--removed-o); transition: opacity var(--dur-fade) var(--ease-standard); }
+.list-row-wrap { position: relative; }
+.list-row-wrap .row-aside { position: absolute; right: 0; top: 50%; transform: translateY(-50%); color: var(--ink); text-decoration: underline; text-decoration-thickness: var(--hairline); text-underline-offset: var(--underline-offset); }
+@keyframes pop-in {
+  from { opacity: 0; transform: translateY(var(--pop-rise)) scale(var(--pop-scale)); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ---------- bottom sheet (§3.12) ---------- */
+.scrim {
+  position: fixed; inset: 0; z-index: 70; background: var(--scrim);
+  animation: fade-in var(--dur-fade) var(--ease-standard) both;
+}
+.scrim.leaving { animation: fade-out var(--dur-fade) var(--ease-in) both; }
+.sheet {
+  position: fixed; z-index: 71; left: 0; right: 0; bottom: 0; max-width: var(--overlay-w); margin: 0 auto;
+  max-height: 92dvh; overflow: auto; overscroll-behavior: contain;
+  background: var(--surface-1); border-radius: var(--r-lg) var(--r-lg) 0 0; box-shadow: var(--sh-sheet);
+  padding: var(--s-3) var(--s-6) calc(var(--s-7) + env(safe-area-inset-bottom));
+  animation: sheet-in var(--dur-pop) var(--ease-out) both;
+}
+.sheet.leaving { animation: sheet-out var(--dur-fade) var(--ease-in) both; }
+@keyframes sheet-in { from { transform: translateY(calc(var(--rise) * 6)); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes sheet-out { to { transform: translateY(calc(var(--rise) * 3)); opacity: 0; } }
+.sheet-handle { width: var(--sheet-handle-w); height: var(--sheet-handle-h); border-radius: var(--r-full); background: var(--line-3); margin: 0 auto var(--s-6); }
+.sheet-body { animation: fade-in var(--dur-fade) var(--ease-standard) both; }
+.sheet-actions { display: grid; gap: var(--s-4); margin-top: var(--s-7); }
+
+/* desktop: the bottom sheet becomes a centred 520 dialog with four round corners, no handle (§8.3.8);
+   a pair of buttons sits side by side at equal width — the WeRead choice stays exactly even */
+@media (min-width: 1024px) {
+  .sheet {
+    inset: 0; margin: auto; width: var(--overlay-w); max-width: calc(100vw - var(--page-x) * 2); height: fit-content; max-height: 80vh;
+    border-radius: var(--r-lg); box-shadow: var(--sh-float); padding: var(--s-8);
+    animation: dialog-in var(--dur-pop) var(--ease-out) both;
+  }
+  .sheet.leaving { animation: dialog-out var(--dur-fade) var(--ease-in) both; }
+  .sheet-handle { display: none; }
+  .sheet-actions:has(> :nth-child(2):last-child) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@keyframes dialog-in { from { opacity: 0; transform: scale(var(--dialog-scale)); } to { opacity: 1; transform: none; } }
+@keyframes dialog-out { to { opacity: 0; transform: scale(var(--dialog-scale)); } }
+
+/* ---------- preview card (§3.4) ---------- */
+.preview-layer { position: fixed; inset: 0; z-index: 50; }
+.preview {
+  position: fixed; z-index: 51; width: min(calc(100vw - var(--s-9)), var(--preview-max));
+  background: var(--surface-1); box-shadow: var(--sh-float); border-radius: var(--r-md);
+  animation: pop-in var(--dur-pop) var(--ease-out) both;
+}
+.preview-main { display: flex; gap: var(--s-4); padding: 14px; } /* 14 = spec inner padding */
+.preview-meta { min-width: 0; display: flex; flex-direction: column; gap: var(--s-1); }
+.preview-title { font: var(--t-preview-title); color: var(--ink); }
+.preview-actions { display: flex; border-top: var(--hairline) solid var(--line-inner); padding: 0 var(--s-2); }
+.preview-actions .btn-text { flex: 1; }
+
+/* ---------- ··· menu (entry, polish r3): the preview card's material, text rows only ---------- */
+.menu {
+  position: fixed; z-index: 51; min-width: 188px; padding: var(--s-2) 0;
+  background: var(--surface-1); box-shadow: var(--sh-float); border-radius: var(--r-md);
+  animation: pop-in var(--dur-pop) var(--ease-out) both; transform-origin: 100% 0;
+}
+.menu-item {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px; width: 100%;
+  padding: 10px var(--s-5); font: var(--t-ui); color: var(--ink); text-align: left;
+}
+.menu-item:disabled { color: var(--text-tertiary); }
+.menu-item:focus-visible { outline: none; background: var(--line-inner); }
+.menu-note { font: var(--t-small); color: var(--text-tertiary); }
+
+/* ---------- segmented text tabs (§3.5) ---------- */
+.seg { display: flex; gap: var(--s-6); position: relative; }
+.seg button {
+  font: var(--t-ui); color: var(--text-tertiary); height: var(--hit); position: relative; white-space: nowrap;
+  transition: color var(--dur-fade) var(--ease-standard);
+}
+.seg button.on { color: var(--ink); font-weight: var(--w-strong); }
+.seg-bar {
+  /* 6px below the text baseline box: half the 22px ui line-height + 6 */
+  position: absolute; top: calc(50% + 0.6875rem + 6px); height: var(--rule-tab); background: var(--ink);
+  transition: left var(--dur-pop) var(--ease-out), width var(--dur-pop) var(--ease-out);
+}
+.seg-dots { display: inline; color: var(--text-quaternary); }
+
+/* ---------- infobox (§3.2 rule 3) ---------- */
+.infobox { border-top: var(--hairline) solid var(--line-2); border-bottom: var(--hairline) solid var(--line-2); }
+.info-row { display: flex; gap: var(--s-4); padding: 10px 0; } /* 10 = spec row padding */
+.info-row + .info-row { border-top: var(--hairline) solid var(--line-inner); }
+.info-row dt { flex: 0 0 4em; font: var(--t-infokey); color: var(--text-tertiary); padding-top: var(--s-1); }
+.info-row dd { flex: 1; min-width: 0; font: var(--t-ui); color: var(--ink); overflow-wrap: anywhere; }
+.info-row dd.isbn { font: var(--t-mono); }
+.info-more { font: var(--t-ui); color: var(--text-secondary); }
+.info-expand { overflow: hidden; transition: height var(--dur-pop) var(--ease-out); }
+
+/* ---------- list row (§3.5 #3) ---------- */
+.list-row {
+  display: flex; align-items: center; gap: var(--s-4); min-height: var(--row-list);
+  position: relative; margin: 0 calc(var(--s-3) * -1); padding: var(--s-1) var(--s-3); border-radius: var(--r-sm);
+  transition: background-color var(--dur-press) var(--ease-standard);
+}
+.list-row:active { background: var(--surface-2); }
+.list-row + .list-row::before {
+  content: ""; position: absolute; top: 0; right: var(--s-3); left: calc(var(--s-3) + var(--thumb-w) + var(--s-4));
+  border-top: var(--hairline) solid var(--line-inner);
+}
+.list-row.no-thumb + .list-row.no-thumb::before { left: var(--s-3); }
+.list-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.list-title { font: var(--t-ui); font-weight: var(--w-strong); color: var(--ink); }
+.list-meta { font: var(--t-caption); letter-spacing: var(--track-caption); color: var(--text-secondary); }
+.list-date { font: var(--t-caption); letter-spacing: var(--track-caption); color: var(--text-tertiary); white-space: nowrap; text-align: right; min-width: 3.4em; }
+
+/* ---------- covers (§3.3) ---------- */
+.cover {
+  position: relative; overflow: hidden; flex: none;
+  border-radius: var(--r-object); box-shadow: var(--sh-object); background: var(--surface-2);
+}
+.cover::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: var(--sh-object-inner); pointer-events: none;
+}
+.cover.is-book::after { background: var(--spine-light); }
+.cover img { width: 100%; height: 100%; object-fit: cover; filter: var(--cover-filter); }
+.cover img.loading { opacity: 0; }
+.cover img.loaded { animation: fade-in var(--dur-fade) var(--ease-standard) both; }
+.cover.thumb { box-shadow: var(--sh-object); }
+/* covers that rise on hover (display, person band, grid, strip, objects, collage): the lift shadow is
+   its own layer and only its opacity animates — a box-shadow transition repaints every frame on the
+   main thread (trace, polish r3/r4). The cover stops clipping so the layer can cast outside it; the
+   image and the paper block clip their own corners instead. */
+:is(.display-item, .pband-tile, .cat-cell, .strip-item, .pobject, .collage a) .cover { overflow: visible; }
+:is(.display-item, .pband-tile, .cat-cell, .strip-item, .pobject, .collage a) .cover > :is(img, .literal) { border-radius: inherit; overflow: hidden; }
+:is(.display-item, .pband-tile, .cat-cell, .strip-item, .pobject, .collage a) .cover::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: var(--sh-lift);
+  opacity: 0; transition: opacity var(--dur-fade) var(--ease-out); pointer-events: none;
+}
+
+.literal {
+  position: absolute; inset: 0; color: var(--paper-ink);
+}
+.literal-title {
+  position: absolute; top: 14%; left: 50%; transform: translateX(-50%);
+  writing-mode: vertical-rl; font-family: var(--font-serif); font-weight: var(--w-bold); line-height: 1.15;
+  max-height: 72%; overflow: hidden; white-space: nowrap;
+}
+.literal-author {
+  position: absolute; left: 10%; bottom: 8%; writing-mode: vertical-rl;
+  font: var(--t-caption); letter-spacing: var(--track-caption); opacity: .72; max-height: 40%; overflow: hidden; white-space: nowrap;
+}
+.literal-essay-rule { position: absolute; left: 12%; right: 12%; top: 14%; border-top: var(--hairline) solid var(--line-2); }
+.literal-essay-title {
+  position: absolute; left: 12%; right: 12%; top: calc(14% + var(--s-3));
+  font-family: var(--font-serif); font-weight: var(--w-bold); line-height: 1.3; overflow: hidden;
+}
+
+.avatar {
+  border-radius: var(--r-full); box-shadow: var(--sh-ring); background: var(--surface-2); flex: none;
+  display: grid; place-items: center; overflow: hidden;
+  font-family: var(--font-serif); font-weight: var(--w-bold); color: var(--text-secondary);
+}
+
+/* ---------- seal (§3.2 rule 8) ---------- */
+.colophon {
+  display: flex; align-items: center; justify-content: center; gap: var(--s-3); flex-wrap: wrap; text-align: center;
+  margin-top: var(--s-10); font: var(--t-caption); letter-spacing: var(--track-caption); color: var(--text-tertiary);
+}
+.seal { width: var(--seal); height: var(--seal); flex: none; color: var(--accent); filter: var(--accent-glow); }
+/* The glyph is drawn in the 16-unit SVG box (§3.2: 宋体 10 inside a 16×16 seal), so it is artwork, not UI type. */
+.seal text { font-family: var(--font-serif); font-weight: var(--w-bold); }
+
+/* ---------- switch ---------- */
+.switch {
+  width: 44px; height: 26px; border-radius: var(--r-full); background: var(--surface-3); position: relative; flex: none;
+  transition: background-color var(--dur-fade) var(--ease-standard);
+}
+.switch::after {
+  content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: var(--r-full);
+  background: var(--surface-1); box-shadow: var(--sh-float); transition: transform var(--dur-fade) var(--ease-out);
+}
+.switch.on { background: var(--ink); }
+.switch.on::after { transform: translateX(18px); }
+
+/* ---------- misc ---------- */
+.hscroll { display: flex; overflow-x: auto; scrollbar-width: none; -webkit-mask-image: var(--mask-fade-right); mask-image: var(--mask-fade-right); }
+.hscroll::-webkit-scrollbar { display: none; }
+/* the fade's own width of room after the last item, so the end (「游戏」 on the home type index) is never under it */
+.hscroll::after { content: ""; flex: none; width: 40px; }
+.row-press { border-radius: var(--r-sm); margin: 0 calc(var(--s-3) * -1); padding-left: var(--s-3); padding-right: var(--s-3); transition: background-color var(--dur-press) var(--ease-standard); }
+.row-press:active { background: var(--surface-2); }
+.chev { color: var(--text-tertiary); }
+
+/* ---------- desktop top bar (§8.2) ---------- */
+.deskbar, .desk-tools { display: none; }
+@media (min-width: 1024px) {
+  .topbar, .tabbar { display: none; }
+  .deskbar { display: block; position: fixed; z-index: 30; top: 0; left: 0; right: 0; height: var(--desk-bar); box-shadow: var(--sh-bar-bottom); }
+  .deskbar::before {
+    content: ""; position: absolute; inset: 0; background: var(--bar-bg);
+    -webkit-backdrop-filter: var(--bar-filter); backdrop-filter: var(--bar-filter); opacity: var(--bar-o, 1);
+  }
+  .deskbar-in {
+    position: relative; height: 100%; max-width: calc(var(--container) + var(--page-x) * 2); margin: 0 auto; padding: 0 var(--page-x);
+    display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; column-gap: var(--s-7);
+  }
+  .deskbar-left { display: flex; align-items: center; gap: var(--s-8); min-width: 0; }
+  .wordmark { font: var(--t-wordmark); color: var(--ink); white-space: nowrap; }
+  .desk-nav { display: flex; gap: var(--s-6); }
+  .desk-nav a {
+    position: relative; height: var(--desk-bar); display: inline-flex; align-items: center;
+    font: var(--t-ui); color: var(--text-tertiary); transition: color var(--dur-press) var(--ease-standard);
+  }
+  .desk-nav a.on { color: var(--ink); font-weight: var(--w-strong); }
+  /* 1.5px ink rule 6px under the text, as in the segmented control (§3.5) */
+  .desk-nav a.on::after { content: ""; position: absolute; left: 0; right: 0; top: calc(50% + 0.6875rem + 6px); height: var(--rule-tab); background: var(--ink); }
+  .desk-search {
+    width: var(--desk-search-w); height: var(--desk-search-h); border-radius: var(--r-full); background: var(--surface-2);
+    display: flex; align-items: center; gap: var(--s-3); padding: 0 var(--s-3) 0 var(--s-4);
+    font: var(--t-ui); color: var(--text-tertiary); transition: box-shadow var(--dur-press) var(--ease-standard);
+  }
+  .desk-search svg { width: var(--icon-sm); height: var(--icon-sm); color: var(--text-tertiary); flex: none; }
+  .desk-search span { flex: 1; min-width: 0; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .kbd {
+    flex: none; height: var(--kbd-h); padding: 0 var(--s-2); border-radius: var(--r-xs); box-shadow: var(--sh-kbd);
+    display: inline-flex; align-items: center; font: var(--t-caption); letter-spacing: var(--track-caption); color: var(--text-tertiary);
+  }
+  .deskbar-right { display: flex; justify-content: flex-end; align-items: center; gap: var(--s-5); }
+  .pill-plus {
+    height: var(--desk-pill-h); padding: 0 var(--desk-pill-x); border-radius: var(--r-full); background: var(--ink); color: var(--on-ink);
+    display: inline-flex; align-items: center; gap: var(--s-2); font: var(--t-pill); white-space: nowrap;
+    transition: background-color var(--dur-press) var(--ease-standard), transform var(--dur-press) var(--ease-out);
+  }
+  .pill-plus svg { width: var(--icon-sm); height: var(--icon-sm); }
+  .pill-plus:active { transform: scale(var(--press-scale)); }
+  .me-dot {
+    width: var(--desk-avatar); height: var(--desk-avatar); border-radius: var(--r-full); display: grid; place-items: center; flex: none;
+    background: var(--surface-2); box-shadow: var(--sh-ring); font: var(--t-me-dot); color: var(--text-secondary); transition: color var(--dur-press) var(--ease-standard), box-shadow var(--dur-press) var(--ease-standard);
+  }
+  .me-dot.on { color: var(--ink); box-shadow: var(--sh-ink-ring); }
+
+  /* page actions that lived in the phone bar (view toggle, ···) */
+  .desk-tools {
+    display: flex; gap: var(--s-1); position: absolute; z-index: 5;
+    top: calc(var(--desk-bar) + var(--s-4)); right: max(var(--page-x), calc((100% - var(--container)) / 2));
+  }
+}
+/* a fine pointer does not need the 44 touch target (§8.1) */
+@media (min-width: 1024px) and (pointer: fine) {
+  .desk-tools .icon-btn { width: var(--icon-press); height: var(--icon-press); }
+}
+
+/* ---------- pointer, keyboard and touch states (§8.5) ----------
+   Every :hover lives in this query so a tap on a phone never leaves a stuck hover state. */
+@media (hover: hover) and (pointer: fine) {
+  .icon-btn:hover::before { background: var(--hover-tint); opacity: 1; }
+  .icon-btn:active::before { background: var(--surface-2); }
+  .btn-primary:hover { background: var(--btn-primary-hover); }
+  .btn-secondary:hover { box-shadow: var(--btn-secondary-hover); }
+  .btn-text:hover, .btn-text.quiet:hover, .info-more:hover { color: var(--ink); }
+  .list-row:hover, .row-press:hover, .mention:hover { background: var(--hover-tint); }
+  .me-row:hover { background: var(--hover-tint); box-shadow: var(--sh-hover-bleed); border-radius: var(--r-xs); }
+  .list-row:active, .row-press:active, .mention:active { background: var(--surface-2); }
+  .seg button:hover, .tab:hover, .desk-nav a:hover { color: var(--ink); }
+  .desk-search:hover { box-shadow: var(--sh-input); }
+  .pill-plus:hover { background: var(--btn-primary-hover); }
+  .me-dot:hover { color: var(--ink); }
+  .tab-plus:hover i { background: var(--btn-primary-hover); }
+  .infolink:hover { text-decoration-color: var(--link-line-active); }
+  .autolink:hover, .byline-link:hover { text-decoration-color: var(--link-line-active); }
+  .preview-actions .btn-text:hover { color: var(--ink); }
+  .menu-item:not(:disabled):hover { background: var(--line-inner); }
+}
+.list-row:focus-visible, .row-press:focus-visible, .me-row:focus-visible, .mention:focus-visible { box-shadow: var(--focus-ring-inset); border-radius: var(--r-sm); }
+.autolink:focus-visible { text-decoration-color: var(--link-line-active); }
+.btn:focus-visible { border-radius: var(--r-md); }
+.icon-btn:focus-visible, .pill-plus:focus-visible, .me-dot:focus-visible, .desk-search:focus-visible { border-radius: var(--r-full); }
+
+/* ---------- search command panel (§8.3.6) ---------- */
+.palette-scrim {
+  position: fixed; inset: 0; z-index: 70; background: var(--scrim-palette);
+  display: flex; justify-content: center; align-items: flex-start; padding-top: 14vh;
+  animation: fade-in var(--dur-fade) var(--ease-out) both;
+}
+.palette-scrim.closing { animation: fade-out var(--dur-fade) var(--ease-in) both; }
+.palette {
+  width: min(var(--palette-w), calc(100vw - var(--page-x) * 2)); display: flex; flex-direction: column;
+  background: var(--surface-1); box-shadow: var(--sh-float); border-radius: var(--r-lg); overflow: hidden;
+  animation: palette-in var(--dur-pop) var(--ease-out) both;
+}
+.palette-scrim.closing .palette { animation: palette-out var(--dur-fade) var(--ease-in) both; }
+@keyframes palette-in { from { opacity: 0; transform: translateY(calc(var(--pop-rise) * -1.5)) scale(var(--pop-scale)); } }
+@keyframes palette-out { to { opacity: 0; transform: scale(var(--pop-scale)); } }
+.palette.inline { width: min(var(--palette-inline-w), 100%); margin: 0 auto; box-shadow: var(--sh-ring); animation: none; }
+.palette-field {
+  display: flex; align-items: center; gap: var(--s-4); height: var(--palette-input-h); padding: 0 var(--s-6);
+  border-bottom: var(--hairline) solid var(--line-1);
+}
+.palette-field svg { width: var(--icon-sm); height: var(--icon-sm); color: var(--text-tertiary); flex: none; }
+.palette-field input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: var(--t-palette); color: var(--ink); caret-color: var(--ink); }
+.palette-field input::placeholder { color: var(--text-tertiary); }
+.palette-field input:focus-visible { box-shadow: none; }
+.palette-list { max-height: 60vh; overflow-y: auto; padding: var(--s-2) var(--s-3) var(--s-3); overscroll-behavior: contain; }
+.palette.inline .palette-list { max-height: none; }
+.palette-group { padding: var(--s-4) var(--s-3) var(--s-2); }
+.palette-row {
+  display: grid; grid-template-columns: 28px minmax(0, auto) minmax(0, 1fr); align-items: center; column-gap: var(--s-4);
+  min-height: var(--row-compact); padding: var(--s-2) var(--s-3); border-radius: var(--r-sm); cursor: pointer;
+}
+.palette-row.on { background: var(--hover-tint); }
+.palette-row .cover.thumb { box-shadow: var(--sh-object-inner); justify-self: center; }
+.palette-label { font: var(--t-ui); color: var(--text-secondary); }
+.palette-row.on .palette-label { color: var(--ink); }
+.palette-meta { text-align: right; }
+.palette-essay, .palette-year {
+  width: 28px; height: 28px; display: grid; place-items: center; border-radius: var(--r-xs);
+  font: var(--t-serif-caption); color: var(--text-tertiary); box-shadow: var(--sh-kbd);
+}
+.palette-none { padding: var(--s-8) var(--s-3); display: flex; flex-direction: column; align-items: flex-start; gap: var(--s-3); }
+.palette-foot { display: flex; justify-content: space-between; align-items: center; gap: var(--s-5); padding: var(--s-3) var(--s-6); border-top: var(--hairline) solid var(--line-inner); }
+/* 「按 ? 查看快捷键」: same caption, same tertiary ink, the ? in the ⌘K hint's keycap — desktop fine pointer only */
+.palette-help { display: none; align-items: center; gap: var(--s-1); font: inherit; letter-spacing: inherit; color: inherit; transition: color var(--dur-press) var(--ease-standard); }
+.palette-help .kbd { height: var(--kbd-key-h); min-width: var(--kbd-key-h); padding: 0 var(--s-1); justify-content: center; }
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) {
+  .palette-help { display: inline-flex; }
+  .palette-help:hover { color: var(--text-secondary); }
+  .palette-help:hover .kbd { color: var(--text-secondary); }
+}
+.search-desk .palette.inline { margin-top: var(--s-4); }
+
+/* ---------- 快捷键说明 (? · §8.2, P2-7): the dialog's paper, hairline rows, keys in the ⌘K hint's frame ---------- */
+@media (min-width: 1024px) { .sheet.keys-sheet { width: var(--keys-w); } }
+.keys .t-h2 { margin-bottom: var(--s-2); }
+/* two columns side by side: 全局 + 条目页 | 封面墙 — the whole list fits a 900-high window without scrolling */
+.keys-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: var(--s-8); grid-auto-flow: dense; }
+.keys-cols > :nth-child(1) { grid-column: 1; grid-row: 1; }
+.keys-cols > :nth-child(2) { grid-column: 1; grid-row: 2; }
+.keys-cols > :nth-child(3) { grid-column: 2; grid-row: 1 / span 2; }
+.keys-group { margin-top: var(--s-6); }
+.keys-group .label-head { margin-bottom: var(--s-2); }
+.keys-row {
+  display: flex; justify-content: space-between; align-items: center; gap: var(--s-5);
+  min-height: var(--s-9); border-bottom: var(--hairline) solid var(--line-inner);
+}
+.keys-row:last-child { border-bottom: 0; }
+.keys-keys { display: inline-flex; align-items: center; gap: var(--s-1); flex: none; }
+.keys-keys .kbd { min-width: var(--kbd-h); justify-content: center; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.keys-or { padding: 0 var(--s-1); }
+.keys-foot { display: flex; justify-content: flex-end; margin-top: var(--s-6); }
+
+/* ---------- 看完 date picker (STYLE v0.4 §3.14.2): years, then months, then days — text and short ink rules ---------- */
+.ds-title { margin: 0; }
+.ds-sub { margin-top: var(--s-2); }
+.ds-prov { margin-top: var(--s-1); }
+.ds-yearline { display: flex; align-items: center; margin-top: var(--s-6); }
+.ds-approx {
+  flex: none; width: 32px; height: 32px; border-radius: var(--r-full); font: var(--t-ui); font-weight: var(--w-strong);
+  color: var(--text-tertiary); transition: background var(--dur-fade) var(--ease-standard), color var(--dur-fade) var(--ease-standard);
+}
+.ds-approx.on { background: var(--surface-2); color: var(--ink); }
+.ds-vline { flex: none; width: var(--hairline); height: 24px; margin: 0 var(--s-3); background: var(--line-inner); }
+.ds-years {
+  display: flex; gap: var(--s-2); overflow-x: auto; scrollbar-width: none; flex: 1; min-width: 0;
+  -webkit-mask-image: var(--mask-fade-right); mask-image: var(--mask-fade-right);
+}
+.ds-years::-webkit-scrollbar { display: none; }
+.ds-years::after { content: ""; flex: none; width: 40px; }
+.ds-year {
+  flex: none; width: 64px; height: var(--hit); position: relative; border-radius: var(--r-sm);
+  font: var(--t-year-pick); font-variant-numeric: tabular-nums lining-nums; color: var(--text-secondary);
+}
+.ds-year.on { color: var(--ink); font-weight: var(--w-bold); }
+.ds-year.on::after, .ds-cell.on::after {
+  content: ""; position: absolute; left: 50%; transform: translateX(-50%); bottom: 2px; width: 2.2em; height: var(--rule-tab); background: var(--ink);
+}
+.ds-cell.on::after { width: 1.6em; }
+.ds-months { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); margin-top: var(--s-5); animation: fade-in var(--dur-fade) var(--ease-standard) both; }
+.ds-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); margin-top: var(--s-4); animation: fade-in var(--dur-fade) var(--ease-standard) both; }
+.ds-cell { height: var(--hit); position: relative; border-radius: var(--r-sm); font: var(--t-ui); font-variant-numeric: tabular-nums; color: var(--text-secondary); }
+.ds-days .ds-cell { height: 40px; }
+.ds-cell.on { color: var(--ink); font-weight: var(--w-strong); }
+.ds-cell:disabled { color: var(--text-quaternary); }
+.ds-year:active, .ds-cell:active { background: var(--surface-2); transform: scale(.97); }
+.ds-text { height: var(--hit); font: var(--t-ui); font-weight: var(--w-strong); color: var(--text-secondary); text-align: left; }
+.ds-text:active, .ds-text.is-on { color: var(--ink); }
+.ds-more { margin-top: var(--s-4); }
+.ds-foot { margin-top: var(--s-5); padding-top: var(--s-3); border-top: var(--hairline) solid var(--line-1); }
+.ds-err { margin-top: var(--s-2); }
+.ds-pop {
+  position: fixed; z-index: 51; width: 400px; padding: var(--s-6); background: var(--surface-1);
+  box-shadow: var(--sh-float); border-radius: var(--r-md); animation: fade-in var(--dur-fade) var(--ease-standard) both;
+}
+.ds-search { width: 100%; height: var(--hit); margin-top: var(--s-6); padding: 0 var(--s-4); border-radius: var(--r-md); background: var(--surface-2); font: var(--t-ui); color: var(--ink); }
+.ds-search::placeholder { color: var(--text-tertiary); }
+.ds-same-list { max-height: 50vh; overflow-y: auto; margin-top: var(--s-3); }
+.ds-same-row { display: flex; justify-content: space-between; align-items: center; gap: var(--s-4); width: 100%; height: 52px; text-align: left; }
+.ds-same-row + .ds-same-row { border-top: var(--hairline) solid var(--line-inner); }
+.tnum { font-variant-numeric: tabular-nums; }
+@media (hover: hover) and (pointer: fine) {
+  .ds-year:hover, .ds-cell:not(:disabled):hover, .ds-same-row:hover { background: var(--hover-tint); }
+}
+/* the hero strip's 看完 cell opens the date sheet: the value itself is the button, quietly underlined */
+.strip-btn { font: inherit; color: inherit; text-align: left; margin: 0 calc(var(--s-3) * -1); padding: 0 var(--s-3); border-radius: var(--r-sm); max-width: calc(100% + var(--s-3) * 2); }
+.strip-btn:active { background: var(--surface-2); }
+.strip-btn:focus-visible { box-shadow: var(--focus-ring); }
+@media (hover: hover) and (pointer: fine) { .strip-btn:hover { background: var(--hover-tint); cursor: pointer; } }
+.strip-approx { font: var(--t-approx); color: var(--text-secondary); margin-right: .25em; }
+.strip-unknown { font: var(--t-ui); color: var(--text-tertiary); }
+.list-row { -webkit-touch-callout: none; }
+
+/* r17 the scroll rail under a sideways row (ScrollRail): a hairline with a short thumb, there only while the
+   row is in use; with a mouse the thumb drags and the hairline jumps. On a row that stands on a hairline of
+   its own (索引 · 年份) the rail is that line and draws only the thumb. */
+.srail {
+  position: absolute; z-index: 2; height: var(--rail-hit); transform: translateY(-50%);
+  opacity: 0; pointer-events: none; touch-action: none; cursor: default;
+  transition: opacity var(--dur-fade) var(--ease-standard);
+}
+.srail.is-awake { opacity: 1; pointer-events: auto; }
+.srail.is-still { display: none; }
+.srail::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: var(--hairline); background: var(--line-inner); }
+.srail.on-line::before { background: transparent; }
+/* on a row's own line the rail lies on the shelf: a short hit band ending at the line
+   (rows use content-visibility, which clips anything hung below them) */
+.srail.on-line { transform: translateY(-100%); height: var(--rail-hit-line); }
+.srail.on-line .srail-thumb, .srail.on-line::before { top: auto; bottom: 0; translate: none; }
+.srail-thumb {
+  position: absolute; left: 0; top: 50%; height: var(--rail-thumb); transform-origin: 0 50%;
+  border-radius: var(--r-full); background: var(--rail-thumb-ink); translate: 0 -50%;
+  transition: height var(--dur-fade) var(--ease-standard), background-color var(--dur-fade) var(--ease-standard);
+}
+.srail.is-dragging .srail-thumb { height: var(--rail-thumb-active); background: var(--rail-thumb-ink-active); }
+@media (hover: hover) and (pointer: fine) {
+  .srail:hover .srail-thumb { height: var(--rail-thumb-active); background: var(--rail-thumb-ink-active); }
+}
+@media (pointer: coarse) { .srail.is-awake { pointer-events: none; } }
+
+/* r18 the page's scroll indicator (PageRail): a hairline thumb at the right edge between the bars, the shelf
+   rail's ink; awake only while the page moves or a mouse comes to the edge. The thumb is a narrow band that
+   takes the pointer only when awake (drag to travel); the line itself sits at its right. On long pages the
+   section in view (a year) rides beside it. */
+.prail {
+  position: fixed; z-index: 29; right: calc(env(safe-area-inset-right) + var(--s-1)); width: var(--prail-hit);
+  top: calc(var(--bar-top) + env(safe-area-inset-top) + var(--s-2));
+  bottom: calc(var(--bar-tab) + env(safe-area-inset-bottom) + var(--s-2));
+  pointer-events: none; opacity: 0; transition: opacity var(--dur-fade) var(--ease-standard);
+}
+@media (min-width: 1024px) { .prail { top: calc(var(--desk-bar) + var(--s-2)); bottom: var(--s-2); } }
+html[data-show] .prail { top: var(--s-2); bottom: var(--s-2); }
+.prail.is-awake { opacity: 1; }
+.prail.is-still { display: none; }
+.prail-thumb {
+  position: absolute; top: 0; left: 0; right: 0; touch-action: none; cursor: default;
+}
+.prail.is-awake .prail-thumb { pointer-events: auto; }
+.prail-thumb::after {
+  content: ''; position: absolute; top: 0; bottom: 0; right: 0; width: var(--rail-thumb);
+  border-radius: var(--r-full); background: var(--rail-thumb-ink);
+  transition: width var(--dur-fade) var(--ease-standard), background-color var(--dur-fade) var(--ease-standard);
+}
+.prail.is-dragging .prail-thumb::after { width: var(--rail-thumb-active); background: var(--rail-thumb-ink-active); }
+@media (hover: hover) and (pointer: fine) {
+  .prail-thumb:hover::after { width: var(--rail-thumb-active); background: var(--rail-thumb-ink-active); }
+}
+.prail-label {
+  position: absolute; right: calc(100% + var(--s-1)); top: 50%; transform: translateY(-50%);
+  padding: var(--s-1) var(--s-2); white-space: nowrap; pointer-events: none;
+  font: var(--t-caption); font-variant-numeric: tabular-nums lining-nums; color: var(--text-secondary);
+  background: var(--surface-1); border: var(--hairline) solid var(--line-2); border-radius: var(--r-sm);
+}
+
+/* r19 书脊 / 封面: a two-icon switch (ShelfViewToggle). The chosen one is in ink on a quiet ground; the
+   words show beside the icons where there is room, and are the buttons' names everywhere. */
+.shelf-view { display: inline-flex; flex: none; padding: var(--hairline); border: var(--hairline) solid var(--line-2); border-radius: var(--r-full); }
+.shelf-view button {
+  display: inline-flex; align-items: center; gap: var(--s-1); height: var(--shelf-view-h); padding: 0 var(--s-3);
+  border-radius: var(--r-full); color: var(--text-tertiary); font: var(--t-small);
+  transition: color var(--dur-fade) var(--ease-standard), background-color var(--dur-fade) var(--ease-standard);
+}
+.shelf-view button svg { width: var(--icon-sm); height: var(--icon-sm); }
+.shelf-view button.on { color: var(--ink); background: var(--surface-2); }
+.shelf-view button:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.shelf-view-word { display: none; }
+@media (min-width: 640px) { .shelf-view-word { display: inline; } }
+@media (hover: hover) and (pointer: fine) { .shelf-view button:hover:not(.on) { color: var(--text-secondary); } }
+
+/* r23 a 44px place to land a finger on the small things, drawn invisibly round them — nothing moves.
+   Segment tabs (全部 › 书 番 …), the 全部成就 disclosure, the quiet 「回到首页 ›」 links. */
+.seg button, .steam-more > summary, .empty-back { position: relative; }
+.seg button::after, .steam-more > summary::after, .empty-back::after {
+  content: ''; position: absolute; left: 50%; top: 50%; translate: -50% -50%;
+  width: max(100%, var(--hit)); height: max(100%, var(--hit));
+}

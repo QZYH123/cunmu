@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024"><defs><linearGradient id="bg" x1="0" y1="0" x2="0.25" y2="1"><stop offset="0" stop-color="#2B3A5C"/><stop offset="1" stop-color="#1A253D"/></linearGradient>
+  <radialGradient id="sheen" cx="0.3" cy="0.15" r="0.9"><stop offset="0" stop-color="#fff" stop-opacity="0.18"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+  <filter id="drop" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur in="SourceAlpha" stdDeviation="14"/><feOffset dy="12"/><feComponentTransfer><feFuncA type="linear" slope="0.22"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs><rect width="1024" height="1024" fill="url(#bg)"/><rect width="1024" height="1024" fill="url(#sheen)"/><g filter="url(#drop)">
+      <path d="M272 322 L180 512 L272 702" stroke="#FBF6EC" stroke-width="62" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M400 322 L308 512 L400 702" stroke="#FBF6EC" stroke-width="62" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M624 322 L716 512 L624 702" stroke="#FBF6EC" stroke-width="62" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M752 322 L844 512 L752 702" stroke="#FBF6EC" stroke-width="62" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      <circle cx="512" cy="512" r="56" fill="#C8442C"/>
+    </g></svg>

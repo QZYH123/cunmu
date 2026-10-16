@@ -1,0 +1,7 @@
+{"response":{"game_count":5,"games":[
+{"appid":1086940,"name":"Baldur's Gate 3","playtime_forever":7563,"playtime_2weeks":312,"rtime_last_played":1728900000,"img_icon_url":"d866cd"},
+{"appid":632470,"name":"Disco Elysium","playtime_forever":2890,"rtime_last_played":1609459200},
+{"appid":367520,"name":"Hollow Knight","playtime_forever":45,"rtime_last_played":1577836800},
+{"appid":1145360,"name":"Hades","playtime_forever":0,"rtime_last_played":0},
+{"appid":413150,"name":"Stardew Valley","playtime_forever":620}
+]}}

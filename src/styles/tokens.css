@@ -1,0 +1,420 @@
+/*
+ * Design tokens — the ONLY place raw colors, font sizes, radii, shadows and durations may appear.
+ * Values follow STYLE-GUIDE v0.2 §2.8 plus the v0.3 additions (§7.1 type scale, §7.9 tokens,
+ * §8.1 / §8.4 breakpoints). Font sizes are written in rem (1rem = 16px at the default text size)
+ * so the system / browser text-size setting keeps working (§0).
+ *
+ * Breakpoints (§8.1): phone < 640 · tablet 640–1023 · desktop 1024–1439 · wide ≥ 1440.
+ * Mirrored in src/tokens.ts (BP) for the JS side.
+ */
+:root {
+  /* STYLE v0.4 §2.9 */
+  --dur-hold:1500ms; --dur-linger:2000ms; --hold-line:1px; --select-dim:brightness(.62);
+  --vol-unknown-w:28px; --vol-gap-unknown:24px;
+  color-scheme: light;
+  /* color – light */
+  --bg:#F8F7F5; --surface-1:#FFFFFF; --surface-2:#F0EFEC; --surface-3:#E7E5E1;
+  --ink:#141413; --text-reading:#1E1D1B; --text-secondary:#5F5D59;
+  --text-tertiary:#6E6C68;   /* r9: 4.5:1 on bg and every surface (was #8C8A86, 3.2:1) */ --text-quaternary:#B5B3AF; --on-ink:#F8F7F5;
+  --line-1:rgba(20,19,18,.07); --line-2:rgba(20,19,18,.11);
+  --line-3:rgba(20,19,18,.16); --line-inner:rgba(20,19,18,.05);
+  --link:#2F5F86; --accent:#C4432B; --danger:#B3261E;
+  --scrim:rgba(20,19,18,.32); --scrim-palette:rgba(20,19,18,.19);   /* --scrim at 60% (§8.3.6) */
+  --viewer-bg:#000; --viewer-ink:#F3F2EF; --viewer-hover:rgba(243,242,239,.12);   /* black in both modes */
+  --paper-1:#EDEAE4; --paper-2:#E6E2DA; --paper-3:#E9E7E2;
+  --paper-4:#DFDCD6; --paper-5:#E4E0D8; --paper-6:#F1EEE8; --paper-ink:#24221F;
+
+  /* type (sizes in rem: px / 16) */
+  --font-serif:"Source Serif 4","Noto Serif SC","Source Han Serif SC","Songti SC","STSong","Noto Serif CJK SC",serif;
+  --font-sans:-apple-system,"SF Pro Text","PingFang SC","HarmonyOS Sans SC","MiSans","Noto Sans SC","Source Han Sans SC","Noto Sans CJK SC",system-ui,sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --t-numeral:500 3.5rem/3.5rem var(--font-serif);          /* 56/56 */
+  /* v0.3 hero-scale type (§7.1); per-breakpoint values are at the bottom of this file */
+  --t-mega:400 6rem/5.5rem var(--font-serif);               /* 96/88  year numeral */
+  --t-masthead:600 2.75rem/3rem var(--font-serif);          /* 44/48  首页「刊头」(spec 40; set as a nameplate) */
+  --t-hero:600 2.25rem/2.75rem var(--font-serif);           /* 36/44  entry / person / essay h1 */
+  --t-hero-short:600 2.75rem/3.125rem var(--font-serif);    /* 44/50  phone, title ≤ 6 chars */
+  --t-hero-long:600 1.875rem/2.5rem var(--font-serif);      /* 30/40  title > 14 chars, one step down */
+  --t-count:500 2rem/2.25rem var(--font-serif);             /* 32/36  stock numbers */
+  --t-epigraph:400 1.25rem/2.125rem var(--font-serif);      /* 20/34  题记 */
+  --t-wordmark:600 1.0625rem/1.5rem var(--font-serif);      /* 17/600 desktop bar wordmark */
+  --t-splash:500 1.375rem/1.75rem var(--font-serif);        /* 22/500 启动页字标 (v0.4 §10) */
+  --t-strip-value:600 1.0625rem/1.5rem var(--font-serif);   /* 17/600 hero info strip values */
+  --t-pill:500 0.9375rem/1.375rem var(--font-sans);
+  --t-palette:400 1.125rem/1.75rem var(--font-sans);         /* 18 — command panel input */         /* 15/500 「＋ 收录」 */
+  --t-me-dot:600 0.8125rem/1 var(--font-serif);             /* 「我」 initial in the 28px circle */
+  --track-mega:-0.035em; --track-count:-0.02em; --track-hero-latin:-0.015em;
+  --t-display:600 1.875rem/2.5rem var(--font-serif);        /* 30/40 */
+  --t-title:600 1.5rem/2rem var(--font-serif);              /* 24/32 */
+  --t-h2:600 1.25rem/1.75rem var(--font-serif);             /* 20/28 */
+  --t-h3:600 1.0625rem/1.625rem var(--font-serif);          /* 17/26 */
+  --t-body:400 1rem/1.75rem var(--font-sans);               /* 16/28 */
+  --t-quote:400 1rem/1.875rem var(--font-serif);
+  --t-plate-quote:400 0.9375rem/1.625rem var(--font-serif);   /* 15/26: the line under 首页's picture */            /* 16/30 */
+  --t-ui:400 0.9375rem/1.375rem var(--font-sans);           /* 15/22 */
+  --t-small:400 0.875rem/1.375rem var(--font-sans);         /* 14/22 */
+  --t-caption:400 0.78125rem/1.125rem var(--font-sans);     /* 12.5/18 */
+  --t-label:500 0.75rem/1rem var(--font-sans);              /* 12/16 */
+  --t-micro:500 0.6875rem/0.875rem var(--font-sans);        /* 11/14 */
+  --t-numeral-pager:500 2.25rem/2.5rem var(--font-serif);  /* r5 year pager 36/40 */
+  --t-tab:500 0.9375rem/1.25rem var(--font-serif);          /* r5 #9 tab bar words 15/20 */
+  --track-numeral:-0.02em; --track-display:-0.005em;
+  --track-caption:0.01em; --track-label:0.06em; --track-micro:0.02em; --track-tab:0.08em;
+  /* derived type roles named in §3 */
+  --t-button:500 1rem/1.375rem var(--font-sans);            /* buttons 16/500 */
+  --t-infokey:400 0.8125rem/1.25rem var(--font-sans);       /* infobox key 13/20 */
+  --t-slider-value:500 1.75rem/2rem var(--font-serif);      /* 整理方式 28/500 */
+  --t-ordinal:500 1.25rem/1.75rem var(--font-serif);        /* WeRead sheet numbering 20/500 */
+  --t-year-tag:600 0.9375rem/1.375rem var(--font-serif);    /* 卷 / 年份浮标 15/600 */
+  --t-year-pick:500 1.25rem/1 var(--font-serif);            /* 日期点选的年份 20/500 (v0.4 §3.14.2) */
+  --t-approx:400 0.875rem/1 var(--font-sans);               /* 信息条里的「约」 14/400 (v0.4 §3.14.1) */
+  --t-spine:600 0.8125rem/1rem var(--font-serif);           /* 书脊书名 13 */
+  --t-spine-row:600 0.6875rem/1 var(--font-serif);          /* 索引 · 年份 spine titles: phone 11, desktop 12 (SHELF.fs) */
+  --t-preview-title:600 1.0625rem/1.5rem var(--font-serif); /* 预览卡条目名 17/600 */
+  --t-serif-caption:500 0.78125rem/1.125rem var(--font-serif);
+  --t-mono:400 0.9375rem/1.375rem var(--font-mono);         /* key input 15 */
+  --t-mono-caption:400 0.78125rem/1.125rem var(--font-mono);
+  --t-mention:600 1rem/1.5rem var(--font-serif);            /* 被提到 title 16/600 */
+  --w-strong:500; --w-strong-serif:520; --w-bold:600; --w-regular:400;
+
+  /* space & layout */
+  --s-1:2px; --s-2:4px; --s-3:8px; --s-4:12px; --s-5:16px; --s-6:20px;
+  --s-7:24px; --s-8:32px; --s-9:40px; --s-10:56px; --s-11:72px;
+  --page-x:20px; --bar-top:48px; --bar-tab:48px;
+  /* responsive layout (§8.1 / §8.4); phone values here, the rest in the breakpoint blocks */
+  --container:100vw;                     /* content container; desktop 1200 · wide 1360 */
+  --read-col:100%;                       /* reading column; tablet 680 · desktop 600 · wide 680 */
+  --space-h2:40px;                       /* space above section h2: 40 / 48 / 56 / 64 */
+  --tabbar-w:100%;                       /* tablet: ≤ 480, centred */
+  --overlay-w:100%;                      /* sheets, toasts, dev pill on phone */
+  --desk-bar:56px; --desk-search-w:420px; --desk-search-h:36px; --desk-pill-h:36px; --desk-pill-x:14px;
+  --desk-avatar:28px; --kbd-h:20px; --kbd-key-h:18px;   /* single-key cap (the ? in the search panel's foot) */
+  --wall-cap:56vh;                       /* home wall height cap: 56 / 60 / 64 / 64 vh (§7.2-1) */
+  --masthead-gap:20px;                   /* wall edge → masthead: 20 phone · 32 desktop (the wall ends crisp, see --wall-fade) */
+  --hero-zone-h:auto;                    /* desktop: clamp(520px, 70vh, 760px); cover sizes live in tokens.ts */
+  --hero-below:var(--s-9);               /* hero → infobox: ≥ 40 (§7.4-5); desktop 48 (§8.3.2) */
+  --contact-h:14px; --contact-gap:6px;
+  /* Entry grid (§8.3.2). The spec grid (220|64|680|64|340) is wider than a 1440 screen, so the gaps
+     and side columns step down until 1600; the reading column keeps 36+ characters (§6.4 #52). */
+  --toc-w:184px; --entry-gap:48px; --side-w:288px; --entry-read:var(--read-col); --sticky-top:calc(var(--desk-bar) + var(--s-9));
+  --margin-w:280px; --side-w-person:340px; --palette-w:640px; --palette-inline-w:720px; --palette-input-h:56px; --dropcap-fallback:4.875rem; --toc-indicator:2px; --toc-fade:24px;
+  --tip-pad:6px 10px; --tip-gap:8px;
+  --hit:44px; --icon:22px; --icon-sm:18px; --icon-xs:12px; --icon-stroke:1.5;
+  --tab-plus:36px; --icon-press:32px;
+  --btn-h:48px; --btn-text-h:44px; --input-h:44px; --toast-h:44px;
+  --row-list:64px; --row-person:60px; --row-search:56px; --row-compact:52px;
+  --thumb-w:40px; --thumb-h:60px; --thumb-search-w:32px; --thumb-search-h:48px;
+  --avatar-hero:88px; --avatar-row:40px; --avatar-search:32px;
+  --cover-book-w:120px; --cover-book-h:180px;
+  --cover-poster-w:120px; --cover-poster-h:170px;
+  --cover-music-w:140px; --cover-music-h:140px;
+  --cover-game-w:120px; --cover-game-h:160px;
+  --strip-h:120px;                       /* person page cover strip */
+  --spine-shelf-gap:28px; --vol-h:176px; --vol-h-home:120px; --vol-h-desk:200px;   /* desktop 索引: 卷高 200 (§8.3.7) */
+  --wall-display-h:220px;
+  --timeline-dot:5px; --default-dot:3px;
+  --slider-track:2px; --slider-thumb:24px; --slider-thumb-hover:26px; --slider-thumb-active:28px;
+  --sheet-handle-w:36px; --sheet-handle-h:4px;
+  --seal:16px; --rule-quote:2px; --rule-tab:1.5px; --hairline:1px;
+  --rail-gutter:64px; --rail-hit:32px; --rail-strip:64px; --rail-tick:6px; --rail-thumb:3px;   /* r5 year rail */
+  --press-dim:.8; --pager-gap:24px;   /* r5 year pager */
+  /* r6 索引 · 年份 rows of spines: the two inks a spine title takes (on its own colour, in either theme),
+     the row rhythm, the label columns (desktop), how far a pointed spine comes out of the row */
+  --spine-ink-dark:#1E1D1B; --spine-ink-light:#F4F2EE;
+  --yrow-gap:calc(var(--s-8) + var(--s-5)); --yrow-year:160px; --yrow-sum:232px; --yrow-cols-gap:var(--s-8);
+  /* r8 spine material: a rounded back (darker at both edges, a soft light just left of the middle, away
+     from the title), a faint head edge, a whisper of fibre (one shared tile, white and black specks on
+     transparency), hairline bands on some, a small paper label on a few, a slight contact shadow at the
+     shelf line. The turn: the depth a spine turns in and the ink a face darkens to edge-on. */
+  --spine-grain:url(/spine-grain.png); --spine-grain-size:128px 128px;
+  /* the title column (12–88% of the narrowest spine) only ever gets the shade that raises its contrast:
+     light on a dark-ink spine, dark on a light-ink one; the other kind stays at the edges */
+  --spine-light-round:linear-gradient(90deg,rgba(0,0,0,.19) 0,rgba(0,0,0,0) 8%,rgba(255,255,255,.11) 15%,rgba(255,255,255,0) 30%,rgba(0,0,0,0) 88%,rgba(0,0,0,.18) 100%);
+  --spine-light-round-ink:linear-gradient(90deg,rgba(0,0,0,.22) 0,rgba(255,255,255,.07) 6%,rgba(255,255,255,0) 11%,rgba(0,0,0,0) 40%,rgba(0,0,0,.07) 76%,rgba(0,0,0,.24) 100%);
+  --spine-light-head:linear-gradient(to bottom,rgba(255,255,255,.24) 0,rgba(255,255,255,.24) 1px,rgba(0,0,0,.09) 1px,rgba(0,0,0,.09) 3px,rgba(0,0,0,0) 6px);
+  --band:color-mix(in srgb,currentColor 32%,transparent); --band-at:6px; --band-pad:7px;
+  --spine-light-bands:linear-gradient(to bottom,transparent var(--band-at),var(--band) var(--band-at),var(--band) calc(var(--band-at) + 1px),transparent calc(var(--band-at) + 1px),transparent calc(var(--band-at) + 3px),var(--band) calc(var(--band-at) + 3px),var(--band) calc(var(--band-at) + 4px),transparent calc(var(--band-at) + 4px),transparent calc(100% - var(--band-at) - 4px),var(--band) calc(100% - var(--band-at) - 4px),var(--band) calc(100% - var(--band-at) - 3px),transparent calc(100% - var(--band-at) - 3px),transparent calc(100% - var(--band-at) - 1px),var(--band) calc(100% - var(--band-at) - 1px),var(--band) calc(100% - var(--band-at)),transparent calc(100% - var(--band-at)));
+  --spine-plate:oklch(.955 .012 85); --r-plate:1px;
+  --sh-plate:inset 0 0 0 .5px rgba(20,19,18,.22),0 .5px 1px rgba(20,19,18,.18);
+  --sh-spine-foot:0 1px 1.5px -.5px rgba(20,19,18,.32);
+  --sh-spine:inset 0 -1px 0 rgba(20,19,18,.12),inset 0 0 0 .5px rgba(20,19,18,.10),var(--sh-spine-foot);
+  --sh-spine-mini:inset 0 0 0 .5px rgba(20,19,18,.10),0 .5px 1px -.25px rgba(20,19,18,.28);
+  --sh-face:inset 0 0 0 .5px rgba(20,19,18,.12),var(--sh-spine-foot);
+  --spine-turn-ink:#000; --flip-persp:640px; --turn-shade:.42;
+  /* r17 dress by kind: a case's flat back (a lit edge and a shaded one, no rounded light), a paperback's
+     smooth back, a disc case's clear banner, a headband's thread, a foil title on a deep cloth, a framed band */
+  --spine-light-case:linear-gradient(90deg,rgba(255,255,255,.16) 0,rgba(255,255,255,.16) 1px,rgba(255,255,255,0) 2px,rgba(0,0,0,0) calc(100% - 2px),rgba(0,0,0,.14) calc(100% - 1px),rgba(0,0,0,.14) 100%);
+  --spine-light-paperback:linear-gradient(90deg,rgba(0,0,0,.10) 0,rgba(0,0,0,0) 6%,rgba(0,0,0,0) 92%,rgba(0,0,0,.10) 100%);
+  --spine-plastic:rgba(255,255,255,.2); --spine-plastic-edge:rgba(255,255,255,.35);
+  --spine-headband:repeating-linear-gradient(90deg,color-mix(in srgb,currentColor 55%,transparent) 0 1px,color-mix(in srgb,currentColor 20%,transparent) 1px 2px);
+  --spine-foil:oklch(.87 .07 85);
+  --sh-spine-frame:inset 0 0 0 1px color-mix(in srgb,currentColor 62%,transparent);
+  --r-case:3px;
+  --t-spine-sans:600 0.6875rem/1 var(--font-sans);
+  --t-spine-mark:600 0.6875rem/1 var(--font-sans);
+  /* r7: rows that scroll sideways — room for a ring at the edges, the fade where a row runs on, the 「‹ ›」 */
+  /* r17 scrolling: a row's rail (a hairline and a short thumb, shown while the row is in use) and the page's
+     own bar on a mouse-driven screen — thin, no track, a thumb in the ink at a low strength */
+  --rail-hit:14px; --rail-hit-line:6px; --prail-hit:20px; --shelf-view-h:28px; --steam-icon:32px; --steam-bar-w:220px; --steam-bar-h:3px; --steam-locked:.55; --rail-thumb:2px; --rail-thumb-active:3px; --rail-thumb-ink:var(--text-tertiary); --rail-thumb-ink-active:var(--text-secondary);
+  --scrollbar-w:8px; --scrollbar-thumb:color-mix(in srgb,var(--ink) 22%,transparent); --scrollbar-thumb-active:color-mix(in srgb,var(--ink) 40%,transparent);
+  --spine-col-gap:2px; --fade-col:linear-gradient(to bottom,#000 calc(100% - 1.75em),transparent);   /* r17: two title columns; a title's end fading out */
+  --yshelf-bleed:3px; --yscroll-size:28px; --yscroll-off:.3; --cover-lift:-2px; --yrow-cover-pad:var(--s-5);
+  --fade-row-end:linear-gradient(to right, #000 calc(100% - var(--s-10)), transparent);
+  --fade-row-start:linear-gradient(to right, transparent, #000 var(--s-9));
+  --fade-row-both:linear-gradient(to right, transparent, #000 var(--s-9), #000 calc(100% - var(--s-10)), transparent);
+  --side-year-name:52px; --side-year-n:28px;
+  --sh-spine-paper:inset 0 0 0 var(--hairline) var(--line-2),var(--sh-spine-foot);   /* a paper spine keeps its edge on paper (and at night) */
+  --note-w:480px; --note-rule:24px; --underline-offset:3px; --removed-o:.4;   /* r5: 页脚注, underlined text actions, 移出 in place */
+  --preview-max:340px; --keys-w:760px;   /* ? 快捷键说明, two columns */ --rail-w:20px;
+
+  /* radius */
+  --r-object:3px; --r-xs:6px; --r-sm:10px; --r-md:12px; --r-lg:16px; --r-full:999px;
+  --r-seal:2px; --r-collage:2px; --r-spine:2px;
+
+  /* shadow */
+  --sh-ring:0 0 0 1px var(--line-1);
+  --sh-float:0 0 0 1px rgba(20,19,18,.06),0 12px 32px rgba(20,19,18,.06);
+  --sh-sheet:0 -1px 0 rgba(20,19,18,.05),0 -16px 48px rgba(20,19,18,.08);
+  --sh-object:0 1px 1px rgba(20,19,18,.08),0 6px 14px -4px rgba(20,19,18,.16);
+  --sh-object-inner:inset 0 0 0 1px rgba(20,19,18,.08);
+  --sh-input-focus:0 0 0 1px var(--line-3);
+  --sh-btn-secondary:inset 0 0 0 1px var(--line-3);
+  --wall-seam:inset 0 0 0 .5px rgba(0,0,0,.08);
+  --sh-input:inset 0 0 0 1px var(--line-2);
+  --sh-underline:inset 0 -1px 0 var(--line-1);   /* a field that reads as a line of text (最爱's one-line why) */
+  --sh-radio:inset 0 0 0 1.5px var(--ink);       /* v0.4 §3.18.2 单选圆圈 */
+  --sh-bar-bottom:0 var(--hairline) 0 var(--line-1);
+  --sh-bar-top:0 calc(var(--hairline) * -1) 0 var(--line-1);
+  --sh-dot-hollow:inset 0 0 0 1px var(--dot-ink);
+  --sh-bound:var(--sh-object),inset 0 -8px 0 var(--line-1);
+  /* v0.3 (§7.9) */
+  --sh-lift:0 2px 4px rgba(20,19,18,.06),0 18px 40px -8px rgba(20,19,18,.24);
+  --sh-hero:0 2px 4px rgba(20,19,18,.08),0 24px 56px -14px rgba(20,19,18,.30);
+  --focus-ring:0 0 0 2px var(--bg),0 0 0 4px color-mix(in srgb,var(--link) 60%,transparent);
+  --focus-ring-inset:inset 0 0 0 2px var(--bg),inset 0 0 0 4px color-mix(in srgb,var(--link) 60%,transparent);
+  --hover-tint:color-mix(in srgb,var(--ink) 4%,transparent);
+  --btn-primary-hover:color-mix(in srgb,var(--ink) 88%,var(--bg));
+  --btn-secondary-hover:inset 0 0 0 1px color-mix(in srgb,var(--ink) 28%,transparent);
+  --contact-ink:rgba(20,19,18,.22);
+  /* S1 row depth (§7.2-4): each row down is 1.5% darker, floor .92 (dark: 2.5%, floor .82) */
+  --row-dim:.015; --row-dim-min:.92;
+  /* S1 wall light (§7.2-3) — whitelisted wall material, never used off the wall */
+  --wall-light:radial-gradient(120% 90% at 18% 0%,rgba(255,255,255,.10),transparent 60%),linear-gradient(to bottom,transparent 40%,rgba(20,19,18,.10) 100%);
+  --wall-light-blend:soft-light;
+  /* S1 pointer light (§7.2-8, P2-2): §7.2-8's 220px circle, pre-rendered on its own layer and moved by
+     transform, so following the pointer never repaints the wall */
+  --pointer-light:radial-gradient(circle closest-side,rgba(255,255,255,.10),transparent 70%);
+  --pointer-blend:screen; --pointer-size:440px;   /* screen keeps the covers' colour (normal white greys them) */
+  /* S6 paper grain (§7.7) */
+  --grain-o:.045; --grain-blend:multiply;
+  --accent-glow:none;
+  --dur-sheen:700ms; --wall-mast-delay:240ms; --dur-pointer-light:300ms;
+  /* the sheen crosses on a near-even curve: its bright centre is over the cover only in the middle
+     half of the travel, and on --ease-standard (.2,0,0,1) that middle passes in ~150ms — a flash, the
+     rest of the 700ms moving it unseen. A gentle S keeps it crossing for ~350ms, entering and leaving
+     softly (P2-1) */
+  --ease-sheen:cubic-bezier(.35,.1,.65,.9);
+  /* S2 schedule from release (§7.3): tag · title · byline · strip · epigraph · rest; body at 720 */
+  --flight-t1:120ms; --flight-t2:160ms; --flight-t3:200ms; --flight-t4:240ms; --flight-t5:280ms; --flight-t6:320ms;
+  --late-in:720ms; --rise-flight:12px; --sheen-delay:120ms;
+  /* S3 sheen + S4 tint materials (§7.9 whitelist) */
+  /* P2-1: §7.4-4's soft-light .22 leaves black untouched and lifts mid-tones by ~2% — on real covers
+     the sweep could not be seen at all (frame strips). Screen at .14 reads as gloss on a jacket. */
+  --sheen:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.14) 50%,transparent 65%);
+  --sheen-blend:screen;
+  --sh-kbd:inset 0 0 0 var(--hairline) var(--line-2);          /* ⌘K hint box */
+  --sh-ink-ring:inset 0 0 0 var(--hairline) var(--ink);         /* current 「我」 */
+  --sh-hover-bleed:0 0 0 var(--s-2) var(--hover-tint);          /* hover tint that bleeds past a flush row */
+
+  /* materials (the only gradients allowed: spine light §3.3, fades/masks, bar blur, and the v0.3
+     whitelist §7.9 — wall light, pointer light, hero tint, contact shadow, cover sheen) */
+  --spine-light:linear-gradient(90deg,rgba(0,0,0,.10) 0,rgba(0,0,0,0) 3px,rgba(255,255,255,.08) 4px,rgba(255,255,255,0) 8px);
+  --mask-fade-bottom:linear-gradient(to bottom,#000 calc(100% - 40px),transparent);
+  /* Polish r2 (deviation from §7.2-2): the wall ends on a crisp edge instead of a 96/160px fade the
+     masthead overlaps. The fade kept a band of half-dissolved covers under the title (muddy in 墨夜);
+     a clean edge plus the masthead hung under it reads as a magazine cover. --wall-mask stays
+     defined for a fade to come back by token, but the wrap no longer applies it; the title never
+     sits on a cover. */
+  --wall-fade:0px;
+  --wall-mask:linear-gradient(to bottom,#000 0,#000 calc(100% - var(--wall-fade)),rgba(0,0,0,.8) calc(100% - var(--wall-fade) * .86),rgba(0,0,0,.5) calc(100% - var(--wall-fade) * .7),rgba(0,0,0,.26) calc(100% - var(--wall-fade) * .54),rgba(0,0,0,.15) calc(100% - var(--wall-fade) * .4),rgba(0,0,0,.06) calc(100% - var(--wall-fade) * .2),transparent 100%);   /* eased so the fade reads as mist, not a band */
+  --mask-fade-y:linear-gradient(to bottom,transparent 0,#000 var(--toc-fade),#000 calc(100% - var(--toc-fade)),transparent 100%);
+  --contact-shadow:radial-gradient(closest-side,var(--contact-ink),transparent);
+  --mask-fade-right:linear-gradient(to right,#000 calc(100% - 40px),transparent);
+  --bar-bg:color-mix(in srgb,var(--bg) 92%,transparent);
+  --bar-filter:blur(20px) saturate(1.1);
+  --link-line:color-mix(in srgb,var(--link) 35%,transparent);
+  --link-line-active:color-mix(in srgb,var(--link) 90%,transparent);
+  --info-link-line:color-mix(in srgb,var(--link) 30%,transparent);
+  --press-tint:color-mix(in srgb,var(--ink) 6%,transparent);
+  --dot-ink:color-mix(in srgb,var(--ink) 60%,transparent);
+  --accent-selection:color-mix(in srgb,var(--accent) 18%,transparent);
+  --cover-filter:none;                    /* dark: brightness(.92) */
+  --wall-filter:brightness(1);            /* dark: brightness(.95) saturate(1.04); row depth is added on top */
+  --tile-press-filter:brightness(.9);
+  --tile-arrive-filter:brightness(1.08);
+  --dim-others:.55; --disabled:.4; --press-scale:.97; --plus-press-scale:.94; --lift-scale:1.04;
+
+  /* motion */
+  --ease-out:cubic-bezier(.16,1,.3,1); --ease-standard:cubic-bezier(.2,0,0,1);
+  --ease-in:cubic-bezier(.4,0,1,1);
+  --dur-press:120ms; --dur-fade:200ms; --dur-pop:280ms; --dur-page:440ms;
+  --dur-place:560ms; --stagger:40ms; --dur-roll:240ms; --dur-link-in:400ms;
+  --dur-spin:900ms;
+  --rise:8px; --pop-rise:4px; --pop-scale:.985; --dialog-scale:.98; --arrive-scale:.96;
+  /* v0.3 (§7.9, §8.5) */
+  --dur-wall-in:520ms; --dur-flight:520ms; --dur-flight-back:440ms; --dur-tint:600ms;
+  --ease-flight:cubic-bezier(.16,1,.3,1);
+  --dur-tip-in:450ms; --dur-tip-out:120ms;   /* wall hover label: show after dwell, hide after leave */
+  --hover-rise:-3px; --tile-hover-rise:-2px; --tile-hover-scale:1.035; --lead-hover-scale:1.01; --cover-press-scale:.98;
+}
+
+:root[data-theme="dark"] {
+  --select-dim:brightness(.5);
+  color-scheme: dark;
+  /* S7 墨夜 (§7.8): a desk at night with one lamp — deeper paper, brighter covers, lit surface edges */
+  --bg:#0F0F0E; --surface-1:#181816; --surface-2:#1F1F1D; --surface-3:#2A2927;
+  --ink:#ECEBE6; --text-reading:#DAD8D4;   /* §7.8 asks #EDEBE6 / #DAD7D1; nudged to keep rule 1 (spread ≤ 6) */ --text-secondary:#A6A4A0;
+  --text-tertiary:#8A8884;   /* r9: 4.5:1 on the sheets too (was #7F7D79) */ --text-quaternary:#575652; --on-ink:#121211;
+  --line-1:rgba(243,242,239,.08); --line-2:rgba(243,242,239,.12);
+  --line-3:rgba(243,242,239,.17); --line-inner:rgba(243,242,239,.06);
+  --link:#93B7D6; --accent:#E2735A; --danger:#F2726A;
+  --scrim:rgba(0,0,0,.56); --scrim-palette:rgba(0,0,0,.34);
+  --paper-1:#2A2825; --paper-2:#2F2C28; --paper-3:#272624;
+  --paper-4:#33302B; --paper-5:#2C2A27; --paper-6:#24231F; --paper-ink:#E6E2DA;
+  --sh-float:inset 0 1px 0 rgba(255,255,255,.045),0 0 0 1px rgba(255,255,255,.07),0 12px 32px rgba(0,0,0,.5);
+  --sh-sheet:inset 0 1px 0 rgba(255,255,255,.045),0 -1px 0 rgba(255,255,255,.07),0 -16px 48px rgba(0,0,0,.55);
+  --sh-object:0 1px 1px rgba(0,0,0,.5),0 8px 18px -4px rgba(0,0,0,.6);
+  --sh-object-inner:inset 0 0 0 1px rgba(255,255,255,.06);
+  --wall-seam:inset 0 0 0 .5px rgba(255,255,255,.05);
+  --cover-filter:brightness(.96);
+  --wall-filter:brightness(.95) saturate(1.04);
+  --row-dim:.025; --row-dim-min:.82;
+  --wall-light:radial-gradient(120% 90% at 18% 0%,rgba(255,240,220,.08),transparent 60%),linear-gradient(to bottom,transparent 30%,rgba(0,0,0,.35) 100%);
+  --wall-light-blend:normal;
+  --pointer-light:radial-gradient(circle closest-side,rgba(255,240,220,.07),transparent 70%);
+  --pointer-blend:screen;
+  --grain-o:.06; --grain-blend:screen;
+  --accent-glow:drop-shadow(0 0 6px rgba(226,115,90,.25));
+  --sh-lift:0 2px 4px rgba(0,0,0,.45),0 18px 40px -8px rgba(0,0,0,.7);
+  --sh-hero:0 2px 4px rgba(0,0,0,.5),0 24px 60px -12px rgba(0,0,0,.75),inset 0 1px 0 rgba(255,255,255,.06);
+  --contact-ink:rgba(0,0,0,.6);
+  --spine-light-round:linear-gradient(90deg,rgba(0,0,0,.30) 0,rgba(0,0,0,0) 8%,rgba(255,255,255,.07) 15%,rgba(255,255,255,0) 30%,rgba(0,0,0,0) 88%,rgba(0,0,0,.28) 100%);
+  --spine-light-round-ink:linear-gradient(90deg,rgba(0,0,0,.32) 0,rgba(255,255,255,.05) 6%,rgba(255,255,255,0) 11%,rgba(0,0,0,0) 40%,rgba(0,0,0,.10) 76%,rgba(0,0,0,.32) 100%);
+  --spine-light-head:linear-gradient(to bottom,rgba(255,255,255,.14) 0,rgba(255,255,255,.14) 1px,rgba(0,0,0,.16) 1px,rgba(0,0,0,.16) 3px,rgba(0,0,0,0) 6px);
+  --spine-plate:oklch(.84 .014 85);
+  --sh-plate:inset 0 0 0 .5px rgba(0,0,0,.35),0 .5px 1px rgba(0,0,0,.4);
+  --sh-spine-foot:0 1px 2px -.5px rgba(0,0,0,.7);
+  --sh-spine:inset 0 -1px 0 rgba(0,0,0,.25),inset 0 0 0 .5px rgba(255,255,255,.05),var(--sh-spine-foot);
+  --sh-spine-mini:inset 0 0 0 .5px rgba(255,255,255,.05),0 .5px 1px -.25px rgba(0,0,0,.6);
+  --sh-face:inset 0 0 0 .5px rgba(255,255,255,.06),var(--sh-spine-foot);
+  --spine-light-case:linear-gradient(90deg,rgba(255,255,255,.10) 0,rgba(255,255,255,.10) 1px,rgba(255,255,255,0) 2px,rgba(0,0,0,0) calc(100% - 2px),rgba(0,0,0,.3) calc(100% - 1px),rgba(0,0,0,.3) 100%);
+  --spine-light-paperback:linear-gradient(90deg,rgba(0,0,0,.22) 0,rgba(0,0,0,0) 6%,rgba(0,0,0,0) 92%,rgba(0,0,0,.22) 100%);
+  --spine-plastic:rgba(255,255,255,.1); --spine-plastic-edge:rgba(255,255,255,.18);
+}
+
+/* Reduced motion: no translate / scale anywhere, only ≤150ms opacity (§2.7). data-motion lets the
+   prototype force it for review without touching OS settings. */
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur-pop:150ms; --dur-page:150ms; --dur-place:150ms; --stagger:0ms; --dur-roll:0ms;
+          --rise:0px; --pop-rise:0px; --pop-scale:1; --arrive-scale:1; --press-scale:1;
+          --plus-press-scale:1; --lift-scale:1; --tile-arrive-filter:none;
+          --hover-rise:0px; --tile-hover-rise:0px; --tile-hover-scale:1; --lead-hover-scale:1; --cover-press-scale:1;
+          --rise-flight:0px; --wall-mast-delay:0ms; --late-in:0ms; --dialog-scale:1;
+          --cover-lift:0px; }
+}
+:root[data-motion="reduce"] {
+  --dur-pop:150ms; --dur-page:150ms; --dur-place:150ms; --stagger:0ms; --dur-roll:0ms;
+  --rise:0px; --pop-rise:0px; --pop-scale:1; --arrive-scale:1; --press-scale:1;
+  --plus-press-scale:1; --lift-scale:1; --tile-arrive-filter:none;
+  --hover-rise:0px; --tile-hover-rise:0px; --tile-hover-scale:1; --lead-hover-scale:1; --cover-press-scale:1;
+  --rise-flight:0px; --wall-mast-delay:0ms; --late-in:0ms; --dialog-scale:1;
+  --cover-lift:0px;
+}
+
+@media (max-width: 360px) {
+  :root { --page-x:16px; }
+}
+
+/* ---------- breakpoints (§7.1 type scale, §8.1 containers, §8.4 spacing) ---------- */
+/* tablet 640–1023 */
+@media (min-width: 640px) {
+  :root {
+    --t-mega:400 8rem/7.25rem var(--font-serif);            /* 128/116 */
+    --t-masthead:600 3.75rem/4rem var(--font-serif);        /* 60/64 (spec 52) */
+    --t-hero:600 3rem/3.5rem var(--font-serif);             /* 48/56 */
+    --t-hero-short:var(--t-hero);
+    --t-hero-long:600 2.5rem/3rem var(--font-serif);        /* 40/48 */
+    --t-count:500 2.5rem/2.75rem var(--font-serif);         /* 40/44 */
+    --t-epigraph:400 1.375rem/2.375rem var(--font-serif);   /* 22/38 */
+    --t-display:600 2rem/2.625rem var(--font-serif);        /* 32/42 */
+    --t-h2:600 1.3125rem/1.875rem var(--font-serif);        /* 21/30 */
+    --t-body:400 1.0625rem/1.875rem var(--font-sans);       /* 17/30 */
+    --page-x:32px; --bar-top:52px; --space-h2:48px;
+    --t-spine-row:600 0.75rem/1 var(--font-serif);
+    --read-col:680px; --tabbar-w:480px; --overlay-w:560px;
+    --wall-cap:60vh; --wall-display-h:280px;
+  }
+}
+/* desktop 1024–1439 */
+@media (min-width: 1024px) {
+  :root {
+    --t-mega:400 10rem/9rem var(--font-serif);              /* 160/144 */
+    --t-masthead:600 5rem/5.25rem var(--font-serif);        /* 80/84 (spec 64) */
+    --t-hero:600 3.5rem/4rem var(--font-serif);             /* 56/64 */
+    --t-hero-long:600 2.75rem/3.25rem var(--font-serif);    /* 44/52 */
+    --t-hero-short:600 4.5rem/5rem var(--font-serif);       /* 72/80  ≤ 6 characters (polish r2) */
+    --t-epigraph-aside:400 1.25rem/2.125rem var(--font-serif); /* 20/34 epigraph in the hero side column */
+    --t-count:500 3.5rem/3.5rem var(--font-serif);          /* 56/56 */
+    --t-epigraph:400 1.5rem/2.625rem var(--font-serif);     /* 24/42 */
+    --t-display:600 2.125rem/2.75rem var(--font-serif);     /* 34/44 */
+    --t-h2:600 1.375rem/2rem var(--font-serif);             /* 22/32 */
+    --t-body:400 1.0625rem/1.9375rem var(--font-sans);      /* 17/31 */
+    --t-caption:400 0.8125rem/1.125rem var(--font-sans);    /* 13/18 */
+    --page-x:48px; --bar-top:56px; --space-h2:56px;
+    --yrow-gap:var(--s-11);
+    /* 612 instead of 600: 36 characters of 17px body per line (§6.4 #52) */
+    --container:1200px; --read-col:612px; --overlay-w:520px;
+    /* 陈列 zone: the 240 covers (§8.3.1) with 40 of paper above and below, as on phone */
+    --wall-cap:64vh; --masthead-gap:32px; --wall-display-h:320px;
+    --hero-zone-h:clamp(480px, 60vh, 660px); --hero-below:48px;
+  }
+}
+/* wide ≥ 1440 */
+@media (min-width: 1440px) {
+  :root {
+    --t-mega:400 11.5rem/10.25rem var(--font-serif);        /* 184/164 */
+    --t-masthead:600 6rem/6.25rem var(--font-serif);        /* 96/100 (spec 76) */
+    --t-hero:600 4rem/4.5rem var(--font-serif);             /* 64/72 */
+    --t-hero-long:600 3rem/3.5rem var(--font-serif);        /* 48/56 */
+    --t-hero-short:600 clamp(5rem, 5.6vw, 7rem)/1.06 var(--font-serif); /* 80 at 1440 → 108 at 1920 */
+    --t-epigraph-aside:400 1.375rem/2.375rem var(--font-serif); /* 22/38 */
+    --t-count:500 4rem/4rem var(--font-serif);              /* 64/64 */
+    --t-epigraph:400 1.625rem/2.75rem var(--font-serif);    /* 26/44 */
+    --t-display:600 2.25rem/2.875rem var(--font-serif);     /* 36/46 */
+    --t-body:400 1.125rem/2rem var(--font-sans);            /* 18/32 */
+    --page-x:64px; --space-h2:64px;
+    --container:1360px; --read-col:680px; --desk-search-w:480px;
+  }
+}
+/* Entry grid (§8.3.2). The hero cover's left edge sits on the TOC column and the title on the
+   reading column, so the TOC column is exactly as wide as the cover (ENTRY_COVER in tokens.ts).
+   1280: 240 | 40 | 612 | 40 | 252 · 1440: 264 | 48 | 648 | 48 | 304 · 1600+: 300 | 64 | 680 | 64 | 340 */
+@media (min-width: 1280px) {
+  :root { --toc-w:240px; --entry-gap:40px; --entry-read:612px; --side-w:252px; }
+}
+@media (min-width: 1440px) {
+  :root { --toc-w:264px; --entry-gap:48px; --entry-read:648px; --side-w:304px; }
+}
+@media (min-width: 1600px) {
+  :root { --toc-w:300px; --entry-gap:64px; --entry-read:680px; --side-w:340px; }
+}
+
+/* S4 ambient tint (§7.5). Declared on .hero-zone, not :root, because it reads the per-entry
+   --tint-c / --tint-h set inline there. Light L .955 C ≤ .03 (polish r2: §7.5 allows .045, which
+   read as a coloured wash on warm covers; felt, not seen) · dark L .22 C ≤ .04 (polish r3: .24 / .055
+   turned a warm cover's hero brown; a little lift stays, so the cover still has air around it). */
+.hero-zone {
+  --hero-tint:oklch(0.955 min(var(--tint-c, 0), 0.03) var(--tint-h, 0));
+  --hero-glow:radial-gradient(90% 70% at var(--tint-x, 50%) 28%, var(--hero-tint) 0%, transparent 72%);
+}
+:root[data-theme="dark"] .hero-zone { --hero-tint:oklch(0.22 min(var(--tint-c, 0), 0.04) var(--tint-h, 0)); }

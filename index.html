@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#F8F7F5" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0F0F0E" media="(prefers-color-scheme: dark)" />
+    <title>存目</title>
+    <meta name="application-name" content="存目" />
+    <meta name="apple-mobile-web-app-title" content="存目" />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="./favicon.ico" sizes="48x48" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <!-- before any stylesheet or script: the page colour of the chosen look, so a dark phone never sees a white frame -->
+    <style>
+      html { background: #F8F7F5; }
+      @media (prefers-color-scheme: dark) { html { background: #0F0F0E; } }
+      html[data-theme="light"] { background: #F8F7F5; }
+      html[data-theme="dark"] { background: #0F0F0E; }
+      .splash { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; background: inherit; pointer-events: none; }
+    </style>
+    <script src="./boot.js"></script>
+  </head>
+  <body>
+    <!-- 启动页: the page colour and the app mark, centred where the phone's own launch screen put it; it fades once the app has drawn -->
+    <div class="splash" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 1024 1024"><defs><linearGradient id="splash-ga" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#AACDB9"/><stop offset="1" stop-color="#7BA691"/></linearGradient><radialGradient id="splash-gb" cx="0.3" cy="0.12" r="0.9"><stop offset="0" stop-color="#fff" stop-opacity="0.18"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs><rect width="1024" height="1024" rx="224" fill="url(#splash-ga)"/><rect width="1024" height="1024" rx="224" fill="url(#splash-gb)"/><defs><filter id="splash-ks" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="16"/></filter><linearGradient id="splash-kl" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0.1"/><stop offset="0.55" stop-color="#fff" stop-opacity="0"/></linearGradient></defs><g transform="translate(512 512) scale(1) translate(-512 -512) translate(518 536) scale(0.95) translate(-512 -512)"><rect x="239" y="226" width="330" height="440" rx="30" transform="translate(5 10) rotate(-12 404 446)" fill="#16302A" opacity="0.24" filter="url(#splash-ks)"/><rect x="239" y="226" width="330" height="440" rx="30" transform="rotate(-12 404 446)" fill="#263656"/><rect x="239" y="226" width="330" height="440" rx="30" transform="rotate(-12 404 446)" fill="url(#splash-kl)"/><rect x="333" y="276" width="330" height="440" rx="30" transform="translate(5 10) rotate(-2 498 496)" fill="#16302A" opacity="0.24" filter="url(#splash-ks)"/><rect x="333" y="276" width="330" height="440" rx="30" transform="rotate(-2 498 496)" fill="#E0AA45"/><rect x="333" y="276" width="330" height="440" rx="30" transform="rotate(-2 498 496)" fill="url(#splash-kl)"/><rect x="435" y="328" width="330" height="440" rx="30" transform="translate(5 10) rotate(8 600 548)" fill="#16302A" opacity="0.24" filter="url(#splash-ks)"/><rect x="435" y="328" width="330" height="440" rx="30" transform="rotate(8 600 548)" fill="#C8442C"/><rect x="435" y="328" width="330" height="440" rx="30" transform="rotate(8 600 548)" fill="url(#splash-kl)"/><rect x="487" y="374" width="58" height="196" rx="12" transform="rotate(8 600 548)" fill="#FBF6EC"/></g></svg></div>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

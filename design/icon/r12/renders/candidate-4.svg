@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024"><defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="0.3" y2="1"><stop offset="0" stop-color="#F2E7D5"/><stop offset="1" stop-color="#E6D6BC"/></linearGradient>
+  <radialGradient id="glow" cx="0.32" cy="0.22" r="0.8"><stop offset="0" stop-color="#fff" stop-opacity="0.55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+  <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="18"/></filter>
+  <filter id="soft2" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="5"/></filter>
+  
+  <linearGradient id="top" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#FFFBF3"/><stop offset="1" stop-color="#F1E4CF"/></linearGradient>
+  <radialGradient id="cherry" cx="0.35" cy="0.3" r="0.75"><stop offset="0" stop-color="#F06A4A"/><stop offset="0.6" stop-color="#D0452B"/><stop offset="1" stop-color="#B13820"/></radialGradient>
+  <linearGradient id="sideshade" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#000" stop-opacity="0.10"/><stop offset="1" stop-color="#000" stop-opacity="0.22"/></linearGradient></defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/><rect width="1024" height="1024" fill="url(#glow)"/>
+    <ellipse cx="481" cy="854" rx="330" ry="34" fill="#3B2A1A" opacity="0.22" filter="url(#soft)"/>
+    <!-- second cut face, receding to the back -->
+    <g transform="translate(616 456) skewY(-40.36453657309736)">
+      <clipPath id="sc"><rect x="0" y="0" width="190" height="380" rx="10"/></clipPath>
+      <g clip-path="url(#sc)"><rect x="0" y="0" width="190" height="40" fill="#FBF4E6"/><rect x="0" y="40" width="190" height="76" fill="#E8AE45"/><rect x="0" y="116" width="190" height="28" fill="#FBF4E6"/><rect x="0" y="144" width="190" height="76" fill="#33456E"/><rect x="0" y="158" width="190" height="48" fill="#EFE3CC"/><rect x="0" y="220" width="190" height="28" fill="#FBF4E6"/><rect x="0" y="248" width="190" height="72" fill="#25211F"/><rect x="0" y="320" width="190" height="28" fill="#FBF4E6"/><rect x="0" y="348" width="190" height="32" fill="#E2B272"/><rect width="190" height="380" fill="url(#sideshade)"/></g>
+    </g>
+    <!-- top: frosting, the back edge is the crust -->
+    <path d="M226 456 L616 456 L806 294.5 Z" fill="url(#top)"/>
+    <path d="M226 456 L806 294.5" stroke="#E7CFA6" stroke-width="10" stroke-linecap="round"/>
+    <!-- front cut face -->
+    <clipPath id="fc"><rect x="226" y="456" width="390" height="380" rx="14"/></clipPath>
+    <g clip-path="url(#fc)"><g transform="translate(226 456)"><rect x="0" y="0" width="390" height="40" fill="#FBF4E6"/><rect x="0" y="40" width="390" height="76" fill="#E8AE45"/><rect x="46.8" y="57" width="296.4" height="42" rx="21" fill="#D29531"/><circle cx="117" cy="78" r="14" fill="#FBF4E6"/><circle cx="273" cy="78" r="14" fill="#FBF4E6"/><rect x="0" y="116" width="390" height="28" fill="#FBF4E6"/><rect x="0" y="144" width="390" height="76" fill="#33456E"/><rect x="0" y="158" width="390" height="48" fill="#EFE3CC"/><rect x="0" y="164" width="390" height="2" fill="#D6C5A4"/><rect x="0" y="171" width="390" height="2" fill="#D6C5A4"/><rect x="0" y="178" width="390" height="2" fill="#D6C5A4"/><rect x="0" y="185" width="390" height="2" fill="#D6C5A4"/><rect x="0" y="192" width="390" height="2" fill="#D6C5A4"/><rect x="0" y="199" width="390" height="2" fill="#D6C5A4"/><rect x="0" y="220" width="390" height="28" fill="#FBF4E6"/><rect x="0" y="248" width="390" height="72" fill="#25211F"/><rect x="14" y="258" width="22" height="13" rx="3" fill="#FBF4E6" opacity="0.85"/><rect x="14" y="297" width="22" height="13" rx="3" fill="#FBF4E6" opacity="0.85"/><rect x="60" y="258" width="22" height="13" rx="3" fill="#FBF4E6" opacity="0.85"/><rect x="60" y="297" width="22" height="13" rx="3" fill="#FBF4E6" opacity="0.85"/><rect x="106" y="258" width="22" height="13" rx="3" fill="#FBF4E6" opacity="0.85"/><rect x="106" y="297" width="22" height="13" rx="3" fill="#FBF4E6" opacity="0.85"/><rect x="152" y="258" width="22" height="13" rx="3" fill="#FBF4E6" opacity="0.85"/><rect x="152" y="297" width="22" height="13" rx="3" fill="#FBF4E6" opacity="0.85"/><rect x="198" y="258" width="22" height="13" rx="3" fill="#FBF4E6" opacity="0.85"/><rect x="198" y="297" width="22" height="13" rx="3" fill="#FBF4E6" opacity="0.85"/><rect x="244" y="258" width="22" height="13" rx="3" fill="#FBF4E6" opacity="0.85"/><rect x="244" y="297" width="22" height="13" rx="3" fill="#FBF4E6" opacity="0.85"/><rect x="290" y="258" width="22" height="13" rx="3" fill="#FBF4E6" opacity="0.85"/><rect x="290" y="297" width="22" height="13" rx="3" fill="#FBF4E6" opacity="0.85"/><rect x="336" y="258" width="22" height="13" rx="3" fill="#FBF4E6" opacity="0.85"/><rect x="336" y="297" width="22" height="13" rx="3" fill="#FBF4E6" opacity="0.85"/><rect x="0" y="320" width="390" height="28" fill="#FBF4E6"/><rect x="0" y="348" width="390" height="32" fill="#E2B272"/></g></g>
+    <!-- a little cream piped on top, and the cherry -->
+    <circle cx="506.8" cy="444" r="44" fill="#FBF4E6"/>
+    <path d="M506.8 360 q16 -64 84 -80" stroke="#4A3B2A" stroke-width="12" fill="none" stroke-linecap="round"/>
+    <circle cx="506.8" cy="410" r="58" fill="url(#cherry)"/>
+    <ellipse cx="486.8" cy="388" rx="16" ry="10" fill="#fff" opacity="0.6" transform="rotate(-30 486.8 388)"/>
+  </svg>

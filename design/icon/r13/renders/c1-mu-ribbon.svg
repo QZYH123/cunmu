@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024"><defs><linearGradient id="bg" x1="0" y1="0" x2="0.25" y2="1"><stop offset="0" stop-color="#D85A40"/><stop offset="1" stop-color="#B23A24"/></linearGradient>
+  <radialGradient id="sheen" cx="0.3" cy="0.15" r="0.9"><stop offset="0" stop-color="#fff" stop-opacity="0.18"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+  <filter id="drop" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur in="SourceAlpha" stdDeviation="14"/><feOffset dy="12"/><feComponentTransfer><feFuncA type="linear" slope="0.22"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs><rect width="1024" height="1024" fill="url(#bg)"/><rect width="1024" height="1024" fill="url(#sheen)"/>
+      <mask id="m"><rect width="1024" height="1024" fill="#fff"/><rect x="362" y="280" width="260" height="101.33333333333333" rx="18" fill="#000"/><rect x="362" y="439.3333333333333" width="260" height="101.33333333333333" rx="18" fill="#000"/><rect x="362" y="598.6666666666666" width="260" height="101.33333333333333" rx="18" fill="#000"/></mask>
+      <g filter="url(#drop)">
+        <rect x="292" y="210" width="400" height="560" rx="70" fill="#FBF6EC" mask="url(#m)"/>
+        <path d="M498 198 q0 -14 14 -14 h56 q14 0 14 14 v680 l-42 -44 l-42 44 z" fill="#22304D"/>
+      </g></svg>

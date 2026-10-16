@@ -1,0 +1,89 @@
+name: release
+# On a version tag (v0.1.0 …): the Android APK and the Windows installer, attached to a GitHub Release.
+# Android is release-signed only if the four CUNMU_* secrets are set; otherwise it is the debug build
+# (fine for sideloading, cannot be upgraded by a signed build later). Windows is unsigned (SmartScreen warns).
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  android:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: android-actions/setup-android@v3
+      - run: npm ci
+      - name: keystore (only when the secret exists)
+        env:
+          KS_B64: ${{ secrets.CUNMU_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KS_B64" ]; then
+            echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/cunmu.jks"
+            echo "CUNMU_KEYSTORE=$RUNNER_TEMP/cunmu.jks" >> "$GITHUB_ENV"
+          fi
+      - name: build
+        env:
+          CUNMU_KEYSTORE_PASSWORD: ${{ secrets.CUNMU_KEYSTORE_PASSWORD }}
+          CUNMU_KEY_ALIAS: ${{ secrets.CUNMU_KEY_ALIAS }}
+          CUNMU_KEY_PASSWORD: ${{ secrets.CUNMU_KEY_PASSWORD }}
+        run: |
+          mkdir -p out
+          if [ -n "$CUNMU_KEYSTORE" ]; then
+            npm run cap:sync -- android
+            (cd android && ./gradlew assembleRelease --console=plain)
+            cp android/app/build/outputs/apk/release/app-release.apk "out/Cunmu-${GITHUB_REF_NAME}-android.apk"
+          else
+            npm run apk:debug -- --out "out/Cunmu-${GITHUB_REF_NAME}-android-debug.apk"
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android
+          path: out/*.apk
+
+  windows:
+    # cross-built on Linux exactly as scripts/build-win.mjs does locally (cargo-xwin + NSIS)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+      - run: sudo apt-get update && sudo apt-get install -y clang lld llvm nsis
+      - run: cargo install --locked cargo-xwin
+      - run: npm ci
+      - run: npm run win:build -- --out out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: out/*.exe
+
+  publish:
+    needs: [android, windows]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist-release
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist-release/*
+          draft: true
+          generate_release_notes: true

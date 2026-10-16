@@ -12,6 +12,8 @@ import { toParagraphs, todayISO } from '../lib/today';
 import { IMAGES_PER_WORK, deleteImage, putImage, shrinkToBlob, useImageSrc } from '../lib/images';
 import { Link } from 'react-router-dom';
 import { OVERLAY } from '../lib/shell';
+import { noteLanding, takeOpenFrom } from '../lib/motion';
+import { EASE, M } from '../tokens';
 
 const imgId = () => `img-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
 /** a picked picture, shrunk and put in IndexedDB; null if it can't be read */
@@ -146,7 +148,7 @@ function EssayEditor({ editId }: { editId: string | null }) {
     const paras = toParagraphs(body);
     if (!paras.length && !title.trim()) return;
     saved.current = sig;
-    if (!existing) keptNew.current = true;
+    if (!existing) { keptNew.current = true; noteLanding(id); }
     const date = existing?.finished ?? todayISO();
     const w: Work = {
       id, kind: 'essay', title: title.trim(), credits: [], finished: date, collected: existing?.collected ?? date, source: 'manual',
@@ -158,12 +160,26 @@ function EssayEditor({ editId }: { editId: string | null }) {
   useSaveOnLeave(save, () => {
     if (keptNew.current) store.toast('随笔收好了', { label: '不要了', run: () => store.removeWork(id) });
   });
-  // the unmount saves (and, for a new essay, leaves the footnote); leaving is just going back
-  const leave = () => { history.state?.idx > 0 ? nav(-1) : nav('/'); };
+  // the unmount saves too (and, for a new essay, leaves the footnote); saving before going back lets
+  // 随笔 know which row to land as it renders (P1-5)
+  const leave = () => { save(); history.state?.idx > 0 ? nav(-1) : nav('/'); };
   useEscLeaves(leave);
+  // opened from 「写一篇」: the page unfolds out of the button's box (a clip, the text is never scaled),
+  // and the caret appears once it is open (P1-5)
+  const sheet = useRef<HTMLDivElement>(null);
+  const [from] = useState(takeOpenFrom);
+  useEffect(() => {
+    const el = sheet.current, ta = el?.querySelector<HTMLTextAreaElement>('.editor-body');
+    if (!el || !from) { ta?.focus({ preventScroll: true }); return; }
+    const { innerWidth: w, innerHeight: h } = window;
+    const inset = `inset(${from.top}px ${w - from.right}px ${h - from.bottom}px ${from.left}px round ${from.height / 2}px)`;
+    const a = el.animate([{ clipPath: inset }, { clipPath: 'inset(0 0 0 0 round 0px)' }], { duration: M.base, easing: EASE.out });
+    a.finished.then(() => ta?.focus({ preventScroll: true }), () => undefined);
+    return () => a.cancel();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="editor">
+    <div className="editor" ref={sheet}>
       <EditorHead onBack={leave} />
       <input className="editor-title" placeholder="标题（可以不写）" aria-label="标题" value={title} onChange={(e) => setTitle(e.target.value)} />
       {photo && (
@@ -172,7 +188,7 @@ function EssayEditor({ editId }: { editId: string | null }) {
           <button className="icon-btn" aria-label="去掉图片" onClick={() => setPhoto(null)}><X strokeWidth={1.5} /></button>
         </figure>
       )}
-      <textarea className="editor-body" placeholder="写点什么" aria-label="正文" autoFocus value={body} onChange={(e) => setBody(e.target.value)} />
+      <textarea className="editor-body" placeholder="写点什么" aria-label="正文" value={body} onChange={(e) => setBody(e.target.value)} />
       <EditorBar>
         <button className="icon-btn" aria-label="图片" onClick={() => file.current?.click()}><Image strokeWidth={1.5} /></button>
         <input

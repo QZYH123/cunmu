@@ -5,7 +5,7 @@ import { fmtYMD } from '../data/derive';
 import type { Work } from '../data/types';
 import { TopBar } from '../components/Shell';
 import { Pill } from '../components/MeParts';
-import { lastEssayOpen, reduced, staggerStyle, TITLE_VT, transitionIdle, useEnterClass, withViewTransition } from '../lib/motion';
+import { lastEssayOpen, noteOpenFrom, reduced, takeLanding, staggerStyle, TITLE_VT, transitionIdle, useEnterClass, withViewTransition } from '../lib/motion';
 import { useSectionSpy } from './Entry';
 
 const dayOf = (w: Work) => w.finished || w.collected.slice(0, 10);
@@ -21,7 +21,9 @@ export default function Writing() {
   const enter = useEnterClass();
   const { h1, h1Gone } = useSectionSpy([]);
   const essays = library.filter((w) => w.kind === 'essay').sort((a, b) => (dayOf(a) < dayOf(b) ? 1 : dayOf(a) > dayOf(b) ? -1 : 0));
-  const write = () => nav('/write', { state: { from: 'writing' } });
+  const write = (ev?: React.MouseEvent) => { noteOpenFrom(ev?.currentTarget ?? null); nav('/write', { state: { from: 'writing' } }); };
+  // a new essay just saved settles into the top of the list (P1-5)
+  const [landed] = useState(takeLanding);
   // coming back from an essay its title lands in its row, then lets the name go (P1-4)
   const navType = useNavigationType();
   const [back, setBack] = useState(() => (navType === 'POP' ? lastEssayOpen() : ''));
@@ -35,7 +37,7 @@ export default function Writing() {
   };
   return (
     <div className="page under-bar">
-      <TopBar back={false} title="随笔" titleOn={h1Gone} right={essays.length > 0 && <button className="btn-text" onClick={write}>写一篇</button>} />
+      <TopBar back={false} title="随笔" titleOn={h1Gone} right={essays.length > 0 && <button className="btn-text" onClick={(ev) => write(ev)}>写一篇</button>} />
       <div className={`page-x read-x list-page writing-page ${enter}`}>
         <h1 className="t-title page-title" ref={h1}>随笔</h1>
         <p className="t-small c-2 list-lede">{essays.length ? `写过 ${essays.length} 篇。` : '自己写的东西，放在这里。'}</p>
@@ -44,7 +46,7 @@ export default function Writing() {
             {essays.map((e, i) => {
               const img = e.images?.[0];
               return (
-                <article key={e.id} className={`writing-item ${img ? 'has-img' : ''}`} style={enter ? staggerStyle(i) : undefined}>
+                <article key={e.id} className={`writing-item ${img ? 'has-img' : ''} ${landed === e.id ? 'landed' : ''}`} style={enter ? staggerStyle(i) : undefined}>
                   <Link to={`/essay/${e.id}`} className="writing-link" onClick={(ev) => open(ev, e.id)}>
                     <span className="writing-t" style={back === e.id ? { viewTransitionName: TITLE_VT } : undefined}>{e.title || '随笔'}{me.onlyMe.includes(e.id) && <Pill>只给自己</Pill>}</span>
                     <span className="writing-d">{fmtYMD(dayOf(e))}</span>
@@ -59,7 +61,7 @@ export default function Writing() {
         ) : (
           <div className="writing-empty">
             <p className="t-ui c-2 empty-line">还没有写过。读完、看完想说几句，或者别的什么，都可以写在这里。</p>
-            <button className="btn btn-primary" onClick={write}>写一篇</button>
+            <button className="btn btn-primary" onClick={(ev) => write(ev)}>写一篇</button>
           </div>
         )}
       </div>

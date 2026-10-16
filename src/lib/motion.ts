@@ -249,6 +249,17 @@ let lastEssay = '';
 export const noteEssay = (id: string) => { lastEssay = id; };
 export const lastEssayOpen = () => lastEssay;
 
+/**
+ * 写一篇 (P1-5): the editor opens out of the button that asked for it, and a new essay lands in 随笔.
+ * Both are one-shot notes, taken by the page that plays them.
+ */
+let openFrom: DOMRect | null = null;
+let landing = '';
+export const noteOpenFrom = (el: Element | null) => { openFrom = el && !reduced() ? el.getBoundingClientRect() : null; };
+export const takeOpenFrom = () => { const r = openFrom; openFrom = null; return r; };
+export const noteLanding = (id: string) => { landing = id; };
+export const takeLanding = () => { const id = landing; landing = ''; return id; };
+
 export const STAGGER_MAX = 6;
 export const staggerStyle = (i: number): React.CSSProperties =>
   ({ animationDelay: `calc(var(--stagger) * ${Math.min(i, STAGGER_MAX)})` });

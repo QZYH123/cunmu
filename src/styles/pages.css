@@ -1276,3 +1276,7 @@ p.confirm-first { height: auto; }
 @media (hover: hover) and (pointer: fine) {
   .writing-link:hover .writing-t { text-decoration: underline; text-decoration-thickness: var(--hairline); text-underline-offset: 4px; }
 }
+
+/* a new essay lands in its place: a short drop and a fade, the length of a signature (P1-5) */
+.writing-item.landed { animation: land var(--m-sign) var(--e-out) both; }
+@keyframes land { from { opacity: 0; transform: translateY(calc(var(--d-nudge) * -1)); } }

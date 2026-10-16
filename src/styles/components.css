@@ -7,7 +7,7 @@
   background: var(--bar-bg);
   -webkit-backdrop-filter: var(--bar-filter); backdrop-filter: var(--bar-filter);
   box-shadow: none;
-  transition: box-shadow var(--dur-fade) var(--ease-standard), opacity var(--dur-fade) var(--ease-standard);
+  transition: opacity var(--dur-fade) var(--ease-standard);
 }
 .topbar.scrolled { box-shadow: var(--sh-bar-bottom); }
 .topbar.hidden { opacity: 0; pointer-events: none; }
@@ -225,7 +225,7 @@
 .list-row {
   display: flex; align-items: center; gap: var(--s-4); min-height: var(--row-list);
   position: relative; margin: 0 calc(var(--s-3) * -1); padding: var(--s-1) var(--s-3); border-radius: var(--r-sm);
-  transition: background-color var(--dur-press) var(--ease-standard);
+
 }
 .list-row:active { background: var(--surface-2); }
 .list-row + .list-row::before {
@@ -298,7 +298,7 @@
 /* ---------- switch ---------- */
 .switch {
   width: 44px; height: 26px; border-radius: var(--r-full); background: var(--surface-3); position: relative; flex: none;
-  transition: background-color var(--dur-fade) var(--ease-standard);
+
 }
 .switch::after {
   content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: var(--r-full);
@@ -312,7 +312,7 @@
 .hscroll::-webkit-scrollbar { display: none; }
 /* the fade's own width of room after the last item, so the end (「游戏」 on the home type index) is never under it */
 .hscroll::after { content: ""; flex: none; width: 40px; }
-.row-press { border-radius: var(--r-sm); margin: 0 calc(var(--s-3) * -1); padding-left: var(--s-3); padding-right: var(--s-3); transition: background-color var(--dur-press) var(--ease-standard); }
+.row-press { border-radius: var(--r-sm); margin: 0 calc(var(--s-3) * -1); padding-left: var(--s-3); padding-right: var(--s-3);  }
 .row-press:active { background: var(--surface-2); }
 .chev { color: var(--text-tertiary); }
 
@@ -342,7 +342,7 @@
   .desk-search {
     width: var(--desk-search-w); height: var(--desk-search-h); border-radius: var(--r-full); background: var(--surface-2);
     display: flex; align-items: center; gap: var(--s-3); padding: 0 var(--s-3) 0 var(--s-4);
-    font: var(--t-ui); color: var(--text-tertiary); transition: box-shadow var(--dur-press) var(--ease-standard);
+    font: var(--t-ui); color: var(--text-tertiary);
   }
   .desk-search svg { width: var(--icon-sm); height: var(--icon-sm); color: var(--text-tertiary); flex: none; }
   .desk-search span { flex: 1; min-width: 0; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -354,13 +354,13 @@
   .pill-plus {
     height: var(--desk-pill-h); padding: 0 var(--desk-pill-x); border-radius: var(--r-full); background: var(--ink); color: var(--on-ink);
     display: inline-flex; align-items: center; gap: var(--s-2); font: var(--t-pill); white-space: nowrap;
-    transition: background-color var(--dur-press) var(--ease-standard), transform var(--dur-press) var(--ease-out);
+    transition: transform var(--dur-press) var(--ease-out);
   }
   .pill-plus svg { width: var(--icon-sm); height: var(--icon-sm); }
   .pill-plus:active { transform: scale(var(--press-scale)); }
   .me-dot {
     width: var(--desk-avatar); height: var(--desk-avatar); border-radius: var(--r-full); display: grid; place-items: center; flex: none;
-    background: var(--surface-2); box-shadow: var(--sh-ring); font: var(--t-me-dot); color: var(--text-secondary); transition: color var(--dur-press) var(--ease-standard), box-shadow var(--dur-press) var(--ease-standard);
+    background: var(--surface-2); box-shadow: var(--sh-ring); font: var(--t-me-dot); color: var(--text-secondary); transition: color var(--dur-press) var(--ease-standard);
   }
   .me-dot.on { color: var(--ink); box-shadow: var(--sh-ink-ring); }
 
@@ -480,7 +480,7 @@
 .ds-yearline { display: flex; align-items: center; margin-top: var(--s-6); }
 .ds-approx {
   flex: none; width: 32px; height: 32px; border-radius: var(--r-full); font: var(--t-ui); font-weight: var(--w-strong);
-  color: var(--text-tertiary); transition: background var(--dur-fade) var(--ease-standard), color var(--dur-fade) var(--ease-standard);
+  color: var(--text-tertiary); transition: color var(--dur-fade) var(--ease-standard);
 }
 .ds-approx.on { background: var(--surface-2); color: var(--ink); }
 .ds-vline { flex: none; width: var(--hairline); height: 24px; margin: 0 var(--s-3); background: var(--line-inner); }
@@ -552,7 +552,7 @@
 .srail-thumb {
   position: absolute; left: 0; top: 50%; height: var(--rail-thumb); transform-origin: 0 50%;
   border-radius: var(--r-full); background: var(--rail-thumb-ink); translate: 0 -50%;
-  transition: scale var(--dur-fade) var(--ease-standard), background-color var(--dur-fade) var(--ease-standard);
+  transition: scale var(--dur-fade) var(--ease-standard);
 }
 /* thicker while held or pointed at: a scale, not a height (P0-4); 3 / 2 = --rail-thumb-active / --rail-thumb */
 .srail.is-dragging .srail-thumb { scale: 1 1.5; background: var(--rail-thumb-ink-active); }
@@ -582,7 +582,7 @@ html[data-show] .prail { top: var(--s-2); bottom: var(--s-2); }
 .prail-thumb::after {
   content: ''; position: absolute; top: 0; bottom: 0; right: 0; width: var(--rail-thumb);
   border-radius: var(--r-full); background: var(--rail-thumb-ink); transform-origin: 100% 50%;
-  transition: scale var(--dur-fade) var(--ease-standard), background-color var(--dur-fade) var(--ease-standard);
+  transition: scale var(--dur-fade) var(--ease-standard);
 }
 .prail.is-dragging .prail-thumb::after { scale: 1.5 1; background: var(--rail-thumb-ink-active); }
 @media (hover: hover) and (pointer: fine) {
@@ -601,7 +601,7 @@ html[data-show] .prail { top: var(--s-2); bottom: var(--s-2); }
 .shelf-view button {
   display: inline-flex; align-items: center; gap: var(--s-1); height: var(--shelf-view-h); padding: 0 var(--s-3);
   border-radius: var(--r-full); color: var(--text-tertiary); font: var(--t-small);
-  transition: color var(--dur-fade) var(--ease-standard), background-color var(--dur-fade) var(--ease-standard);
+  transition: color var(--dur-fade) var(--ease-standard);
 }
 .shelf-view button svg { width: var(--icon-sm); height: var(--icon-sm); }
 .shelf-view button.on { color: var(--ink); background: var(--surface-2); }

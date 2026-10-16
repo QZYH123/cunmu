@@ -244,7 +244,7 @@
 .mentions { display: flex; flex-direction: column; }
 .mention {
   display: block; padding: var(--s-4) var(--s-3); margin: 0 calc(var(--s-3) * -1); border-radius: var(--r-sm); position: relative;
-  transition: background-color var(--dur-press) var(--ease-standard);
+
 }
 .mention:first-child { padding-top: 0; }
 .mention:active { background: var(--surface-2); }
@@ -342,7 +342,7 @@
 .ym-item {
   display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; column-gap: var(--s-4);
   padding: var(--s-2) var(--s-2); margin: 0 calc(var(--s-2) * -1); border-radius: var(--r-xs); break-inside: avoid;
-  transition: background-color var(--dur-press) var(--ease-standard);
+
 }
 .ym-item:active { background: var(--surface-2); }
 .ym-item:focus-visible { box-shadow: var(--focus-ring-inset); }
@@ -372,7 +372,7 @@
 .tl-month.after-gap::before { content: ""; position: absolute; left: 6px; top: 0; height: var(--s-7); border-left: var(--hairline) solid var(--line-2); }
 .tl-month-head { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: var(--hit); text-align: left; }
 .tl-count { display: inline-flex; align-items: center; gap: var(--s-1); font: var(--t-caption); color: var(--text-tertiary); }
-.tl-item { display: flex; align-items: flex-start; gap: var(--s-4); padding: var(--s-3) 0 var(--s-3) var(--s-7); position: relative; border-radius: var(--r-sm); transition: background-color var(--dur-press) var(--ease-standard); }
+.tl-item { display: flex; align-items: flex-start; gap: var(--s-4); padding: var(--s-3) 0 var(--s-3) var(--s-7); position: relative; border-radius: var(--r-sm);  }
 .tl-item:active { background: var(--surface-2); }
 .tl-dot { position: absolute; left: calc(6.5px - var(--timeline-dot) / 2); top: calc(var(--s-3) + 0.6875rem - var(--timeline-dot) / 2); width: var(--timeline-dot); height: var(--timeline-dot); border-radius: var(--r-full); background: var(--dot-ink); }
 .tl-item.is-essay .tl-dot { background: var(--bg); box-shadow: var(--sh-dot-hollow); }
@@ -460,7 +460,7 @@
   height: var(--row-compact); padding: 0 var(--s-3); vertical-align: middle;
   border-bottom: var(--hairline) solid var(--line-inner);
   font: var(--t-small); color: var(--text-secondary);
-  transition: background-color var(--dur-press) var(--ease-standard);
+
 }
 .cat-table tbody tr:not(.group-row) { cursor: pointer; }
 .cat-table .td-title a { display: flex; align-items: center; gap: var(--s-4); min-width: 0; font: var(--t-ui); font-weight: var(--w-strong); color: var(--ink); }
@@ -525,7 +525,7 @@ section:first-child > .group-head { margin-top: 0; }
 .search-field {
   margin-top: var(--s-4); height: var(--input-h); border-radius: var(--r-md); background: var(--surface-2);
   display: flex; align-items: center; gap: var(--s-3); padding: 0 var(--s-4);
-  transition: box-shadow var(--dur-fade) var(--ease-standard); view-transition-name: searchbox;
+   view-transition-name: searchbox;
 }
 .search-field:focus-within { box-shadow: var(--sh-input-focus); }
 .search-field svg { width: var(--icon-sm); height: var(--icon-sm); color: var(--text-tertiary); flex: none; }
@@ -676,7 +676,7 @@ section:first-child > .group-head { margin-top: 0; }
 }
 .cat-cell:focus-visible .cover::before, .strip-item:focus-visible .cover::before, .pobject:focus-visible .cover::before, .collage a:focus-visible .cover::before { opacity: 1; }
 .tl-item:focus-visible, .tl-month-head:focus-visible { box-shadow: var(--focus-ring-inset); border-radius: var(--r-sm); }
-.tl-month-head { border-radius: var(--r-sm); transition: background-color var(--dur-press) var(--ease-standard); }
+.tl-month-head { border-radius: var(--r-sm);  }
 .tl-month-head:active { background: var(--surface-2); }
 .toc-list button:focus-visible { box-shadow: var(--focus-ring-inset); }
 .epigraph-btn:focus-visible, .hero-empty:focus-visible { border-radius: var(--r-xs); }

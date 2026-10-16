@@ -330,7 +330,8 @@ scan(38, 'no shimmer skeletons', /shimmer|skeleton/gi, { skip: (p) => p.endsWith
 {
   // what moves is transform / opacity (paint-only colour and shadow fades allowed); a transition or keyframe
   // on a box's size or place lays the page out every frame, which Android WebView cannot afford
-  const LAYOUT = /\b(width|height|max-height|min-height|max-width|top|left|right|bottom|inset|margin(-\w+)?|padding(-\w+)?|grid-template-\w+|flex-basis|font-size|line-height)\b/;
+  // layout (size, place) and paint (shadow, filter, background): neither stays on the compositor
+  const LAYOUT = /\b(width|height|max-height|min-height|max-width|top|left|right|bottom|inset|margin(-\w+)?|padding(-\w+)?|grid-template-\w+|flex-basis|font-size|line-height|box-shadow|filter|backdrop-filter|background(-color|-image|-position|-size)?)\b/;
   const bad = [];
   for (const f of readdirSync(join(ROOT, 'src/styles')).filter((x) => x.endsWith('.css'))) {
     const t = stripComments(readFileSync(join(ROOT, 'src/styles', f), 'utf8'));
@@ -339,7 +340,34 @@ scan(38, 'no shimmer skeletons', /shimmer|skeleton/gi, { skip: (p) => p.endsWith
       for (const d of k[2].matchAll(/([\w-]+)\s*:/g)) if (LAYOUT.test(d[1]) && LAYOUT.exec(d[1])[0] === d[1]) bad.push(`${f}: @keyframes ${k[1]} animates ${d[1]}`);
     }
   }
-  bad.length ? fail(77, `layout animated\n    ${bad.join('\n    ')}`) : pass(77, 'MOTION-SPEC P0-4: transitions and keyframes move transform / opacity, never size or place');
+  bad.length ? fail(77, `layout animated\n    ${bad.join('\n    ')}`) : pass(77, 'MOTION-SPEC P0-4: transitions and keyframes never animate size, place, shadow, filter or background');
+}
+
+/* ---------- MOTION-SPEC audit: the same rule for motion written in script ---------- */
+{
+  // inline style transitions and el.animate keyframes in src/**/*.ts(x): transform, opacity, colour, and
+  // clip-path (the editor's open, P1-5) only
+  const BAD = /^(width|height|maxHeight|minHeight|maxWidth|top|left|right|bottom|inset|margin\w*|padding\w*|fontSize|lineHeight|boxShadow|filter|backdropFilter|WebkitBackdropFilter|background\w*)$/;
+  const CSSBAD = /\b(width|height|max-height|top|left|right|bottom|margin|padding|box-shadow|filter|backdrop-filter|background(-color)?)\b/;
+  const bad = [];
+  const files = [];
+  const walk = (d) => { for (const f of readdirSync(d, { withFileTypes: true })) { const p = join(d, f.name); if (f.isDirectory()) walk(p); else if (/\.tsx?$/.test(f.name)) files.push(p); } };
+  walk(join(ROOT, 'src'));
+  const argOf = (t, i) => {   // the balanced first argument starting at t[i] (just after "animate(")
+    let depth = 0, j = i;
+    for (; j < t.length; j++) { const c = t[j]; if ('([{'.includes(c)) depth++; else if (')]}'.includes(c)) { if (!depth) break; depth--; } else if (c === ',' && !depth) break; }
+    return t.slice(i, j).trim();
+  };
+  for (const p of files) {
+    const t = readFileSync(p, 'utf8'), rel = relative(ROOT, p);
+    for (const m of t.matchAll(/\btransition(Property)?\s*:\s*(`[^`]*`|'[^']*'|"[^"]*")/g)) if (CSSBAD.test(m[2])) bad.push(`${rel}: inline ${m[0].slice(0, 70)}`);
+    for (const m of t.matchAll(/\.animate\(/g)) {
+      let a = argOf(t, m.index + m[0].length);
+      if (/^\w+$/.test(a)) { const d = t.match(new RegExp(`\\b(?:const|let)\\s+${a}\\b[^=]*=\\s*([\\s\\S]*?);\\n`)); a = d ? d[1] : ''; }
+      for (const k of a.matchAll(/(?:[{,]\s*)(\w+)\s*:/g)) if (BAD.test(k[1])) bad.push(`${rel}: el.animate keyframe ${k[1]}`);
+    }
+  }
+  bad.length ? fail(78, `script animates layout or paint\n    ${bad.join('\n    ')}`) : pass(78, 'MOTION-SPEC audit: inline transitions and el.animate keyframes move transform / opacity only');
 }
 
 /* ---------- report ---------- */

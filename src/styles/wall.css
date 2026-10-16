@@ -57,7 +57,7 @@
    hundreds of filtered images were re-rastered at once on a press or a pick (MOTION-SPEC P0-6) */
 .tile::after {
   content: ""; position: absolute; inset: 0; box-shadow: var(--wall-seam); pointer-events: none;
-  background-color: color-mix(in srgb, var(--shade-ink) calc(var(--shade) * 100%), transparent); transition: background-color var(--dur-press) var(--ease-standard);
+  background-color: color-mix(in srgb, var(--shade-ink) calc(var(--shade) * 100%), transparent);
 }
 .tile img { width: 100%; height: 100%; object-fit: cover; filter: var(--wall-filter); -webkit-user-drag: none; }
 .tile img.loading { opacity: 0; }
@@ -117,8 +117,7 @@
 .display-item:active { transform: scale(var(--press-scale)); }
 .display-item.drop .cover { animation: drop var(--dur-place) var(--ease-out) both; }
 @keyframes drop {
-  from { transform: translateY(calc(var(--rise) * -1)); box-shadow: none; opacity: 0; }
-  to { transform: none; box-shadow: var(--sh-object); opacity: 1; }
+  from { transform: translateY(calc(var(--rise) * -1)); opacity: 0; }   /* its shadow rides along at rest: no shadow animation */
 }
 
 /* ---------- home content ---------- */

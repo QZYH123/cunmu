@@ -140,8 +140,7 @@ body::before {
   cursor: pointer;
   -webkit-touch-callout: none;
   user-select: none;
-  transition: text-decoration-color var(--dur-press) var(--ease-standard),
-              background-color var(--dur-press) var(--ease-standard);
+  transition: text-decoration-color var(--dur-press) var(--ease-standard);
 }
 .autolink:active, .autolink.pressed { text-decoration-color: var(--link-line-active); background: var(--press-tint); }
 

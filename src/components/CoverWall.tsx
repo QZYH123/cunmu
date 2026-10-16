@@ -590,7 +590,7 @@ export function HomeWall({ works, width, vh, bp, mode, newIds, onArrived, pin }:
         if (newIds.includes(id)) {
           const kf = rm
             ? [{ opacity: 0 }, { opacity: 1 }]
-            : [{ opacity: 0, transform: 'scale(.96)', filter: 'brightness(1.08)' }, { opacity: 1, transform: 'none', filter: 'brightness(1)' }];
+            : [{ opacity: 0, transform: 'scale(.96)' }, { opacity: 1, transform: 'none' }];
           const a = t.animate(kf, { duration: rm ? DUR.reduced : DUR.place, easing: EASE.out, fill: 'backwards' });
           a.onfinish = () => { haptic('light'); onArrived?.(); };
           release(a);

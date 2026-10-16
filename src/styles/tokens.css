@@ -251,7 +251,6 @@
   --cover-filter:none;                    /* dark: brightness(.92) */
   --wall-filter:brightness(1);            /* dark: brightness(.95) saturate(1.04); row depth is added on top */
   --tile-press-filter:brightness(.9); --tile-press-shade:.1; --pick-shade:.38; --shade-ink:#000;
-  --tile-arrive-filter:brightness(1.08);
   --dim-others:.55; --disabled:.4; --press-scale:var(--s-press); --plus-press-scale:.94; --lift-scale:var(--s-lift);
 
   /* motion (MOTION-SPEC v0.1 §5): five durations, two for one material each, three curves and a settle */
@@ -326,7 +325,7 @@
   --stagger:0ms; --dur-roll:0ms;
   --d-rise:0px; --d-nudge:0px; --d-sheet:0px; --s-press:1; --s-pop:1; --s-lift:1;
   --rise:0px; --pop-rise:0px; --pop-scale:1; --arrive-scale:1; --press-scale:1;
-  --plus-press-scale:1; --lift-scale:1; --tile-arrive-filter:none;
+  --plus-press-scale:1; --lift-scale:1;
   --hover-rise:0px; --tile-hover-rise:0px; --tile-hover-scale:1; --lead-hover-scale:1; --cover-press-scale:1;
   --rise-flight:0px; --wall-mast-delay:0ms; --late-in:0ms; --dialog-scale:1;
   --cover-lift:0px; --e-settle:var(--e-move);

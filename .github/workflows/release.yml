@@ -22,7 +22,8 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
-      - uses: android-actions/setup-android@v3
+      # the runner's preinstalled SDK (ANDROID_HOME); Gradle fetches any missing platform/build-tools
+      - run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
       - run: npm ci
       - name: keystore (only when the secret exists)
         env:
@@ -65,6 +66,8 @@ jobs:
         with:
           targets: x86_64-pc-windows-msvc
       - run: sudo apt-get update && sudo apt-get install -y clang lld llvm nsis
+      # Ubuntu ships clang-cl / lld-link / llvm-rc / llvm-lib only under /usr/lib/llvm-N/bin
+      - run: ls -d /usr/lib/llvm-*/bin | sort -V | tail -1 >> "$GITHUB_PATH"
       - run: cargo install --locked cargo-xwin
       - run: npm ci
       - run: npm run win:build -- --out out

@@ -11,7 +11,7 @@
 The anime you stayed up all night to finish one summer. The novel you read on the train to work. The save file with 200 hours on it.<br>
 Cunmu gathers what you've logged across the web into a single book, and the book is about you.
 
-No sign-up, no ads, nothing leaves your device. Android · Windows · open source (GPL-3.0)
+No sign-up, no ads. Your records stay on your device; Cunmu only goes online when you connect Bangumi or Steam. Android · Windows · open source (GPL-3.0)
 
 [![verify](https://img.shields.io/github/actions/workflow/status/QZYH123/cunmu/verify.yml?branch=main&label=verify)](https://github.com/QZYH123/cunmu/actions/workflows/verify.yml)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)

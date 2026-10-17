@@ -58,11 +58,9 @@
 /* the current item: one hairline under the word (r5 #9) */
 .tab-line {
   position: absolute; left: 0; right: 0; bottom: calc(var(--s-1) * -1); height: var(--hairline); background: currentColor;
-  /* a route change is a cut (P1-1): the line draws in under the new tab, a transform only */
-  transform-origin: 50% 50%; animation: tab-line-in var(--m-quick) var(--e-out) both;
+  /* a route change is a cut (P1-1), but the line slides over from the last tab (Shell.tsx SlideLine, a transform only) */
+  transform-origin: 0 50%;
 }
-:root[data-motion="reduce"] .tab-line { animation: none; }
-@keyframes tab-line-in { from { transform: scaleX(0); } }
 .tab-plus { display: grid; place-items: center; }
 .tab-plus i {
   width: var(--tab-plus); height: var(--tab-plus); border-radius: var(--r-full); background: var(--ink); color: var(--on-ink);
@@ -338,7 +336,7 @@
   }
   .desk-nav a.on { color: var(--ink); font-weight: var(--w-strong); }
   /* 1.5px ink rule 6px under the text, as in the segmented control (§3.5) */
-  .desk-nav a.on::after { content: ""; position: absolute; left: 0; right: 0; top: calc(50% + 0.6875rem + 6px); height: var(--rule-tab); background: var(--ink); }
+  .desk-line { position: absolute; left: 0; right: 0; top: calc(50% + 0.6875rem + 6px); height: var(--rule-tab); background: var(--ink); transform-origin: 0 50%; }
   .desk-search {
     width: var(--desk-search-w); height: var(--desk-search-h); border-radius: var(--r-full); background: var(--surface-2);
     display: flex; align-items: center; gap: var(--s-3); padding: 0 var(--s-3) 0 var(--s-4);

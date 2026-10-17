@@ -256,6 +256,7 @@
   /* motion (MOTION-SPEC v0.1 §5): five durations, two for one material each, three curves and a settle */
   --m-instant:100ms; --m-quick:180ms; --m-base:260ms; --m-space:440ms; --m-sign:520ms;
   --m-sheen:700ms; --m-tint:600ms;
+  --m-cut:150ms;   /* a route change's fade-in (P1-1): the reduced-motion value, the same in both modes */
   --e-out:cubic-bezier(.16,1,.3,1); --e-move:cubic-bezier(.2,0,0,1); --e-in:cubic-bezier(.4,0,1,1);
   /* after a release (sheet drag, pull, slider reset): stiffness 380, damping 34, mass 1, sampled */
   --e-settle:linear(0, .22 6%, .58 14%, .83 22%, .96 31%, 1.012 40%, 1.016 48%, 1.006 60%, 1);

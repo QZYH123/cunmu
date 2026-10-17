@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronLeft, MoreHorizontal, Plus, Search } from 'lucide-react';
 import { Menu } from './Bits';
 import { useStore } from '../data/store';
-import { afterAnimations, useScrolled } from '../lib/motion';
+import { afterAnimations, reduced, useScrolled } from '../lib/motion';
 import { flyBack, flyableHero } from '../lib/backFlight';
-import { DUR } from '../tokens';
+import { DUR, EASE } from '../tokens';
 import { usePalette } from './CommandPalette';
 
 const SW = 1.5;
@@ -99,10 +99,10 @@ export function DesktopBar({ onPlus, onShow }: { onPlus: () => void; onShow?: ()
         <div className="deskbar-left">
           <Link to="/" className="wordmark">存目</Link>
           <nav className="desk-nav" aria-label="主导航">
-            <Link to="/" className={onHome ? 'on' : ''} aria-current={onHome ? 'page' : undefined}>首页</Link>
-            <Link to="/all" className={onAll ? 'on' : ''} aria-current={onAll ? 'page' : undefined}>全部</Link>
-            <Link to="/writing" className={onWriting ? 'on' : ''} aria-current={onWriting ? 'page' : undefined}>随笔</Link>
-            <Link to="/index/people" className={onIndex ? 'on' : ''} aria-current={onIndex ? 'page' : undefined}>索引</Link>
+            <Link to="/" data-line="desk:home" className={onHome ? 'on' : ''} aria-current={onHome ? 'page' : undefined}>首页<DeskLine on={onHome} id="home" /></Link>
+            <Link to="/all" data-line="desk:all" className={onAll ? 'on' : ''} aria-current={onAll ? 'page' : undefined}>全部<DeskLine on={onAll} id="all" /></Link>
+            <Link to="/writing" data-line="desk:writing" className={onWriting ? 'on' : ''} aria-current={onWriting ? 'page' : undefined}>随笔<DeskLine on={onWriting} id="writing" /></Link>
+            <Link to="/index/people" data-line="desk:index" className={onIndex ? 'on' : ''} aria-current={onIndex ? 'page' : undefined}>索引<DeskLine on={onIndex} id="index" /></Link>
           </nav>
         </div>
         <button className="desk-search" onClick={palette.open} aria-keyshortcuts={IS_MAC ? 'Meta+K /' : 'Control+K /'}>
@@ -149,16 +149,41 @@ export function TabBar({ onPlus }: { onPlus: () => void }) {
   return (
     // r5 #9: words, not glyphs — a running footer in the serif; the ink ＋ stays the one primary action
     <nav className="tabbar" aria-label="主导航">
-      <NavLink to="/" className={() => `tab ${home ? 'on' : ''}`} aria-current={home ? 'page' : undefined}><span>首页<TabLine on={home} /></span></NavLink>
-      <NavLink to="/all" className={() => `tab ${all ? 'on' : ''}`} aria-current={all ? 'page' : undefined}><span>全部<TabLine on={all} /></span></NavLink>
+      <NavLink to="/" className={() => `tab ${home ? 'on' : ''}`} aria-current={home ? 'page' : undefined}><span data-line="tab:home">首页<TabLine on={home} id="home" /></span></NavLink>
+      <NavLink to="/all" className={() => `tab ${all ? 'on' : ''}`} aria-current={all ? 'page' : undefined}><span data-line="tab:all">全部<TabLine on={all} id="all" /></span></NavLink>
       <button className="tab tab-plus" aria-label="收录" onClick={onPlus}><i><Plus strokeWidth={1.75} size={20} /></i></button>
-      <NavLink to="/writing" className={() => `tab ${writing ? 'on' : ''}`} aria-current={writing ? 'page' : undefined}><span>随笔<TabLine on={writing} /></span></NavLink>
-      <NavLink to="/search" className={() => `tab ${search ? 'on' : ''}`}><span>搜索<TabLine on={search} /></span></NavLink>
+      <NavLink to="/writing" className={() => `tab ${writing ? 'on' : ''}`} aria-current={writing ? 'page' : undefined}><span data-line="tab:writing">随笔<TabLine on={writing} id="writing" /></span></NavLink>
+      <NavLink to="/search" className={() => `tab ${search ? 'on' : ''}`}><span data-line="tab:search">搜索<TabLine on={search} id="search" /></span></NavLink>
     </nav>
   );
 }
 
-const TabLine = ({ on }: { on: boolean }) => (on ? <i className="tab-line" aria-hidden /> : null);
+/**
+ * The current item's hairline (P1-2). A route change is a cut, but the line slides over from the item it
+ * left to the new one: one transform (translateX + scaleX from the left edge) on the compositor, no view
+ * transition. It slides only when the old line went in the same commit (one item to another); arriving from
+ * a page with no current item, or under reduced motion, it is simply there.
+ */
+const lastLine: Record<string, { id: string; gone: number }> = {};
+function SlideLine({ group, id, className }: { group: string; id: string; className: string }) {
+  const ref = useRef<HTMLElement>(null);
+  useLayoutEffect(() => {
+    const el = ref.current, prev = lastLine[group];
+    lastLine[group] = { id, gone: Infinity };
+    if (el && prev && prev.id !== id && performance.now() - prev.gone < 100 && !reduced()) {
+      const from = el.closest('nav')?.querySelector<HTMLElement>(`[data-line="${group}:${prev.id}"]`);
+      const a = from?.getBoundingClientRect(), b = el.getBoundingClientRect();
+      if (a && a.width && b.width) {
+        el.animate([{ transform: `translateX(${a.left - b.left}px) scaleX(${a.width / b.width})` }, { transform: 'none' }],
+          { duration: DUR.pop, easing: EASE.out });
+      }
+    }
+    return () => { if (lastLine[group]?.id === id) lastLine[group].gone = performance.now(); };
+  }, [group, id]);
+  return <i ref={ref} className={className} aria-hidden />;
+}
+const TabLine = ({ on, id }: { on: boolean; id: string }) => (on ? <SlideLine group="tab" id={id} className="tab-line" /> : null);
+const DeskLine = ({ on, id }: { on: boolean; id: string }) => (on ? <SlideLine group="desk" id={id} className="desk-line" /> : null);
 
 export function Toasts() {
   const { toasts, dismissToast } = useStore();

@@ -84,7 +84,7 @@ body::before {
 .enter.in-vt, .in-vt .stagger > *, .in-vt.stagger > * { animation-name: rise-move; }
 /* after a route change (motion.ts routeArrivals): the cut, as under reduced motion — one quick fade, no rise, no stagger */
 .by-route { --stagger: calc(var(--m-quick) * 0); }
-.enter.by-route, .by-route .stagger > *, .by-route.stagger > * { animation: fade-in var(--m-quick) var(--e-out) both; }
+.enter.by-route, .by-route .stagger > *, .by-route.stagger > * { animation: fade-in var(--m-cut) var(--e-out) both; }
 
 /* ---------- type roles ---------- */
 .t-numeral { font: var(--t-numeral); letter-spacing: var(--track-numeral); }

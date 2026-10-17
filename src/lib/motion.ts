@@ -50,8 +50,8 @@ export const transitionIdle = (): Promise<void> => running ?? Promise.resolve();
 
 /**
  * A route change is a cut, on every device (MOTION-SPEC P1-1, as under reduced motion): no view
- * transition; the new page fades in once, quickly, without the rise, and the tab line grows under its
- * tab. Wraps the router's navigate so no call site changes; a navigation inside another transition
+ * transition; the new page fades in once at --m-cut (the reduced-motion speed), without the rise, and the
+ * tab line slides over to its tab. Wraps the router's navigate so no call site changes; a navigation inside another transition
  * (a cover flight, an essay title) is left to it. A page already seen comes back on ‹ as it was.
  */
 type Nav = (to: unknown, opts?: unknown) => Promise<void>;

@@ -242,6 +242,21 @@ export function suggestions(works: Work[], ctx: { title?: string; me: MeData; to
   return out;
 }
 
+/** a name card: a blank name does nothing (Enter matches the disabled 好). null means do not dismiss. */
+export function nameFromCard(raw: string): string | null {
+  const v = raw.trim();
+  return v ? v : null;
+}
+
+/** the interest / period sheet lists every member; the count is how many are still ticked */
+export function sheetMembers<T extends { id: string }>(members: T[], on: ReadonlySet<string>): { shown: T[]; count: number; exclude: string[] } {
+  return {
+    shown: members,
+    count: members.filter((m) => on.has(m.id)).length,
+    exclude: members.filter((m) => !on.has(m.id)).map((m) => m.id),
+  };
+}
+
 /** what 「是」 adds, as the store takes it */
 export const asInterest = (s: Extract<Suggestion, { type: 'interest' }>, edit?: { name?: string; exclude?: string[] }): Omit<Interest, 'id' | 'createdAt'> =>
   ({ name: edit?.name?.trim() || s.name, rule: s.rule, include: [], exclude: edit?.exclude ?? [], key: s.key });

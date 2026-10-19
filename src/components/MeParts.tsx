@@ -11,7 +11,7 @@ import type { Work } from '../data/types';
 import { KIND_ASPECT } from '../data/types';
 import { personId } from '../data/derive';
 import { chapterOrder, FAV_MAX, INTEREST_LINE_MAX, INTEREST_NAME_MAX, interestMembers, ownInterest, shownTo, withMembers, type Interest } from '../data/me';
-import { asFavorites, asInterest, asPeriod, favCandidates, suggestions, whyFor, type FavPick, type Suggestion } from '../data/suggest';
+import { asFavorites, asInterest, asPeriod, favCandidates, nameFromCard, sheetMembers, suggestions, whyFor, type FavPick, type Suggestion } from '../data/suggest';
 import { plain, spaced, type LeadCtx, type Seg } from '../data/lead';
 import { todayISO } from '../lib/today';
 import { titleOf, TITLE_MAX } from '../lib/naming';
@@ -133,7 +133,7 @@ export function SuggestCard({ s }: { s: Suggestion }) {
     else if (s.type === 'period') { const id = store.addPeriod(asPeriod(s)); store.toast(`收成了一个时期：${s.name}`, { label: '看看', run: () => nav(`/period/${id}`) }); }
   };
   if (s.type === 'name') {
-    const save = () => { const v = name.trim(); if (v) store.setTitle(v); else no(); };
+    const save = () => { const v = nameFromCard(name); if (v) store.setTitle(v); };
     return (
       <section className="ask" aria-label="一个建议">
         <h2 className="ask-q">{s.question}</h2>
@@ -271,11 +271,11 @@ function EditSuggestionSheet({ s, open, onClose }: { s: Extract<Suggestion, { ty
   const store = useStore();
   const nav = useNavigate();
   const [name, setName] = useState(s.name);
-  const shown = s.members.slice(0, 24);
-  const [on, setOn] = useState(() => new Set(shown.map((w) => w.id)));
+  const [on, setOn] = useState(() => new Set(s.members.map((w) => w.id)));
   const toggle = (id: string) => setOn((x) => { const n = new Set(x); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+  const view = sheetMembers(s.members, on);
   const keep = () => {
-    const exclude = shown.filter((w) => !on.has(w.id)).map((w) => w.id);
+    const { exclude } = view;
     if (s.type === 'interest') { const id = store.addInterest(asInterest(s, { name, exclude })); store.toast(`收成了一个兴趣：${name.trim() || s.name}`, { label: '看看', run: () => nav(`/interest/${id}`) }); }
     else { const id = store.addPeriod(asPeriod(s, { name, exclude })); store.toast(`收成了一个时期：${name.trim() || s.name}`, { label: '看看', run: () => nav(`/period/${id}`) }); }
     onClose();
@@ -286,8 +286,8 @@ function EditSuggestionSheet({ s, open, onClose }: { s: Extract<Suggestion, { ty
         <h2 className="t-title">{s.type === 'interest' ? '收成一个兴趣' : '收成一个时期'}</h2>
         <p className="t-small c-2 sheet-say">名字可以改；不算的，点一下拿掉。</p>
         <input className="ask-field" value={name} onChange={(e) => setName(e.target.value)} aria-label="名字" maxLength={24} />
-        <p className="label-head pick-head">算在里面的 · {on.size + Math.max(0, s.members.length - shown.length)} 部</p>
-        <PickGrid works={shown} on={on} toggle={toggle} label="算在里面的" />
+        <p className="label-head pick-head">算在里面的 · {view.count} 部</p>
+        <PickGrid works={view.shown} on={on} toggle={toggle} label="算在里面的" />
         <div className="sheet-actions pair">
           <button className="btn btn-secondary" onClick={() => { store.dismiss(s.key); onClose(); }}>不收了</button>
           <button className="btn btn-primary" onClick={keep}>收下</button>

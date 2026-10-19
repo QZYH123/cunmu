@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { BANGUMI_FILE_NO_TOKEN, STEAM_FILE_NO_KEY, bangumiFromBackup, steamFromBackup } from '../src/data/restore';
 import { entryWhen } from '../src/data/derive';
 import type { EffDate } from '../src/data/types';
+import { nameFromCard, sheetMembers } from '../src/data/suggest';
 
 const today = '2026-10-19';
 const now = '2026-10-19T12:00:00.000Z';
@@ -51,6 +52,22 @@ test('C-2: a restore with no Steam key on the device says the file has none', ()
 });
 
 const approx = { approx: true } as EffDate;
+test('A-2: Enter on an empty name does nothing', () => {
+  assert.equal(nameFromCard(''), null);
+  assert.equal(nameFromCard('   '), null);
+  assert.equal(nameFromCard(' 舟 '), '舟');
+});
+
+test('A-3: the sheet lists every member and the count is how many stay on', () => {
+  const members = Array.from({ length: 30 }, (_, i) => ({ id: `w${i}` }));
+  const on = new Set(members.map((m) => m.id));
+  on.delete('w0');
+  const r = sheetMembers(members, on);
+  assert.equal(r.shown.length, 30);
+  assert.equal(r.count, 29);
+  assert.deepEqual(r.exclude, ['w0']);
+});
+
 test('B-1: an entry shows the day that was picked', () => {
   assert.equal(entryWhen({ finished: '2026-10-03' }, 2026), '10 月 3 日');
   assert.equal(entryWhen({ finished: '2026-10' }, 2026), '十月');

@@ -1,7 +1,7 @@
 .page-title { margin-bottom: var(--s-1); }
 
 /* ---------- entry (§3.2) ---------- */
-.entry { container-type: inline-size; container-name: entry; }
+.entry { display: flow-root; }   /* not a size container: see .app in base.css */
 .entry-tag { margin-top: var(--s-5); }
 .entry-title { margin-top: var(--s-3); margin-bottom: var(--s-2); }
 .entry-by { color: var(--text-secondary); }

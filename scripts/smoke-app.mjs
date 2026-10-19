@@ -262,6 +262,32 @@ await withPage('按首字母: titles A–Z under letters, # last; the choice is 
   if (again.join('|') !== want.join('|')) throw new Error(`after a reload: ${again.join(' | ')}`);
 });
 
+await withPage('the bars stay on screen: nothing above them becomes the frame for position: fixed', async (page) => {
+  await page.goto(`${BASE}#/`, { waitUntil: 'domcontentloaded' });
+  await seedBooks(page, Array.from({ length: 40 }, (_, i) => `一本书 ${i + 1}`));
+  for (const hash of ['/', '/kind/book', '/entry/manual-3', '/search', '/writing']) {
+    await open(page, hash);
+    await page.mouse.wheel(0, 1200);
+    await page.waitForTimeout(200);
+    const bad = await page.evaluate(() => {
+      const out = [];
+      for (const bar of document.querySelectorAll('.tabbar, .topbar')) {
+        for (let el = bar.parentElement; el && el !== document.documentElement; el = el.parentElement) {
+          const c = getComputedStyle(el);
+          // a size container (layout containment before Chrome 129), containment, a transform or a filter all trap fixed boxes
+          if (c.containerType !== 'normal' && c.containerType) out.push(`${el.className}: container-type ${c.containerType}`);
+          if (/layout|paint|strict|content/.test(c.contain)) out.push(`${el.className}: contain ${c.contain}`);
+          if (c.transform !== 'none' || c.filter !== 'none' || c.perspective !== 'none' || /transform|filter/.test(c.willChange)) out.push(`${el.className}: transform/filter`);
+        }
+      }
+      const tab = document.querySelector('.tabbar')?.getBoundingClientRect();
+      if (tab && Math.abs(tab.bottom - innerHeight) > 1) out.push(`tab bar at ${tab.bottom}, screen ends at ${innerHeight}`);
+      return out;
+    });
+    if (bad.length) throw new Error(`${hash}: ${[...new Set(bad)].join('; ')}`);
+  }
+});
+
 const bgmRequests = () => bgmLog.filter((l) => /^GET /.test(l));
 const toast = (page, text) => page.locator('.toast, [role="status"]').filter({ hasText: text }).first();
 async function connectByName(page, name) {

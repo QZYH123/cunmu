@@ -46,8 +46,11 @@ body::before {
 .app {
   position: relative; z-index: 1;
   min-height: 100dvh;
-  container-type: inline-size;
-  container-name: app;
+  /* no container-type here, nor on any box that holds a bar: until Chrome 129 (and in Android System
+     WebViews that have not updated since) it also meant layout containment, which made the box, not the
+     screen, the frame for position: fixed, so the tab bar sat at the end of the page, not at the foot of
+     the screen. flow-root keeps the box its own formatting context, the one thing it did that showed. */
+  display: flow-root;
 }
 
 .page {

@@ -288,6 +288,26 @@ await withPage('the bars stay on screen: nothing above them becomes the frame fo
   }
 });
 
+await withPage('收录 › 手动填写: name, kind, maker, 约 a year and a few words go in as one work', async (page) => {
+  await page.goto(`${BASE}#/`, { waitUntil: 'domcontentloaded' });
+  await seedBooks(page, ['一本书']);
+  await open(page, '/');
+  await page.locator('.tabbar').getByRole('button', { name: '收录' }).click();
+  await page.getByRole('button', { name: /手动填写/ }).click();
+  const form = page.locator('.manual');
+  await form.getByRole('textbox', { name: '名字', exact: true }).fill('极乐迪斯科');
+  await form.getByRole('radio', { name: '游戏' }).click();
+  await form.getByRole('textbox', { name: '开发', exact: true }).fill('ZA/UM');
+  await form.getByRole('radio', { name: '某一年' }).click();
+  await form.getByRole('textbox', { name: '年份', exact: true }).fill('2019');
+  await form.getByText('约', { exact: true }).click();
+  await form.getByRole('textbox', { name: '写几句', exact: true }).fill('读得最慢的一部游戏。');
+  await form.getByRole('button', { name: '放进来' }).click();
+  await page.waitForFunction(() => (localStorage.getItem('cunmu/library') ?? '').includes('极乐迪斯科'), null, { timeout: 5000 });
+  const saved = await page.evaluate(() => { const s = JSON.parse(localStorage.getItem('cunmu/library')); const w = s.extras.find((x) => x.title === '极乐迪斯科'); return { w, n: s.notes[w.id] }; });
+  if (saved.w.kind !== 'game' || saved.w.credits[0]?.name !== 'ZA/UM' || saved.n?.date?.value !== '2019' || !saved.n?.date?.approx || saved.n?.review?.[0] !== '读得最慢的一部游戏。') throw new Error(JSON.stringify(saved));
+});
+
 const bgmRequests = () => bgmLog.filter((l) => /^GET /.test(l));
 const toast = (page, text) => page.locator('.toast, [role="status"]').filter({ hasText: text }).first();
 async function connectByName(page, name) {

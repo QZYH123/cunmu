@@ -101,7 +101,7 @@ export default function SearchPage() {
         <h1 className="t-title page-title">搜索</h1>
         <label className="search-field">
           <SearchIcon strokeWidth={1.5} />
-          <input ref={input} value={q} onChange={(e) => setQ(e.target.value)} placeholder="书、番、人、年份、随笔" enterKeyHint="search" />
+          <input ref={input} value={q} onChange={(e) => setQ(e.target.value)} placeholder="书、番、人、年份、随笔" enterKeyHint="search" aria-label="搜索" />
         </label>
         {!term && !recent.length && <p className="t-small c-3 quiet-hint">放进作品以后，可以在这里按书名、人名、年份找。</p>}
         {!term && recent.length > 0 && (

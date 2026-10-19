@@ -742,7 +742,7 @@ section:first-child > .group-head { margin-top: 0; }
 .editor-photo img { display: block; max-width: 100%; max-height: 40vh; border-radius: var(--r-xs); box-shadow: var(--sh-object-inner); }
 .editor-photo .icon-btn { position: absolute; top: var(--s-1); right: var(--s-1); background: var(--surface-1); border-radius: var(--r-full); }
 /* text fields show focus on their container (search / key / paste) or, in the editor, by the caret alone */
-:is(.search-field, .key-field, .palette-field) input:focus-visible, textarea.paste:focus-visible { box-shadow: none; }
+:is(.search-field, .key-field, .palette-field) input:focus-visible, .key-field textarea:focus-visible, textarea.paste:focus-visible { box-shadow: none; }
 
 /* ---------- 收录 sheet, UX r1 ---------- */
 .add-list { max-height: min(52vh, 420px); overflow-y: auto; overscroll-behavior: contain; }
@@ -877,6 +877,7 @@ p.confirm-first { height: auto; }
   display: flex; align-items: center; justify-content: space-between; width: 100%; height: var(--hit);
   margin-top: var(--s-4); border-top: var(--hairline) solid var(--line-inner); border-bottom: var(--hairline) solid var(--line-inner);
 }
+.manual-entry + .douban-entry { margin-top: 0; border-top: 0; }
 .douban-entry svg { color: var(--text-tertiary); }
 .douban-entry:active { background: var(--surface-2); }
 
@@ -1197,6 +1198,19 @@ p.confirm-first { height: auto; }
 .restore-say { margin-top: var(--s-3); }
 
 /* ---------- 补封面、作者 (r7 sim): a picture of your own, the name, the maker ---------- */
+.manual-lead { margin-top: var(--s-2); }
+.manual-first { margin-top: var(--s-6); }
+.manual-row { margin-top: var(--s-4); }
+.manual-key { min-width: 3em; margin-right: var(--s-3); }
+.manual-cover { margin-top: var(--s-5); }
+.manual-year { display: flex; align-items: center; gap: var(--s-4); }
+.manual-year .key-field { flex: 1; }
+.manual-approx { display: inline-flex; align-items: center; gap: var(--s-2); margin-top: var(--s-4); min-height: var(--hit); }
+.manual-words { height: auto; align-items: flex-start; }
+.manual-words .t-label { padding-top: var(--s-3); }
+.manual-words textarea { flex: 1; min-width: 0; resize: none; border: 0; outline: 0; background: transparent; font: var(--t-ui); color: var(--ink); padding: var(--s-3) 0; }
+.manual-words textarea::placeholder { color: var(--text-tertiary); }
+.key-field input[type="date"] { font: var(--t-ui); color: var(--ink); min-height: var(--input-h); }
 .edit-cover { display: flex; align-items: flex-end; gap: var(--s-5); margin-top: var(--s-6); }
 .edit-cover .cover { flex: none; }
 .edit-cover-side { display: flex; flex-direction: column; gap: var(--s-2); min-width: 0; }

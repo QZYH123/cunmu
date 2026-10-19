@@ -1,8 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState, type DragEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ChevronRight, Search } from 'lucide-react';
+import { ManualAdd } from '../components/ManualAdd';
 import { useSheets } from '../App';
-import { useStore } from '../data/store';
+import { useStore, type WorkNote } from '../data/store';
 import { ADDABLE, ALL_BY_ID, DEMO } from '@demo';
 import { workFromSubject } from '../lib/bangumi';
 import { bgmClient } from '../lib/bangumiNet';
@@ -52,9 +53,11 @@ export function AddSheet({ open, onClose, initial = '' }: { open: boolean; onClo
   const nav = useNavigate();
   const [q, setQ] = useState('');
   const [pick, setPick] = useState<Work | null>(null);
+  /** 手动填写, with the name typed so far (null = not open) */
+  const [form, setForm] = useState<string | null>(null);
   const [over, setOver] = useState(false);
   const field = useRef<HTMLTextAreaElement>(null);
-  useEffect(() => { if (open) { setQ(initial); setPick(null); setOver(false); } }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (open) { setQ(initial); setPick(null); setForm(null); setOver(false); } }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
   // the field grows with a pasted note (up to FIELD_MAX_ROWS lines), and shrinks back for a name
   useLayoutEffect(() => {
     const el = field.current;
@@ -98,12 +101,21 @@ export function AddSheet({ open, onClose, initial = '' }: { open: boolean; onClo
     const today = todayISO();
     // 「看过了」 is the user's own word for today: a catalogue entry's own dates and ties don't come along
     const { claims: _c, sources: _s, ...bare } = w; // eslint-disable-line @typescript-eslint/no-unused-vars
-    const work: Work = { ...bare, finished: today, collected: today };
+    land({ ...bare, finished: today, collected: today });
+  };
+  const land = (work: Work, note?: WorkNote) => {
+    // dated some other time than today (手动填写): it would not be first in 「最近」, so its own page opens
+    if (work.finished !== todayISO()) {
+      store.addWork(work, note);
+      onClose();
+      nav(`/entry/${work.id}`);
+      return;
+    }
     onClose();
     // one work lands on 全部, where 「最近」 has it first with 「写几句」 (a whole import opens on 首页 instead)
     nav('/all');
     setTimeout(() => {
-      store.addWork(work);
+      store.addWork(work, note);
       // no toast: 「最近」's first row offers 「写几句」 in place, for as long as it is the newest (r5 #5)
       store.setJustAdded(work.id);
     }, DUR.fade);
@@ -210,7 +222,9 @@ export function AddSheet({ open, onClose, initial = '' }: { open: boolean; onClo
 
   return (
     <Sheet open={open} onClose={onClose} label="收录">
-      {!pick ? (
+      {form !== null ? (
+        <ManualAdd start={form} onBack={() => setForm(null)} onAdd={land} />
+      ) : !pick ? (
         <div
           className={`sheet-body add-body ${over ? 'is-over' : ''}`} key="list"
           onDragOver={(e) => { if ([...e.dataTransfer.items].some((i) => i.kind === 'file')) { e.preventDefault(); setOver(true); } }}
@@ -227,6 +241,12 @@ export function AddSheet({ open, onClose, initial = '' }: { open: boolean; onClo
               spellCheck={false} autoCapitalize="off"
             />
           </label>
+          {!q.trim() && <p className="t-caption c-3 field-say">输入名字查找；贴 Bangumi 链接或微信读书笔记也行。</p>}
+          {!pasted && (
+            <button className="douban-entry t-ui c-2 manual-entry" onClick={() => setForm(q.trim())}>
+              <span>手动填写<span className="c-3">　名字、作者、封面、日期</span></span> <ChevronRight size={16} strokeWidth={1.5} />
+            </button>
+          )}
           {!q.trim() && (
             <button className="douban-entry t-ui c-2" onClick={() => handOff(() => sheets.douban())}>
               <span>导入豆瓣备份<span className="c-3 drop-hint">　或把文件拖到这里</span></span> <ChevronRight size={16} strokeWidth={1.5} />

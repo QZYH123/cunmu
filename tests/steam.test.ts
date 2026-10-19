@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import raw from './fixtures/steam-owned-games.json';
 import ach from './fixtures/steam-achievements.json';
-import { fmtPlaytime, parseAppDetails, summarizeAchievements, withStoreFacts, parseOwnedGames, parseSteamUser, planSteam, steamWork, type SteamPull } from '../src/lib/steam';
+import { fmtPlaytime, parseAppDetails, parseProfileXml, profileXmlUrl, summarizeAchievements, withStoreFacts, parseOwnedGames, parseSteamUser, planSteam, steamWork, type SteamPull } from '../src/lib/steam';
 import { migrateV1toV2, migrateV3toV4, DEFAULTS } from '../src/data/persist';
 import type { Work } from '../src/data/types';
 
@@ -110,4 +110,16 @@ test('steam r20: the store facts, and a Steam-only work takes them only where it
   const kept = withStoreFacts({ ...w, genres: ['侦探'], year: 2020 }, f);
   assert.deepEqual(kept.genres, ['侦探']);
   assert.equal(kept.year, 2020);
+});
+
+test('steam: the public profile page names the account without a key; no such profile, or a login page, is told apart', () => {
+  // recorded 2026-10-19 from steamcommunity.com/id/robinwalker/?xml=1 (cut short)
+  const xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><profile>\n\t<steamID64>76561197960435530</steamID64>\n\t<steamID><![CDATA[Robin]]></steamID>\n\t<onlineState>online</onlineState>\n\t<privacyState>public</privacyState>\n\t<visibilityState>3</visibilityState>\n</profile>';
+  assert.deepEqual(parseProfileXml(xml), { steamId: '76561197960435530', name: 'Robin', isPublic: true });
+  assert.deepEqual(parseProfileXml(xml.replace('>public<', '>private<')), { steamId: '76561197960435530', name: 'Robin', isPublic: false });
+  assert.equal(parseProfileXml('<?xml version="1.0"?><response><error><![CDATA[The specified profile could not be found.]]></error></response>'), 'none');
+  assert.equal(parseProfileXml('<!DOCTYPE html><html><title>Sign In</title></html>'), null);
+  assert.equal(parseProfileXml({ profile: 1 }), null);
+  assert.equal(profileXmlUrl({ vanity: 'robin walker' }), 'https://steamcommunity.com/id/robin%20walker/?xml=1');
+  assert.equal(profileXmlUrl({ id: '76561197960435530' }), 'https://steamcommunity.com/profiles/76561197960435530/?xml=1');
 });

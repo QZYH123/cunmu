@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "The one window: its own data folder, the save dialog, web links (http, https, mailto) in the browser, Steam's Web API (no CORS there) through tauri-plugin-http.",
+  "description": "The one window: its own data folder, the save dialog, web links (http, https, mailto) in the browser, Steam's Web API and public profile pages (no CORS there) through tauri-plugin-http.",
   "windows": ["main"],
   "permissions": [
     "core:default",
@@ -11,7 +11,7 @@
     "opener:allow-default-urls",
     {
       "identifier": "http:default",
-      "allow": [{ "url": "https://api.steampowered.com/*" }, { "url": "https://store.steampowered.com/api/*" }]
+      "allow": [{ "url": "https://api.steampowered.com/*" }, { "url": "https://store.steampowered.com/api/*" }, { "url": "https://steamcommunity.com/id/*" }, { "url": "https://steamcommunity.com/profiles/*" }]
     },
     "fs:allow-exists",
     "fs:allow-mkdir",

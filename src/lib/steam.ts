@@ -3,6 +3,7 @@
  *
  *   IPlayerService/GetOwnedGames   appid, name, playtime_forever / playtime_2weeks (minutes), rtime_last_played
  *   ISteamUser/ResolveVanityURL    a custom profile name (steamcommunity.com/id/<name>) → SteamID64
+ *   steamcommunity.com …/?xml=1    the public profile page: the account and whether it is public, no key (checked as it is typed)
  *
  * There is no key-less way: the API answers 401 without a key, and the community pages that once listed a
  * profile's games (…/games?xml=1) now send a visitor to the login page. api.steampowered.com sends no CORS
@@ -75,6 +76,28 @@ export function parseSteamUser(input: string): { id: string } | { vanity: string
   if (m) return { vanity: decodeURIComponent(m[1]) };
   if (/^[A-Za-z0-9_-]{2,32}$/.test(t)) return { vanity: t };
   return null;
+}
+
+/**
+ * The public profile page as XML (steamcommunity.com/id/<name>/?xml=1 or /profiles/<id>/?xml=1): no key
+ * needed, so what was typed can be checked before there is a key. It names the account and says whether the
+ * profile is public; it does not list games (that page asks a visitor to sign in).
+ */
+export const profileXmlUrl = (u: { id: string } | { vanity: string }) =>
+  'id' in u ? `https://steamcommunity.com/profiles/${u.id}/?xml=1` : `https://steamcommunity.com/id/${encodeURIComponent(u.vanity)}/?xml=1`;
+export interface SteamProfile { steamId: string; name: string; isPublic: boolean }
+/** the profile XML read: the account, 'none' for Steam's 「no such profile」, null for anything else (a login page, an error page) */
+export function parseProfileXml(body: unknown): SteamProfile | 'none' | null {
+  if (typeof body !== 'string') return null;
+  if (/<response>\s*<error>/i.test(body)) return 'none';
+  if (!/<profile>/i.test(body)) return null;
+  const tag = (name: string) => {
+    const m = new RegExp(`<${name}>\\s*(?:<!\\[CDATA\\[([\\s\\S]*?)\\]\\]>|([^<]*))\\s*</${name}>`, 'i').exec(body);
+    return m ? (m[1] ?? m[2] ?? '').trim() : '';
+  };
+  const steamId = tag('steamID64');
+  if (!/^\d{17}$/.test(steamId)) return null;
+  return { steamId, name: tag('steamID'), isPublic: tag('privacyState') === 'public' };
 }
 
 export const ownedGamesUrl = (key: string, id: string) =>

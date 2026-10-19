@@ -1,5 +1,7 @@
 import { PageRail } from './components/PageRail';
 import { SteamSheet } from './pages/SteamConnect';
+import { readSteamDraft } from './lib/steamDraft';
+import { steamReachable } from './lib/steamNet';
 import { createContext, lazy, Suspense, useCallback, useContext, useEffect, useState } from 'react';
 import { createHashRouter, Outlet, RouterProvider, ScrollRestoration, useLocation, useNavigate } from 'react-router-dom';
 import { routeArrivals } from './lib/motion';
@@ -109,6 +111,8 @@ function Layout() {
     steam: () => setOpen('steam'),
   };
   const close = () => setOpen(null);
+  // the app was closed while the person was getting a Steam key: open 从 Steam 搬进来 again where they were
+  useEffect(() => { if (steamReachable() && readSteamDraft()?.away) setOpen('steam'); }, []);
   const onBackup = useCallback((f: File) => { setBackup(f); setOpen('douban'); }, []);
   useBackupDrop(onBackup);
   return (

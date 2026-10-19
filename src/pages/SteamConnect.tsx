@@ -7,8 +7,11 @@ import { Sheet, Dots } from '../components/Bits';
 import { ExplainList } from './Connect';
 import { getSecret, setSecret } from '../lib/secrets';
 import { parseOwnedGames, type SteamGame } from '../lib/steam';
-import { readAchievements, readAppDetails, readOwnedGames, resolveSteamUser, steamReachable, SteamError } from '../lib/steamNet';
-import { pickAccept } from '../lib/native';
+import { readAchievements, readAppDetails, readOwnedGames, readProfile, resolveSteamUser, steamReachable, SteamError } from '../lib/steamNet';
+import { openOutside } from '../lib/openOut';
+import { clearSteamDraft, readSteamDraft, saveSteamDraft } from '../lib/steamDraft';
+import type { SteamProfile } from '../lib/steam';
+import { isNative, pickAccept } from '../lib/native';
 import { DUR } from '../tokens';
 import { withViewTransition } from '../lib/motion';
 
@@ -17,8 +20,9 @@ const SAY: Record<SteamError['kind'], string> = {
   key: 'Steam 没认这个 Key。去 Steam 网页上看一眼，复制完整再试。',
   private: '读到了这个账号，但看不到游戏。到 Steam 隐私设置里，把「个人资料」和「游戏详情」设成公开再试。',
   net: '现在连不上 Steam，过一会儿再试。在国内，Steam 有时要多试几次。',
-  user: '没找到这个账号。填 17 位的 SteamID64，或者个人资料页的链接。',
+  user: '没找到这个账号。填个人资料页的链接、链接里 /id/ 后面的名字，或者 17 位的 SteamID64。',
 };
+const KEY_PAGE = 'https://steamcommunity.com/dev/apikey';
 
 /**
  * 从 Steam 搬进来 (r19): your games and how long you played them. The apps read Steam's Web API with your own
@@ -37,12 +41,29 @@ export function SteamSheet({ open, onClose }: { open: boolean; onClose: () => vo
   const [err, setErr] = useState('');
   const [found, setFound] = useState<{ games: SteamGame[]; steamId: string; vanity?: string } | null>(null);
   const file = useRef<HTMLInputElement>(null);
+  // the account, checked on its public profile page as soon as it is typed (no key needed)
+  const [who, setWho] = useState<{ q: string; p?: SteamProfile; looking?: boolean; err?: string } | null>(null);
   useEffect(() => {
     if (!open) return;
-    setErr(''); setBusy(false); setFound(null);
-    setUser(conn?.vanity ?? conn?.steamId ?? '');
+    setErr(''); setBusy(false); setFound(null); setWho(null);
+    // back from Steam's key page (the app may have been closed meanwhile): what was typed is still here
+    setUser(readSteamDraft()?.user || conn?.vanity || conn?.steamId || '');
     void getSecret('steam-key').then((k) => setKey(k ?? ''));
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+  const lookUp = async () => {
+    const q = user.trim();
+    if (!live || !q || who?.q === q) return;
+    setWho({ q, looking: true });
+    try {
+      const p = await readProfile(q);
+      setWho((w) => (w?.q === q ? { q, p } : w));
+    } catch (e) {
+      setWho((w) => (w?.q === q ? { q, err: SAY[e instanceof SteamError ? e.kind : 'net'] } : w));
+    }
+  };
+  const editUser = (v: string) => { setUser(v); setErr(''); saveSteamDraft(v, false); };
+  const openKeyPage = () => { saveSteamDraft(user, true); void openOutside(KEY_PAGE).catch(() => undefined); };
+  const close = () => { clearSteamDraft(); onClose(); };
 
   const read = async () => {
     if (!key.trim() || !user.trim() || busy) return;
@@ -69,6 +90,7 @@ export function SteamSheet({ open, onClose }: { open: boolean; onClose: () => vo
   const bringNow = () => {
     if (!found) return;
     if (live) void setSecret('steam-key', key.trim());
+    clearSteamDraft();
     const r = store.applySteam({
       games: found.games, includeUnplayed: all,
       conn: { status: 'connected', steamId: found.steamId, includeUnplayed: all, ...(found.vanity ? { vanity: found.vanity } : null), lastOkSyncAt: new Date().toISOString(), ...(live ? { keyTail: key.trim().slice(-4) } : null) },
@@ -79,40 +101,63 @@ export function SteamSheet({ open, onClose }: { open: boolean; onClose: () => vo
   };
 
   return (
-    <Sheet open={open} onClose={onClose} label="从 Steam 搬进来">
+    <Sheet open={open} onClose={close} label="从 Steam 搬进来">
       {!found && (
         <div className="sheet-body weread steam" key="ask">
           <h2 className="t-title">从 Steam 搬进来</h2>
-          <ExplainList items={[
-            { t: '搬你玩过的游戏，连同时长', d: '每部游戏记下总时长、最近两周玩了多久，日期按最后一次玩的那天记。没玩过的默认不搬。只从 Steam 读，不往回写。' },
-            { t: 'Key 要你自己去拿', d: <>在 Steam 网页上登录、申请一个 Web API Key（域名随便填），复制回来。<a className="infolink" href="https://steamcommunity.com/dev/apikey" target="_blank" rel="noreferrer">去 Steam 申请 ↗</a></> },
-            { t: '个人资料要公开', d: '在 Steam 的隐私设置里，把「个人资料」和「游戏详情」设成公开，否则读不到游戏。' },
-          ]} />
           {live ? (
             <>
-              <label className="key-field">
+              <p className="t-small c-2 steam-lead">搬你玩过的游戏，连同时长，只从 Steam 读，不往回写。要两样：你的 Steam 个人资料，和一个你自己的 Web API Key。</p>
+              <h3 className="label-head steam-step"><span className="ordinal">1</span>你的 Steam 个人资料</h3>
+              <label className="key-field plain bgm-field steam-user">
+                <input
+                  value={user} onChange={(e) => editUser(e.target.value)} onBlur={() => void lookUp()}
+                  onKeyDown={(e) => { if (e.key === 'Enter') void lookUp(); }}
+                  placeholder="个人资料链接、自定义名字或 17 位数字" aria-label="Steam 个人资料"
+                  autoCapitalize="off" autoCorrect="off" autoComplete="off" spellCheck={false}
+                />
+                {who?.looking && <Dots label="正在查找" words />}
+              </label>
+              {who?.p && who.q === user.trim() ? (
+                <p className="t-small c-2 field-say" role="status">
+                  找到了：{who.p.name || who.p.steamId}。{who.p.isPublic ? '' : '这个账号的个人资料没有公开，读不到游戏：到 Steam 的隐私设置里，把「个人资料」和「游戏详情」设成公开。'}
+                </p>
+              ) : who?.err && who.q === user.trim() ? (
+                <p className="t-small c-2 field-say" role="alert">{who.err}</p>
+              ) : (
+                <p className="t-caption c-3 field-say">在 Steam 里点头像 › 个人资料，复制页面地址粘贴过来就行。</p>
+              )}
+
+              <h3 className="label-head steam-step"><span className="ordinal">2</span>你的 Web API Key</h3>
+              <ol className="steam-how t-small c-2">
+                <li>打开 Steam 的申请页，登录。</li>
+                <li>「域名」填 localhost，勾选同意条款，点「注册」。</li>
+                <li>Steam 会要你在 Steam 手机应用的「确认」里同意一次。这是 Steam 的规定。</li>
+                <li>复制页面上那串 32 位的 Key，回到这里粘贴。</li>
+              </ol>
+              <button className="btn btn-secondary steam-open" onClick={openKeyPage}>打开申请页</button>
+              <p className="t-caption c-3 field-say">{isNative() ? '申请页开在存目里，关掉就回到这里；中途切到别的应用，填好的也还在。' : '申请页在浏览器里打开。拿到 Key，回到这里粘贴。'}</p>
+              <label className="key-field steam-key">
                 <input
                   className="key-mono" value={key} onChange={(e) => { setKey(e.target.value); setErr(''); }}
-                  placeholder="粘贴 Web API Key" spellCheck={false} autoCapitalize="off" autoComplete="off" aria-label="Steam Web API Key"
-                />
-              </label>
-              <p className="t-caption c-3 key-note"><Lock size={12} strokeWidth={1.5} />只存在这台设备上，不进导出文件</p>
-              <label className="key-field plain bgm-field">
-                <input
-                  value={user} onChange={(e) => { setUser(e.target.value); setErr(''); }}
                   onKeyDown={(e) => { if (e.key === 'Enter') void read(); }}
-                  placeholder="SteamID64 或个人资料链接" aria-label="SteamID64 或个人资料链接"
-                  autoCapitalize="off" autoCorrect="off" autoComplete="off" spellCheck={false}
+                  placeholder="粘贴 Web API Key" spellCheck={false} autoCapitalize="off" autoComplete="off" aria-label="Steam Web API Key"
                 />
                 {busy && <Dots label="正在读取" words />}
               </label>
-              {err ? <p className="t-small c-2 field-say" role="alert">{err}</p> : <p className="t-caption c-3 field-say">个人资料页地址里 /profiles/ 后面的 17 位数字，或 /id/ 后面的名字都行。</p>}
+              <p className="t-caption c-3 key-note"><Lock size={12} strokeWidth={1.5} />Key 只存在这台设备上，不进导出文件</p>
+              {err && <p className="t-small c-2 field-say" role="alert">{err}</p>}
               <div className="sheet-actions">
-                <button className="btn btn-secondary" disabled={!key.trim() || !user.trim() || busy} onClick={() => void read()}>读取游戏</button>
+                <button className="btn btn-primary" disabled={!key.trim() || !user.trim() || busy} onClick={() => void read()}>读取游戏</button>
               </div>
             </>
           ) : (
             <>
+              <ExplainList items={[
+                { t: '搬你玩过的游戏，连同时长', d: '每部游戏记下总时长、最近两周玩了多久，日期按最后一次玩的那天记。没玩过的默认不搬。只从 Steam 读，不往回写。' },
+                { t: 'Key 要你自己去拿', d: <>在 Steam 网页上登录、申请一个 Web API Key（域名填 localhost），复制回来。<a className="infolink" href={KEY_PAGE} target="_blank" rel="noreferrer">去 Steam 申请 ↗</a></> },
+                { t: '个人资料要公开', d: '在 Steam 的隐私设置里，把「个人资料」和「游戏详情」设成公开，否则读不到游戏。' },
+              ]} />
               <p className="t-small c-2 field-say">网页版连不上 Steam（Steam 不让网页直接读）。在手机或电脑上的存目里可以直接连；这里可以打开一份存好的游戏列表：在浏览器里打开 GetOwnedGames 的地址，把结果存成 .json。</p>
               {err && <p className="t-small c-2 field-say" role="alert">{err}</p>}
               <div className="sheet-actions">

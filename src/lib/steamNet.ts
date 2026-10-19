@@ -1,13 +1,13 @@
 /**
  * How the app reaches api.steampowered.com (r19). Steam sends no CORS headers, so a page can't read it:
  *   phone    native HTTP (CapacitorHttp)
- *   desktop  tauri-plugin-http (scoped to api.steampowered.com in src-tauri/capabilities)
+ *   desktop  tauri-plugin-http (scoped to api.steampowered.com, the store's API and public profile pages in src-tauri/capabilities)
  *   web      not at all — the sheet offers reading a saved GetOwnedGames response instead
  * Steam can be slow or unreachable (mainland China especially): a read that hangs counts as 'net'.
  */
 import { CapacitorHttp } from '@capacitor/core';
 import { isDesktop, isNative } from './native';
-import { appDetailsUrl, globalPctUrl, ownedGamesUrl, parseAppDetails, parseOwnedGames, parseSteamUser, playerAchievementsUrl, resolveVanityUrl, schemaUrl, summarizeAchievements, type AchSummary, type SteamGame, type StoreFacts } from './steam';
+import { appDetailsUrl, globalPctUrl, ownedGamesUrl, parseAppDetails, parseOwnedGames, parseProfileXml, parseSteamUser, profileXmlUrl, type SteamProfile, playerAchievementsUrl, resolveVanityUrl, schemaUrl, summarizeAchievements, type AchSummary, type SteamGame, type StoreFacts } from './steam';
 
 /** a request that hangs this long counts as offline (not a UI timing) */
 const REQUEST_TIMEOUT_MS = 20_000;
@@ -18,9 +18,9 @@ export class SteamError extends Error {
   constructor(public kind: 'key' | 'private' | 'net' | 'user') { super(kind); }
 }
 
-async function get(url: string): Promise<{ status: number; body: unknown }> {
+async function get(url: string, text = false): Promise<{ status: number; body: unknown }> {
   if (isNative()) {
-    const r = await CapacitorHttp.get({ url, responseType: 'json', connectTimeout: 15000, readTimeout: REQUEST_TIMEOUT_MS });
+    const r = await CapacitorHttp.get({ url, responseType: text ? 'text' : 'json', connectTimeout: 15000, readTimeout: REQUEST_TIMEOUT_MS });
     return { status: r.status, body: r.data };
   }
   if (isDesktop()) {
@@ -49,20 +49,35 @@ const spaced = <T,>(f: () => Promise<T>): Promise<T> => {
   return run;
 };
 
-const call = async (url: string, okStatuses: number[] = []) => {
+const call = async (url: string, okStatuses: number[] = [], text = false) => {
   let r;
-  try { r = await spaced(() => get(url)); } catch (e) { throw e instanceof SteamError ? e : new SteamError('net'); }
+  try { r = await spaced(() => get(url, text)); } catch (e) { throw e instanceof SteamError ? e : new SteamError('net'); }
   if (okStatuses.includes(r.status)) return r.body;
   if (r.status === 401 || r.status === 403) throw new SteamError('key');
   if (r.status >= 500 || r.status === 0 || r.status === 429) throw new SteamError('net');
   return r.body;
 };
 
-/** the account behind what the user typed: a SteamID64 as is, a custom name resolved with the key */
+/**
+ * The account behind what was typed (a profile link, a custom name, a SteamID64), from the public profile
+ * page: no key needed. 'user' = no such account; 'net' = Steam didn't answer, or answered with something else.
+ */
+export async function readProfile(input: string): Promise<SteamProfile & { vanity?: string }> {
+  const u = parseSteamUser(input);
+  if (!u) throw new SteamError('user');
+  const p = parseProfileXml(await call(profileXmlUrl(u), [403, 404], true));
+  if (p === 'none') throw new SteamError('user');
+  if (!p) throw new SteamError('net');
+  return { ...p, ...('vanity' in u ? { vanity: u.vanity } : null) };
+}
+
+/** the account behind what the user typed: a SteamID64 as is, a custom name from its profile page, else with the key */
 export async function resolveSteamUser(key: string, input: string): Promise<{ steamId: string; vanity?: string }> {
   const u = parseSteamUser(input);
   if (!u) throw new SteamError('user');
   if ('id' in u) return { steamId: u.id };
+  const p = await readProfile(input).catch((e) => { if (e instanceof SteamError && e.kind === 'user') throw e; return null; });
+  if (p) return { steamId: p.steamId, vanity: u.vanity };
   const b = await call(resolveVanityUrl(key, u.vanity));
   const j = (typeof b === 'string' ? JSON.parse(b) : b) as { response?: { success?: number; steamid?: string } } | null;
   if (j?.response?.success !== 1 || !j.response.steamid) throw new SteamError('user');

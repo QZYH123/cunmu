@@ -1234,6 +1234,13 @@ p.confirm-first { height: auto; }
 :root[data-motion="reduce"] .cover-sheen { display: none; }
 
 /* r19 从 Steam 搬进来: the one choice under the count */
+.steam-lead { margin-top: var(--s-4); }
+.steam-step { display: flex; align-items: baseline; gap: var(--s-3); margin-top: var(--s-8); }
+.steam-step .ordinal { width: auto; }
+.steam-how { margin-top: var(--s-3); padding-left: var(--s-6); list-style: decimal; display: flex; flex-direction: column; gap: var(--s-1); }
+.steam-how li::marker { color: var(--text-tertiary); }
+.steam-open { margin-top: var(--s-5); }
+.steam-key { margin-top: var(--s-6); }
 .steam-all { display: inline-flex; align-items: center; gap: var(--s-2); margin-top: var(--s-3); min-height: var(--hit); }
 
 /* r21 the one progress bar (STYLE v0.4 §3.19.8, games only): a hairline track, the filled part in ink */

@@ -12,6 +12,8 @@ export function startNativeShell() {
   // desktop: links out of the app open in the browser
   if (isDesktop()) { void import('./desktop').then((d) => d.openLinksOutside()); return; }
   if (!isNative()) return;
+  // phone: links open in the in-app browser, over the app (not handed to another app, which may close this one)
+  void import('./openOut').then((o) => o.linksThroughOpenOutside());
   keepFieldInView();
   if (platform() !== 'android') return;
   void App.addListener('backButton', ({ canGoBack }) => {

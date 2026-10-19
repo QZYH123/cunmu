@@ -40,6 +40,11 @@ test('desktop: file access is the app data folder only (exports go where the sav
 
 // Windows makes folders, registry keys and file names from these; they must stay ASCII (a Chinese install
 // folder breaks tools and scripts). The names people see come from DISPLAYNAME in the NSIS template.
+test('desktop: web links open in the browser — opening a url has a scope (with none, the opener refuses every url)', () => {
+  assert.ok(caps.permissions.includes('opener:allow-open-url'));
+  assert.ok(caps.permissions.includes('opener:allow-default-urls'), 'http, https and mailto');
+});
+
 test('desktop: every path and key the installer makes is ASCII; people still see 存目', () => {
   const ascii = /^[\x20-\x7e]+$/;
   for (const [k, v] of Object.entries({ productName: tauri.productName, mainBinaryName: tauri.mainBinaryName, identifier: tauri.identifier, publisher: tauri.bundle.publisher })) {

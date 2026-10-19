@@ -50,7 +50,7 @@ function Collage({ works }: { works: Work[] }) {
 
 /** the members, newest year first: the year, a small row (each year opens its page) */
 function ByYear({ works }: { works: Work[] }) {
-  const { yearView, setYearView } = useStore();
+  const { yearView, setYearView, show } = useStore();
   const years = useMemo(() => {
     const m = new Map<number, Work[]>();
     for (const w of works) if (w.finished) { const y = Number(w.finished.slice(0, 4)); m.set(y, [...(m.get(y) ?? []), w]); }
@@ -59,7 +59,11 @@ function ByYear({ works }: { works: Work[] }) {
   if (years.length < 2) return null;
   return (
     <section className="mh-sec" aria-labelledby="mp-years">
-      <div className="section-head mh-sec-head"><h2 id="mp-years" className="t-h2">一年年</h2><span className="mh-sec-aside">点一年，翻到那年</span><ShelfViewToggle className="mh-sec-view" value={yearView} onChange={setYearView} /></div>
+      <div className="section-head mh-sec-head">
+        <h2 id="mp-years" className="t-h2">一年年</h2>
+        {!show && <span className="mh-sec-aside">点一年，翻到那年</span>}
+        {!show && <ShelfViewToggle className="mh-sec-view" value={yearView} onChange={setYearView} />}
+      </div>
       <ul className="mp-years">
         {years.map(([y, ws]) => (
           <li key={y}><Link to={`/year/${y}`} className="mp-yr" aria-label={`${y} 年，${ws.length} 部`}><span className="mp-y">{y}</span><MiniRow works={ws} h={36} /></Link></li>

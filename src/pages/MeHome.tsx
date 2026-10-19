@@ -123,8 +123,10 @@ export default function MeHome() {
     const fromFav = favs.find((x) => ok(x.w))?.w;
     const w = [pick(me.profile.frontispiece), fromFav].find(ok) ?? works.find((x) => x.cover && (x.rating10 ?? 0) >= 9) ?? works.find((x) => x.cover);
     if (!w) return null;
-    const why = me.favorites.find((f) => f.id === w.id)?.why || whyFor(w).why;
-    return { w, why };
+    const fav = me.favorites.find((f) => f.id === w.id);
+    const auto = whyFor(w);
+    const why = fav?.why || auto.why;
+    return { w, why, fromBangumi: !fav?.why && auto.whyFrom === 'bangumi' };
   }, [d, me, favs, works, show]);
 
   const essays = view.visible.filter((w) => w.kind === 'essay');
@@ -160,7 +162,7 @@ export default function MeHome() {
       </FlyLink>
       <figcaption>
         <span className="mh-plate-t">《{plate.w.title}》{plate.w.year ? `，${plate.w.year}` : ''}</span>
-        {plate.why && <span className="mh-plate-q">{plate.why}</span>}
+        {plate.why && <span className="mh-plate-q">{plate.why}{plate.fromBangumi && <span className="mh-from">在 Bangumi 写的</span>}</span>}
       </figcaption>
     </figure>
   );
@@ -237,7 +239,7 @@ function Favorites({ favs, desk, onEdit }: { favs: { f: { id: string; why?: stri
                     <span className="mh-fav-box" style={{ height: box }}><Cover work={w} w={cw} h={ch} paperPlaceholder /></span>
                     <span className="mh-fav-t">{w.title}{w.year ? <span className="mh-fav-y">{w.year}</span> : null}</span>
                   </FlyLink>
-                  {why && <p className="mh-fav-w">{why}{auto?.whyFrom === 'bangumi' && !show && <span className="mh-from">在 Bangumi 写的</span>}</p>}
+                  {why && <p className="mh-fav-w">{why}{auto?.whyFrom === 'bangumi' && <span className="mh-from">在 Bangumi 写的</span>}</p>}
                 </li>
               );
             })}

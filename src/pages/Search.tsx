@@ -1,6 +1,6 @@
 import { useFly } from '../components/CoverWall';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Search as SearchIcon } from 'lucide-react';
 import { useStore } from '../data/store';
 import { useSheets } from '../App';
@@ -11,13 +11,34 @@ import { Avatar, Cover } from '../components/Cover';
 import { ListRow, RollingNumber } from '../components/Bits';
 import { useEnterClass, useFlip } from '../lib/motion';
 import { isDesk, useBreakpoint } from '../lib/useWidth';
-import { GROUP_CAP, PalettePanel, searchLibrary } from '../components/CommandPalette';
+import { GROUP_CAP, PalettePanel, searchLibrary, searchPath, searchStateOf, type SearchState } from '../components/CommandPalette';
 
 /** Matched characters in ink 600, the rest secondary 400 — weight, never colour highlight. */
 function Hl({ text, q }: { text: string; q: string }) {
   const i = text.toLowerCase().indexOf(q.toLowerCase());
   if (i < 0) return <span className="c-2">{text}</span>;
   return <><span className="c-2">{text.slice(0, i)}</span><b className="hit">{text.slice(i, i + q.length)}</b><span className="c-2">{text.slice(i + q.length)}</span></>;
+}
+
+/**
+ * The search this page's history entry holds, and a way to keep it there as it changes (replacing the entry,
+ * never adding one, the scroll left alone): back from what it opened, the words, the open groups and the
+ * scroll are as they were, whichever back it was.
+ */
+function useKeptSearch(): [SearchState, (s: SearchState) => void] {
+  const loc = useLocation();
+  const nav = useNavigate();
+  const [start] = useState(() => searchStateOf(loc));
+  const at = useRef(loc);
+  at.current = loc;
+  const keep = useCallback((s: SearchState) => {
+    const l = at.current;
+    if (l.pathname !== '/search') return;
+    const now = searchStateOf(l);
+    if (now.q === s.q && (s.cur === undefined || now.cur === s.cur) && now.open.join('\n') === s.open.join('\n')) return;
+    nav(searchPath(s.q), { replace: true, preventScrollReset: true, state: { search: s } });
+  }, [nav]);
+  return [start, keep];
 }
 
 export default function SearchPage() {
@@ -28,14 +49,18 @@ export default function SearchPage() {
   const desk = isDesk(useBreakpoint());
   const fly = useFly();
   const input = useRef<HTMLInputElement>(null);
-  const [q, setQ] = useState('');
+  const [start, keep] = useKeptSearch();
+  const [q, setQ] = useState(start.q);
   const [animKey] = useState(0);
-  const firstResults = useRef(true);
+  // coming back to results, they are simply there (they rise in only the first time words find something)
+  const firstResults = useRef(!start.q);
   useEffect(() => { if ((loc.state as { focus?: boolean } | null)?.focus) input.current?.focus(); }, [loc.state]);
 
   const term = q.trim();
-  const [open, setOpen] = useState<Set<string>>(() => new Set());
-  useEffect(() => { setOpen(new Set()); }, [term]);
+  const [open, setOpen] = useState<Set<string>>(() => new Set(start.open));
+  const lastTerm = useRef(term);
+  useEffect(() => { if (lastTerm.current === term) return; lastTerm.current = term; setOpen(new Set()); }, [term]);
+  useEffect(() => { if (!desk) keep({ q: term, open: [...open] }); }, [term, open, desk, keep]);
   const results = useMemo(() => (term ? searchLibrary(term, library, d) : null), [term, library, d]);
   const has = results && (results.works.length || results.people.length || results.years.length || results.interests.length);
   /** first GROUP_CAP of a group, then a quiet 「展开其余 N 条」 that opens the rest in place */
@@ -66,7 +91,7 @@ export default function SearchPage() {
   if (desk) {
     return (
       <div className="page under-bar search-desk">
-        <div className="page-x"><PalettePanel inline onAdd={sheets.add} /></div>
+        <div className="page-x"><PalettePanel inline onAdd={sheets.add} start={start} onState={keep} /></div>
       </div>
     );
   }

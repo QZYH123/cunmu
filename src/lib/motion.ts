@@ -187,6 +187,9 @@ export function useEnterClass(): string {
     // only fades in, quickly (the cut, P1-1)
     return inPageFade() ? 'enter in-vt' : arrivedByRoute() ? 'enter by-route' : 'enter';
   });
+  // the page can move its own entry on (搜索 keeps its words in it): that entry is seen too, so ‹ back to it
+  // shows the page as it was
+  useEffect(() => { seenKeys.add(key); }, [key]);
   return cls;
 }
 export const wasSeen = (key: string) => seenKeys.has(key);

@@ -17,6 +17,18 @@ import { isDesktop } from '../lib/native';
 
 export interface Hit { key: string; group: string; to: string; label: string; meta: string; work?: Work; person?: string; interest?: boolean; expand?: string }
 
+/** a search's words, its opened groups and its current row: what 搜索 comes back to (in the URL and the
+ *  history entry, so the in-app back, the Android back button and the browser's all find it) */
+export interface SearchState { q: string; open: string[]; cur?: number }
+export const searchPath = (q: string) => (q ? `/search?q=${encodeURIComponent(q)}` : '/search');
+/** the search a /search history entry holds (its words from the URL, the rest from the entry's state) */
+export function searchStateOf(loc: { search: string; state: unknown }): SearchState {
+  const q = new URLSearchParams(loc.search).get('q')?.trim() ?? '';
+  const st = (loc.state as { search?: Partial<SearchState> } | null)?.search;
+  const open = Array.isArray(st?.open) && st?.q === q ? st.open.filter((g): g is string => typeof g === 'string') : [];
+  return { q, open, ...(st?.q === q && typeof st.cur === 'number' ? { cur: st.cur } : null) };
+}
+
 /** Per-group cap before 「展开其余 N 条」 (UX r1: results used to stop at 40 with counts that looked complete). */
 export const GROUP_CAP = 6;
 
@@ -77,18 +89,25 @@ function Hl({ text, q }: { text: string; q: string }) {
  * keys move the current row, Enter opens (a work's thumbnail flies into its entry, §7.3),
  * ⌘/Ctrl-Enter opens in a new tab, Esc closes. Focus stays in the input (aria-activedescendant).
  */
-export function PalettePanel({ inline, onClose, onAdd, onHelp }: { inline?: boolean; onClose?: (now?: boolean) => void; onAdd?: (t: string) => void; onHelp?: () => void }) {
+export function PalettePanel({ inline, onClose, onAdd, onHelp, start, onState }: {
+  inline?: boolean; onClose?: (now?: boolean) => void; onAdd?: (t: string) => void; onHelp?: () => void;
+  /** where a search left off (搜索 on desktop, coming back from what it opened) */
+  start?: SearchState; onState?: (s: SearchState) => void;
+}) {
   const nav = useNavigate();
-  const [q, setQ] = useState('');
-  const [cur, setCur] = useState(0);
-  const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
-  useEffect(() => { setExpanded(new Set()); }, [q]);
+  const [q, setQ] = useState(start?.q ?? '');
+  const [cur, setCur] = useState(start?.cur ?? 0);
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set(start?.open ?? []));
+  // new words: the groups close and the first row is current (not on the way back, which keeps them)
+  const lastQ = useRef(q);
+  useEffect(() => { if (lastQ.current === q) return; lastQ.current = q; setExpanded(new Set()); setCur(0); }, [q]);
+  useEffect(() => { onState?.({ q: q.trim(), open: [...expanded] }); }, [q, expanded]); // eslint-disable-line react-hooks/exhaustive-deps
   const { hits, empty } = useSearchHits(q, expanded);
   const list = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLInputElement>(null);
   const uid = useId();
-  useEffect(() => { setCur(0); }, [q]);
-  useEffect(() => { input.current?.focus(); }, []);
+  // (no scroll: coming back, the page is where it was)
+  useEffect(() => { input.current?.focus({ preventScroll: true }); }, []);
   useLayoutEffect(() => {
     list.current?.querySelector<HTMLElement>(`[data-i="${cur}"]`)?.scrollIntoView({ block: 'nearest' });
   }, [cur]);
@@ -98,12 +117,21 @@ export function PalettePanel({ inline, onClose, onAdd, onHelp }: { inline?: bool
     if (newTab && !isDesktop()) { window.open(`${location.pathname}${location.search}#${h.to}`, '_blank', 'noopener'); return; }
     const row = list.current?.querySelector<HTMLElement>(`[data-key="${CSS.escape(h.key)}"]`);
     const c = h.work && h.work.kind !== 'essay' ? row?.querySelector<HTMLElement>('.cover img') ?? row?.querySelector<HTMLElement>('.cover') : null;
+    const at: SearchState = { q: q.trim(), open: [...expanded], cur: Math.max(0, hits.indexOf(h)) };
+    const go = () => {
+      // back from what a search opened is the search again, its words, its open groups, this row: on 搜索 the
+      // page's own entry remembers them; from the ⌘K panel over another page, 搜索 is put in between (at its
+      // top: the scroll saved for it is its own, not the page underneath)
+      if (inline) onState?.(at);
+      else if (at.q) { nav(searchPath(at.q), { state: { search: at } }); window.scrollTo(0, 0); }
+      nav(h.to);
+    };
     if (c && !reduced()) {
       // the panel leaves inside the transition, so its thumbnail is the only flying cover
       c.style.viewTransitionName = HERO;
       markFlight(h.work!.id);
-      withViewTransition(() => { onClose?.(true); nav(h.to); }, 'flight');
-    } else { onClose?.(); nav(h.to); }
+      withViewTransition(() => { onClose?.(true); go(); }, 'flight');
+    } else { onClose?.(); go(); }
   };
   const key = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') { e.preventDefault(); setCur((i) => Math.min(hits.length - 1, i + 1)); }

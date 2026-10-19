@@ -194,6 +194,59 @@ await withPage('a prototype save (self-pedia/v1) moves to cunmu/library; the dem
   if (s.connections?.bangumi || s.connections?.weread?.connected) throw new Error('the demo connections came along');
 });
 
+/** a library of these books, typed in by hand (a current save, the way the app writes one) */
+const seedBooks = (page, titles) => page.evaluate((ts) => {
+  localStorage.clear();
+  localStorage.setItem('cunmu/library', JSON.stringify({
+    schemaVersion: 4,
+    extras: ts.map((title, i) => {
+      const day = `2024-${String(1 + (i % 12)).padStart(2, '0')}-${String(1 + (i % 27)).padStart(2, '0')}`;
+      return { id: `manual-${i}`, kind: 'book', title, credits: [], finished: day, collected: day, source: 'manual', cover: null, genres: [], info: [], sources: [{ provider: 'manual', externalId: `manual-${i}` }], claims: [{ source: 'manual_add', value: day, precision: 'day', baseLevel: 1, observedAt: day }] };
+    }),
+  }));
+}, titles);
+
+await withPage('搜索 → 条目 → 返回: back on 搜索 with its words, results and scroll (in-app, system, ⌘K)', async (page) => {
+  await page.goto(`${BASE}#/`, { waitUntil: 'domcontentloaded' });
+  await seedBooks(page, Array.from({ length: 30 }, (_, i) => `系列作 第${i + 1}卷`));
+  await open(page, '/search');
+  await page.locator('.search-field input').fill('系列作');
+  await page.getByText('展开其余', { exact: false }).first().click();
+  await page.locator('.search-row').nth(20).waitFor({ timeout: 5000 });
+  await page.mouse.wheel(0, 600);
+  await page.waitForTimeout(300);
+  const at = () => page.evaluate(() => ({ y: Math.round(scrollY), q: document.querySelector('.search-field input')?.value, rows: document.querySelectorAll('.search-row').length, hash: location.hash }));
+  const before = await at();
+  if (before.y < 300) throw new Error(`the results did not scroll (${before.y})`);
+  const row = page.locator('.search-row').nth(12);
+  for (const back of ['in-app', 'system']) {
+    await row.click();
+    await page.locator('h1').filter({ hasText: '系列作' }).first().waitFor({ timeout: 5000 });
+    if (back === 'in-app') await page.getByRole('button', { name: '返回' }).first().click();
+    else await page.evaluate(() => history.back());   // Android's back button and the browser's
+    await page.locator('.search-field input').waitFor({ timeout: 5000 });
+    await page.waitForTimeout(300);
+    const now = await at();
+    if (now.q !== '系列作' || now.rows !== before.rows || Math.abs(now.y - before.y) > 2) throw new Error(`${back} back: ${JSON.stringify(now)} vs ${JSON.stringify(before)}`);
+  }
+  // ⌘K over another page: back from what it opened is 搜索 with the words, the row it opened current
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await open(page, '/all');
+  await page.keyboard.press('Control+k');
+  await page.locator('.palette-field input').fill('第3卷');
+  await page.keyboard.press('Enter');
+  await page.locator('h1').filter({ hasText: '第3卷' }).first().waitFor({ timeout: 5000 });
+  await page.goBack();
+  await page.locator('.palette.inline .palette-field input').waitFor({ timeout: 5000 });
+  await page.waitForTimeout(400);   // the overlay's own close
+  if (await page.locator('.palette-field input').count() !== 1) throw new Error('the ⌘K overlay stayed open over 搜索');
+  const q = await page.locator('.palette.inline .palette-field input').inputValue();
+  const on = await page.locator('.palette.inline .palette-row.on .palette-label').innerText();
+  if (q !== '第3卷' || on !== '系列作 第3卷') throw new Error(`⌘K back: 「${q}」, current 「${on}」`);
+  await page.goBack();
+  await page.waitForFunction(() => location.hash === '#/all', null, { timeout: 5000 });
+});
+
 const bgmRequests = () => bgmLog.filter((l) => /^GET /.test(l));
 const toast = (page, text) => page.locator('.toast, [role="status"]').filter({ hasText: text }).first();
 async function connectByName(page, name) {

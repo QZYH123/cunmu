@@ -4,6 +4,7 @@ import { BANGUMI_FILE_NO_TOKEN, STEAM_FILE_NO_KEY, bangumiFromBackup, steamFromB
 import { entryWhen } from '../src/data/derive';
 import type { EffDate } from '../src/data/types';
 import { nameFromCard, sheetMembers } from '../src/data/suggest';
+import { essayBody, essayPlan } from '../src/lib/essay';
 
 const today = '2026-10-19';
 const now = '2026-10-19T12:00:00.000Z';
@@ -52,6 +53,16 @@ test('C-2: a restore with no Steam key on the device says the file has none', ()
 });
 
 const approx = { approx: true } as EffDate;
+test('A-4: an essay with only a picture is saved; a cleared one is dropped; a title still fills the body', () => {
+  assert.equal(essayPlan({ existing: false, title: '', paragraphs: [], photo: true }), 'save');
+  assert.equal(essayPlan({ existing: false, title: '  ', paragraphs: [], photo: false }), 'skip');
+  assert.equal(essayPlan({ existing: true, title: '', paragraphs: [], photo: false }), 'drop');
+  assert.equal(essayPlan({ existing: true, title: '', paragraphs: [], photo: true }), 'save');
+  assert.deepEqual(essayBody('', []), []);
+  assert.deepEqual(essayBody('无题', []), ['无题']);
+  assert.deepEqual(essayBody('无题', ['一段']), ['一段']);
+});
+
 test('A-2: Enter on an empty name does nothing', () => {
   assert.equal(nameFromCard(''), null);
   assert.equal(nameFromCard('   '), null);

@@ -9,6 +9,7 @@ import { Cover, thumbSize } from '../components/Cover';
 import { CoverViewer } from '../components/Bits';
 import { DateSheet } from '../components/DateSheet';
 import { toParagraphs, todayISO } from '../lib/today';
+import { essayBody, essayPlan } from '../lib/essay';
 import { IMAGES_PER_WORK, deleteImage, putImage, shrinkToBlob, useImageSrc } from '../lib/images';
 import { Link } from 'react-router-dom';
 import { OVERLAY } from '../lib/shell';
@@ -142,23 +143,33 @@ function EssayEditor({ editId }: { editId: string | null }) {
   const saved = useRef(sig);
   // a new essay that got words: once the page is gone, a quiet way to drop it
   const keptNew = useRef(false);
+  // an existing essay saved with nothing left: once the page is gone, a way to put it back
+  const dropped = useRef(false);
 
   const save = () => {
     if (saved.current === sig) return;
     const paras = toParagraphs(body);
-    if (!paras.length && !title.trim()) return;
+    const plan = essayPlan({ existing: !!existing, title, paragraphs: paras, photo: !!photo });
+    if (plan === 'skip') return;
     saved.current = sig;
+    if (plan === 'drop') {
+      dropped.current = true;
+      store.removeWork(id);
+      return;
+    }
+    dropped.current = false;
     if (!existing) { keptNew.current = true; noteLanding(id); }
     const date = existing?.finished ?? todayISO();
     const w: Work = {
       id, kind: 'essay', title: title.trim(), credits: [], finished: date, collected: existing?.collected ?? date, source: 'manual',
       cover: photo ? { thumb: photo.src, medium: photo.src, aspect: photo.aspect } : null,
-      genres: [], info: [], body: paras.length ? paras : [title.trim()],
+      genres: [], info: [], body: essayBody(title, paras),
     };
     store.saveEssay(w);
   };
   useSaveOnLeave(save, () => {
     if (keptNew.current) store.toast('随笔收好了', { label: '不要了', run: () => store.removeWork(id) });
+    else if (dropped.current) store.toast('这篇随笔删掉了', { label: '撤销', run: () => store.restoreWork(id) });
   });
   // the unmount saves too (and, for a new essay, leaves the footnote); saving before going back lets
   // 随笔 know which row to land as it renders (P1-5)

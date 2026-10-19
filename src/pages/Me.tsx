@@ -22,6 +22,7 @@ import { coverCacheStats } from '../lib/coverCache';
 import { storage } from '../lib/storage';
 import type { Kind } from '../data/types';
 import { runBangumiSync } from '../data/bangumiAgent';
+import { BANGUMI_FILE_NO_TOKEN, STEAM_FILE_NO_KEY } from '../data/restore';
 import { runSteamDetails, runSteamSync, STEAM_ACH } from './SteamConnect';
 import { TopBar } from '../components/Shell';
 import { AboutYou } from '../components/AboutYou';
@@ -128,7 +129,7 @@ export default function Me() {
       name="Steam" right={<span className="t-caption c-3 tnum">{fmtNum(steamCount)} 部</span>}
       captions={[
         ...(steam.lastOkSyncAt ? [`上次读取：${ymdLong(steam.lastOkSyncAt)}`] : []),
-        ...(steam.problem === 'key' ? ['Key 用不了了，换一个就能接着读。搬进来的都还在。'] : steam.problem === 'private' ? ['读不到游戏：Steam 上的「游戏详情」可能不是公开的。'] : steam.problem === 'net' ? ['上次没连上 Steam，过一会儿再试。'] : []),
+        ...(steam.problem === 'key' ? ['Key 用不了了，换一个就能接着读。搬进来的都还在。'] : steam.problem === 'absent' ? [STEAM_FILE_NO_KEY] : steam.problem === 'private' ? ['读不到游戏：Steam 上的「游戏详情」可能不是公开的。'] : steam.problem === 'net' ? ['上次没连上 Steam，过一会儿再试。'] : []),
       ]}
       actions={[
         { label: steamBusy ? '正在读取' : '再读一次', run: () => void steamAgain() },
@@ -153,20 +154,22 @@ export default function Me() {
     // app: what the last sync said, in plain words; a token's expiry can't be read, so a 401 says it
     const caps: React.ReactNode[] = [bgm.mode === 'token' ? `个人令牌 ••••${bgm.tokenTail ?? ''}` : `用户名 ${bgm.username} · 读公开收藏`];
     if (bgm.problem === 'token') caps.splice(0, 1, '令牌用不了了，可能到期了，也可能在 Bangumi 上删掉了。同步先停着，搬进来的都还在。');
+    else if (bgm.problem === 'absent') caps.splice(0, 1, BANGUMI_FILE_NO_TOKEN);
     else if (bgm.problem === 'gone') caps.push('这次没读到这个用户名的公开收藏（改了名，或者设成了私密）。搬进来的都还在。');
     else if (bgm.problem === 'net') caps.push('上次没连上 Bangumi，下次打开时再试。');
     else if (bgm.lastOkSyncAt) caps.push(syncing ? '正在同步…' : `上次同步 ${md(bgm.lastOkSyncAt)}`);
     const acts: { label: string; run: () => void }[] = [];
     if (bgm.problem === 'token') acts.push({ label: '换一个令牌', run: () => sheets.bangumi('token') });
+    else if (bgm.problem === 'absent') acts.push({ label: '填一个令牌', run: () => sheets.bangumi('token') });
     else acts.push({ label: syncing ? '正在同步' : '同步一次', run: () => void syncNow() });
     if (bgm.problem === 'gone' && bgm.mode === 'public') acts.push({ label: '用个人令牌连接', run: () => sheets.bangumi('token') });
     else if (bgm.mode === 'public' && bgm.problem !== 'token') acts.push({ label: '用个人令牌连接', run: () => sheets.bangumi('token') });
-    else if (bgm.mode === 'token' && bgm.problem !== 'token') acts.push({ label: '改用用户名', run: () => sheets.bangumi() });
+    else if (bgm.mode === 'token' && bgm.problem !== 'token' && bgm.problem !== 'absent') acts.push({ label: '改用用户名', run: () => sheets.bangumi() });
     acts.push({ label: '断开 Bangumi', run: () => setLayer('bgm-off') });
     bgmRow = (
       <Row
         name="Bangumi" right={<span className="t-caption c-3 tnum">{fmtNum(bangumiCount)} 部</span>}
-        captions={caps} mono={bgm.mode === 'token' && bgm.problem !== 'token' ? 0 : undefined} actions={acts}
+        captions={caps} mono={bgm.mode === 'token' && bgm.problem !== 'token' && bgm.problem !== 'absent' ? 0 : undefined} actions={acts}
       />
     );
   } else if (!store.bangumiOn) {
@@ -203,7 +206,7 @@ export default function Me() {
     setPending(null);
     try {
       for (const [id, blob] of p.images) await putImage(id, blob);
-      if (!store.importBackup(p.json)) throw new Error('format');
+      if (!(await store.importBackup(p.json))) throw new Error('format');
       store.toast(p.count ? `恢复了 ${fmtNum(p.count)} 条` : '恢复好了');
     } catch {
       store.toast('这个文件读不出来，换一个导出的文件试试');

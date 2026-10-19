@@ -29,7 +29,11 @@ export function runBangumiSync(store: Store): Promise<SyncOutcome> {
     const b = store.connections.bangumi;
     if (!b || b.status !== 'connected') return { ok: false, problem: 'gone' };
     const token = b.mode === 'token' ? await getBangumiToken() : null;
-    if (b.mode === 'token' && !token) { store.setBangumiProblem('token'); return { ok: false, problem: 'token' }; }
+    // a restore that found no token already says so ('absent'); do not call that a dead token
+    if (b.mode === 'token' && !token) {
+      if (b.problem !== 'absent') store.setBangumiProblem('token');
+      return { ok: false, problem: 'token' };
+    }
     const client = bgmClient(token ?? undefined);
     try {
       const username = b.mode === 'token' ? (await client.me()).username : b.username;
@@ -67,7 +71,7 @@ export function BangumiAgent() {
   ref.current = store;
   const b = store.connections.bangumi;
   const on = !DEMO && b?.status === 'connected';
-  const blocked = b?.problem === 'token';
+  const blocked = b?.problem === 'token' || b?.problem === 'absent';
 
   // sync when opened / brought back, if the last good one is old
   useEffect(() => {

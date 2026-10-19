@@ -47,8 +47,9 @@ export interface SteamConnection {
   keyTail?: string;
   /** games never played come in too (the choice made at the first read, kept for the next) */
   includeUnplayed?: boolean;
-  /** 'key' = the key was refused · 'private' = the profile or its game details are not public · 'net' = Steam did not answer */
-  problem?: 'key' | 'private' | 'net';
+  /** 'key' = the key was refused · 'private' = the profile or its game details are not public · 'net' = Steam did not answer.
+   *  'absent' = a restored file, and this device has no key (the file never carries one). */
+  problem?: 'key' | 'private' | 'net' | 'absent';
 }
 /** the work's play record (Work.play): minutes and the last time, as Steam says */
 export interface Play {

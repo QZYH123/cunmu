@@ -165,6 +165,7 @@ export default function Home({ onWeread, onBangumi, onAdd }: { onWeread: () => v
             <button className="btn-text quiet" onClick={() => sheets.douban()}>导入豆瓣备份</button><span aria-hidden> · </span>
             <button className="btn-text quiet" onClick={() => sheets.steam()}>从 Steam 搬游戏</button><span aria-hidden> · </span>
             <button className="btn-text quiet" onClick={() => store.setSample(true)}>看看示例</button>
+            {!desk && <><span aria-hidden> · </span><Link className="btn-text quiet" to="/settings">设置</Link></>}
           </p>
         </div>
         {devPill}

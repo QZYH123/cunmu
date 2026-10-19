@@ -10,7 +10,8 @@ import {
 } from './persist';
 import { withKnown, type BangumiPull } from '../lib/bangumi';
 import { planSteam, withStoreFacts, type AchSummary, type Play, type SteamConnection, type SteamGame, type StoreFacts } from '../lib/steam';
-import { setBangumiToken, setSecret } from '../lib/secrets';
+import { getBangumiToken, getSecret, setBangumiToken, setSecret } from '../lib/secrets';
+import { bangumiFromBackup, steamFromBackup } from './restore';
 import { withViewTransition } from '../lib/motion';
 import { clearCoverCache } from '../lib/coverCache';
 import type { CoverImage, Credit, Dataset, DateClaim, Quote, Work } from './types';
@@ -143,7 +144,7 @@ interface Store extends PersistedV2 {
   applyImport: (batch: ImportBatch, created: Work[], rows: WorkSourceRow[], notes: Record<string, WorkNote>, maybe?: { a: string; b: string; batchId: string }[]) => void;
   undoBatch: (id: string) => { removed: number; kept: number };
   exportBackup: () => CunmuExport;
-  importBackup: (b: unknown) => boolean;
+  importBackup: (b: unknown) => Promise<boolean>;
   /** 删除全部内容: back to the empty first-open state (appearance stays) */
   deleteAll: () => Promise<void>;
   promote: (personId: string) => void;
@@ -743,9 +744,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         prototype: { tier, dataset, workSources: s.workSources },
       };
     },
-    importBackup: (b) => {
+    importBackup: async (b) => {
       const j = b as Partial<CunmuExport> | null;
       if (!j || !isBackupFormat(j.format) || !Array.isArray(j.works)) return false;
+      // the file never has the token or the key; keep using the ones still on this device
+      const [hasToken, hasKey] = await Promise.all([
+        getBangumiToken().then((t) => !!t),
+        getSecret('steam-key').then((k) => !!k),
+      ]);
       const catalogue = new Set(masterFor(j.prototype?.dataset ?? dataset).map((w) => w.id));
       // app: Bangumi's works come back as its last pull (the next sync brings their covers back)
       const fromPull = (w: { id: string; sources?: Work['sources'] }) => !DEMO && /^bgm-\d+$/.test(w.id) && !!w.sources?.some((r) => r.provider === 'bangumi_account');
@@ -770,14 +776,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         // a file from before the 「我」 page has none: it starts empty (and the suggestions offer it again)
         me: fixMe(j.me),
         connections: {
-          bangumi: eb && (DEMO || eb.userId) ? {
-            status: 'connected', mode: eb.mode === 'token' ? 'token' : 'public', username: eb.username, epoch: 1, baselineDoneAt: todayISO(),
-            // app: no sync time, so the next open reads Bangumi again; a token never travels in a file
-            ...(DEMO ? { lastOkSyncAt: nowISO() } : { userId: eb.userId, nickname: eb.nickname, ...(eb.mode === 'token' ? { problem: 'token' as const } : null) }),
-          } : null,
+          // app: no sync time, so the next open reads Bangumi again; a token still on the device is used as-is
+          bangumi: bangumiFromBackup(eb, { demo: DEMO, hasToken, today: todayISO(), now: nowISO() }),
           weread: { connected: false },
-          // the key never travels: the profile comes back, asking for a key on the next read
-          steam: j.connections?.steam?.steamId ? { status: 'connected', steamId: j.connections.steam.steamId, ...(j.connections.steam.vanity ? { vanity: j.connections.steam.vanity } : null), problem: 'key' } : null,
+          steam: steamFromBackup(j.connections?.steam, { hasKey }),
         },
         plays: j.plays ?? {},
         bangumi: pullWorks.length && (DEMO || eb?.userId) ? { done: pullWorks.filter((w) => w.status !== 'doing'), doing: pullWorks.filter((w) => w.status === 'doing') } : undefined,

@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useStore } from '../data/store';
 import type { ImportBatch } from '../data/persist';
 import { fmtNum } from '../data/derive';
@@ -142,7 +141,6 @@ function HoldToDelete({ onDone, busy }: { onDone: () => void; busy: boolean }) {
 /** 删除全部内容 (§3.18.2) */
 export function DeleteAllSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const store = useStore();
-  const nav = useNavigate();
   const run = useExport();
   const [exportedAt, setExportedAt] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
@@ -166,7 +164,6 @@ export function DeleteAllSheet({ open, onClose }: { open: boolean; onClose: () =
     // the one light tick says it is done — after the deleting, not when the hold ends
     haptic('light');
     onClose();
-    nav('/');
     requestAnimationFrame(() => app?.classList.remove('app-out'));
   };
   return (

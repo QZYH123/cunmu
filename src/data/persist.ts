@@ -95,8 +95,9 @@ export interface BangumiConnection {
   userId?: number;
   nickname?: string;
   /** the last sync could not read: 'token' = the token stopped working (expired or revoked), 'gone' = no such
-   *  user or the collection went private, 'net' = no network / Bangumi did not answer */
-  problem?: 'token' | 'gone' | 'net';
+   *  user or the collection went private, 'net' = no network / Bangumi did not answer.
+   *  'absent' = a restored file, and this device has no token (the file never carries one). */
+  problem?: 'token' | 'gone' | 'net' | 'absent';
   // the token itself never goes in here (nor in an export): lib/secrets.ts keeps it on the device only
 }
 

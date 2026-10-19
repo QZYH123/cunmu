@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useStore } from '../data/store';
 import type { Work } from '../data/types';
 import { fmtPlaytime, type AchSummary } from '../lib/steam';
+import { fmtYMD } from '../data/derive';
 import { getSecret } from '../lib/secrets';
 import { readAchievements, readAppDetails, steamReachable, SteamError } from '../lib/steamNet';
 import { Section, Dots } from './Bits';
@@ -49,8 +50,8 @@ export function SteamPlay({ work }: { work: Work }) {
     <Section title="游玩">
       <dl className="related steam-play">
         <div className="info-row"><dt>时长</dt><dd>{fmtPlaytime(play.minutes)}{play.recentMinutes ? <span className="c-3">　最近两周 {fmtPlaytime(play.recentMinutes)}</span> : null}</dd></div>
-        {play.lastPlayed && <div className="info-row"><dt>最后玩于</dt><dd className="tnum">{play.lastPlayed}</dd></div>}
-        {a && a.first && <div className="info-row"><dt>开始</dt><dd className="tnum">约 {a.first}<span className="c-3">　第一个成就解锁的那天</span></dd></div>}
+        {play.lastPlayed && <div className="info-row"><dt>最后玩于</dt><dd className="tnum">{fmtYMD(play.lastPlayed)}</dd></div>}
+        {a && a.first && <div className="info-row"><dt>开始</dt><dd className="tnum">{fmtYMD(a.first)}<span className="c-3">　第一个成就解锁的那天</span></dd></div>}
         {a && (
           <div className="info-row">
             <dt>成就</dt>
@@ -63,7 +64,7 @@ export function SteamPlay({ work }: { work: Work }) {
         {a?.rarest && (
           <div className="info-row">
             <dt>最稀有</dt>
-            <dd>{a.rarest.title}<span className="c-3 tnum">　{a.rarest.pct}% 的玩家解锁{a.rarest.at ? ` · 解锁于 ${a.rarest.at}` : ''}</span></dd>
+            <dd>{a.rarest.title}<span className="c-3 tnum">　{a.rarest.pct}% 的玩家解锁{a.rarest.at ? ` · 解锁于 ${fmtYMD(a.rarest.at)}` : ''}</span></dd>
           </div>
         )}
       </dl>
@@ -79,7 +80,7 @@ export function SteamPlay({ work }: { work: Work }) {
                     <span className="t-small">{x.title}</span>
                     {x.desc && <span className="t-caption c-3">{x.desc}</span>}
                   </span>
-                  <span className="t-caption c-3 tnum steam-ach-side">{x.at ? `解锁于 ${x.at}` : '未解锁'}{x.pct !== undefined ? ` · ${x.pct}%` : ''}</span>
+                  <span className="t-caption c-3 tnum steam-ach-side">{x.at ? `解锁于 ${fmtYMD(x.at)}` : '未解锁'}{x.pct !== undefined ? ` · ${x.pct}%` : ''}</span>
                 </li>
               ))}
             </ol>

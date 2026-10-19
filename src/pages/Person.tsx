@@ -68,7 +68,9 @@ export default function Person() {
   const objH = desk && objFit ? objFit : spec.objH;
   const roleLabel = p.roles.slice(0, 2).join(' · ');
   const reason = p.core
-    ? `${firstIn.source === 'manual' ? fmtYMD(firstIn.collected) : ''}因为《${firstIn.title}》收进索引`
+    ? (firstIn.source === 'manual'
+      ? `${fmtYMD(firstIn.collected)}收进索引，因为《${firstIn.title}》`
+      : `因为《${firstIn.title}》收进索引`)
     : p.manual ? `${fmtYMD(firstIn.collected)}从《${firstIn.title}》收进索引` : `因为出现在 ${p.works.length} 部作品里`;
   const info = (
     <InfoBox rows={[

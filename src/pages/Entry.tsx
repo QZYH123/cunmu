@@ -11,7 +11,7 @@ import { ALL_BY_ID } from '@demo';
 import type { Credit, Kind, Work } from '../data/types';
 import { KIND_ASPECT, KIND_LABEL, SOURCE_LABEL, sourceLabelOf } from '../data/types';
 import { Cover } from '../components/Cover';
-import { cnMonth, personId } from '../data/derive';
+import { cnMonth, entryWhen, entryWhenParts, personId } from '../data/derive';
 import { DateSheet } from '../components/DateSheet';
 import { useImageSrc } from '../lib/images';
 import type { UserImage } from '../data/types';
@@ -175,16 +175,21 @@ function WorkEntry({ work }: { work: Work }) {
   const linked = useMemo(() => new Set(store.linked), [store.linked]);
   const mentionCount = useMentions(work.id).length;
 
-  const y = Number(work.finished.slice(0, 4));
-  const m = Number(work.finished.slice(5, 7));
+  const parts = entryWhenParts(work);
+  const y = parts.kind === 'unknown' ? 0 : parts.y;
   const named = y ? d.years.get(y)?.named : undefined;
   const sample = !!work.isSample;
   const doing = work.status === 'doing';
-  // 时间未知 is a plain fact here, never a gap to fill in (DECISIONS-r2 #3/#4)
-  const when = !work.finished ? '时间未知' : !m ? `${work.date?.approx ? '约 ' : ''}${y}` : `${y} · ${cnMonth(m)}`;
-  // four ways to write it (v0.4 §3.14.1): 「约」 and 时间未知 speak in grey, never with an icon
-  const whenNode = !work.finished ? <span className="strip-unknown">时间未知</span>
-    : work.date?.approx && !m ? <><span className="strip-approx">约</span>{y}</> : when;
+  // the same line as 写几句: this year says the day, an earlier year stays at the month
+  const when = entryWhen(work);
+  // 「约」 and 时间未知 speak in grey, never with an icon
+  const whenNode = parts.kind === 'unknown' ? <span className="strip-unknown">时间未知</span>
+    : parts.kind === 'year' && parts.approx ? <><span className="strip-approx">约</span>{` ${parts.y}`}</> : when;
+  const monthLink = (yy: number, mm: number, label: string) => (
+    (d.years.get(yy)?.months.get(mm)?.length ?? 0) >= store.settings.monthEntry
+      ? <Link className="infolink" to={`/year/${yy}/${mm}`}>{label}</Link>
+      : label
+  );
   const core = work.credits.filter((c) => c.core);
   // a date Steam gave is the last time played, and says so (as Bangumi's says 标记于)
   const verb = work.date?.source === 'steam_last_played' ? '最后玩于' : work.kind === 'music' ? '听过' : work.kind === 'game' ? '玩过' : '看完';
@@ -311,13 +316,12 @@ function WorkEntry({ work }: { work: Work }) {
         <div className="info-row">
           <dt>时期</dt>
           <dd>
-            {doing ? '还在看' : !y ? <Link className="infolink" to="/unknown">时间未知</Link> : (
+            {doing ? '还在看' : parts.kind === 'unknown' ? <Link className="infolink" to="/unknown">时间未知</Link> : (
               <>
-                {work.date?.approx && '约 '}<Link className="infolink" to={`/year/${y}`}>{y}</Link>
-                {m > 0 && ' · '}
-                {m > 0 && ((d.years.get(y)?.months.get(m)?.length ?? 0) >= store.settings.monthEntry
-                  ? <Link className="infolink" to={`/year/${y}/${m}`}>{cnMonth(m)}</Link>
-                  : cnMonth(m))}
+                {parts.kind === 'year' && <>{parts.approx && <><span className="strip-approx">约</span>{' '}</>}<Link className="infolink" to={`/year/${parts.y}`}>{parts.y}</Link></>}
+                {parts.kind === 'past' && <><Link className="infolink" to={`/year/${parts.y}`}>{parts.y}</Link>{' · '}{monthLink(parts.y, parts.m, cnMonth(parts.m))}</>}
+                {parts.kind === 'month' && monthLink(parts.y, parts.m, cnMonth(parts.m))}
+                {parts.kind === 'day' && <>{monthLink(parts.y, parts.m, `${parts.m} 月`)}{` ${parts.d} 日`}</>}
                 {named && <> · <Link className="infolink" to="/index/periods">{named}</Link></>}
               </>
             )}

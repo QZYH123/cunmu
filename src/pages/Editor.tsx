@@ -4,7 +4,7 @@ import { ChevronLeft, Image, X } from 'lucide-react';
 import { useStore } from '../data/store';
 import { ALL_BY_ID } from '@demo';
 import type { UserImage, Work } from '../data/types';
-import { linkify } from '../data/derive';
+import { entryWhen, linkify } from '../data/derive';
 import { Cover, thumbSize } from '../components/Cover';
 import { CoverViewer } from '../components/Bits';
 import { DateSheet } from '../components/DateSheet';
@@ -217,17 +217,6 @@ function Thumb({ im, onRemove, onOpen }: { im: UserImage; onRemove: () => void; 
   );
 }
 
-const CN_M = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'];
-/** the toolbar's date (v0.4 §3.14.1): this year 3 月 12 日 / 三月 / 2026; earlier 2024 · 三月; 约 2021; 时间未知 */
-function toolDate(w: Work): string {
-  const v = w.finished;
-  if (!v) return '时间未知';
-  const y = Number(v.slice(0, 4));
-  if (v.length === 4) return `${w.date?.approx ? '约 ' : ''}${y}`;
-  const m = Number(v.slice(5, 7));
-  if (y !== new Date().getFullYear()) return `${y} · ${CN_M[m - 1]}月`;
-  return v.length >= 10 ? `${m} 月 ${Number(v.slice(8, 10))} 日` : `${CN_M[m - 1]}月`;
-}
 
 function WorkNoteEditor({ work }: { work: Work }) {
   const store = useStore();
@@ -247,7 +236,7 @@ function WorkNoteEditor({ work }: { work: Work }) {
   const sig = JSON.stringify([body, quote]);
   const saved = useRef(sig);
   const verb = work.kind === 'music' ? '听过' : work.kind === 'game' ? '玩过' : '看完';
-  const when = work.status === 'doing' ? '' : toolDate(work);
+  const when = work.status === 'doing' ? '' : entryWhen(work);
 
   const save = () => {
     if (saved.current === sig) return;

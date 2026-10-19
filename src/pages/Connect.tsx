@@ -330,7 +330,7 @@ export function BangumiSheet({ open, onClose, start = 'name', user = '' }: { ope
           <h2 className="t-title">从 Bangumi 搬进来</h2>
           <ExplainList items={[
             { t: '只搬「看过」的，不往回写', d: '动画、书籍、三次元、音乐、游戏里标成「看过」的都会搬进来；「在看」的另放一处，不上墙。存目只从 Bangumi 拉进来，不往回写。' },
-            { t: '日期精确到天', d: '按你在 Bangumi 上标成「看过」的那天记。一口气标了很多部的那一天，记作「时间未知」。你随时可以改。' },
+            { t: '日期', d: '按 Bangumi 记下的更新时间，记到某一天。这个时间不一定是你标成「看过」的那天。同一天挤着很多部时，记作「时间未知」。你随时可以改。' },
             { t: '断开时，从 Bangumi 来的会一起删掉', d: '你自己写的短评、摘抄、随笔和改过的日期会留着，重新连接后回到原来的作品上。' },
           ]} />
           <label className="key-field plain bgm-field">

@@ -239,3 +239,35 @@ export function whenOf(w: Work, style: 'long' | 'ym' | 'year' = 'long'): string 
 }
 
 export const creatorLine = (w: Work) => w.credits.filter((c) => c.core).map((c) => c.name).slice(0, 2).join('、');
+
+/**
+ * The date on an entry and in 写几句, as far as it is known.
+ * This year with a day: 「10 月 3 日」. This year, month only: 「十月」.
+ * An earlier year: 「2024 · 三月」. A year alone: 「约 2021」. Nothing: 「时间未知」.
+ */
+export type EntryWhen =
+  | { kind: 'unknown' }
+  | { kind: 'year'; y: number; approx: boolean }
+  | { kind: 'past'; y: number; m: number }
+  | { kind: 'month'; y: number; m: number }
+  | { kind: 'day'; y: number; m: number; d: number };
+
+export function entryWhenParts(w: Pick<Work, 'finished' | 'date'>, year = new Date().getFullYear()): EntryWhen {
+  const v = w.finished;
+  if (!v) return { kind: 'unknown' };
+  const y = Number(v.slice(0, 4));
+  if (v.length < 7) return { kind: 'year', y, approx: !!w.date?.approx };
+  const m = Number(v.slice(5, 7));
+  if (y !== year) return { kind: 'past', y, m };
+  if (v.length >= 10) return { kind: 'day', y, m, d: Number(v.slice(8, 10)) };
+  return { kind: 'month', y, m };
+}
+
+export function entryWhen(w: Pick<Work, 'finished' | 'date'>, year = new Date().getFullYear()): string {
+  const p = entryWhenParts(w, year);
+  if (p.kind === 'unknown') return '时间未知';
+  if (p.kind === 'year') return `${p.approx ? '约 ' : ''}${p.y}`;
+  if (p.kind === 'past') return `${p.y} · ${cnMonth(p.m)}`;
+  if (p.kind === 'month') return cnMonth(p.m);
+  return `${p.m} 月 ${p.d} 日`;
+}

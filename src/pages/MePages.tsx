@@ -18,7 +18,7 @@ import { InfoBox, Menu, Seal, Sheet } from '../components/Bits';
 import { MiniRow } from '../components/YearMini';
 import { ShelfViewToggle } from '../components/ShelfView';
 import { ScrollRail } from '../components/ScrollRail';
-import { chapterNo, fit, Lead, LeadText, useMeView } from '../components/MeParts';
+import { chapterNo, fit, InterestSheet, Lead, LeadText, useMeView } from '../components/MeParts';
 import { useEnterClass } from '../lib/motion';
 import { isDesk, useBreakpoint } from '../lib/useWidth';
 import { FlyLink } from '../components/FlyLink';
@@ -127,7 +127,10 @@ export function InterestPage() {
   const view = useMeView();
   const enter = useEnterClass();
   const i = me.interests.find((x) => x.id === id);
-  const [editing, setEditing] = useState(false);
+  // which part the sheet opens on; a fresh sheet each time (the last one keeps its leave)
+  const [editing, setEditing] = useState<null | 'name' | 'works'>(null);
+  const [round, setRound] = useState(0);
+  const edit = (f: 'name' | 'works') => { setRound((r) => r + 1); setEditing(f); };
   const own = useOwnerMenu('兴趣');
   const ms = useMemo(() => (i ? interestMembers(i, view.works) : []), [i, view.works]);
   if (!i) return <Gone what="兴趣" />;
@@ -154,6 +157,12 @@ export function InterestPage() {
         <p className="mp-sub">{[first && `${first.finished.slice(0, 4)} 年起`, `${fmtNum(ms.length)} 部`].filter(Boolean).join(' · ')}</p>
         {i.blurb && <p className="mp-epigraph">{i.blurb}</p>}
         <Collage works={ms} />
+        {ms.length === 0 && !show && (
+          <p className="mp-empty t-small c-3">
+            <span>放进来的作品会排在这里。</span>
+            <button className="btn-text quiet" onClick={() => edit('works')}>挑几部放进来</button>
+          </p>
+        )}
         <Lead segs={lead} mine={i.lead} onSave={(t) => store.updateInterest(i.id, { lead: t.trim() || undefined })} />
         {rows.length > 0 && <div className="mh-info"><InfoBox rows={rows} /></div>}
         {favs.length > 0 && (
@@ -174,11 +183,10 @@ export function InterestPage() {
         <p className="mh-colo"><Seal /><span>存目</span></p>
       </div>
       {own.desk && own.right && <div className="desk-tools">{own.right}</div>}
-      {own.menu && <Menu anchor={own.menu} onClose={() => own.setMenu(null)} label="更多" items={[{ label: '改名字', run: () => setEditing(true) }]} />}
+      {own.menu && <Menu anchor={own.menu} onClose={() => own.setMenu(null)} label="更多" items={[{ label: '改名字和一句话', run: () => edit('name') }, { label: '放进或拿出作品', run: () => edit('works') }]} />}
       {!show && (
-        <NameSheet
-          key={`${i.id}-${editing}`} open={editing} onClose={() => setEditing(false)} kind="兴趣" name={i.name} line={i.blurb ?? ''} lineLabel="一句话"
-          onSave={(name, blurb) => store.updateInterest(i.id, { name, blurb: blurb || undefined })}
+        <InterestSheet
+          key={`${i.id}-${round}`} open={!!editing} onClose={() => setEditing(null)} interest={i} focus={editing ?? 'name'}
           onRemove={() => { const keep = i; store.removeInterest(i.id); nav('/', { replace: true }); store.toast(`拿掉了兴趣：${keep.name}`, { label: '撤销', run: () => store.addInterest({ ...keep }) }); }}
         />
       )}

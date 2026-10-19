@@ -19,7 +19,7 @@ import { TopBar } from '../components/Shell';
 import { Cover } from '../components/Cover';
 import { InfoBox, Menu, Seal, type MenuItem } from '../components/Bits';
 import { MiniRow } from '../components/YearMini';
-import { chapterNo, CoverPickSheet, FavEditSheet, fit, Lead, LeadText, Pill, Strip, SuggestCard, useMeView } from '../components/MeParts';
+import { chapterNo, CoverPickSheet, FavEditSheet, fit, InterestSheet, Lead, LeadText, Pill, Strip, SuggestCard, useMeView } from '../components/MeParts';
 import { Dateline } from '../components/Dateline';
 import { fileTitle, titleOf } from '../lib/naming';
 import { imageTarget, saveImageOut } from '../lib/saveOut';
@@ -248,29 +248,41 @@ function Favorites({ favs, desk, onEdit }: { favs: { f: { id: string; why?: stri
 }
 
 function Interests({ list, works }: { list: Interest[]; works: Work[] }) {
+  const { show } = useStore();
+  const [adding, setAdding] = useState(false);
+  // a fresh sheet each time it opens (the last one keeps its leave)
+  const [round, setRound] = useState(0);
   const rows = useMemo(() => list.map((i) => {
     const ms = interestMembers(i, works);
     const dated = ms.filter((w) => w.finished);
     const first = dated.length ? dated.reduce((a, w) => (w.finished < a.finished ? w : a)) : undefined;
     const last = dated.length ? dated.reduce((a, w) => (w.finished > a.finished ? w : a)) : undefined;
     return { i, ms, first, last };
-  }).filter((x) => x.ms.length), [list, works]);
-  if (!rows.length) return null;
+  // one with nothing in it yet is yours to fill: listed for you, never for a guest
+  }).filter((x) => x.ms.length || !show), [list, works, show]);
+  if (!rows.length && show) return null;
   return (
     <section className="mh-sec" aria-labelledby="mh-ints">
-      <div className="section-head mh-sec-head"><h2 id="mh-ints" className="t-h2">一直喜欢的</h2></div>
-      <ul className="mh-ints">
-        {rows.map(({ i, ms, first, last }) => (
-          <li key={i.id} className="mh-int">
-            <Link to={`/interest/${i.id}`} className="mh-int-link">
-              <span className="mh-int-n">{i.name}</span>
-              {first && <span className="mh-int-y">{first.finished.slice(0, 4)} 年起</span>}
-              <span className="mh-int-d">{i.blurb || (first && last && first !== last ? `从《${first.title}》开始；最近一部是《${last.title}》。` : first ? `从《${first.title}》开始。` : '')}</span>
-              <Strip works={ms} h={52} max={6} />
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <div className="section-head mh-sec-head">
+        <h2 id="mh-ints" className="t-h2">一直喜欢的</h2>
+        {!show && <button className="btn-text quiet mh-sec-act" onClick={() => { setRound((r) => r + 1); setAdding(true); }}>添一个</button>}
+      </div>
+      {rows.length === 0 && <p className="t-small c-3 mh-quiet">一直喜欢的作者、题材、系列，会排在这里。</p>}
+      {rows.length > 0 && (
+        <ul className="mh-ints">
+          {rows.map(({ i, ms, first, last }) => (
+            <li key={i.id} className="mh-int">
+              <Link to={`/interest/${i.id}`} className="mh-int-link">
+                <span className="mh-int-n">{i.name}</span>
+                {first && <span className="mh-int-y">{first.finished.slice(0, 4)} 年起</span>}
+                <span className="mh-int-d">{i.blurb || (first && last && first !== last ? `从《${first.title}》开始；最近一部是《${last.title}》。` : first ? `从《${first.title}》开始。` : ms.length ? '' : '还可以挑几部放进来。')}</span>
+                {ms.length > 0 && <Strip works={ms} h={52} max={6} />}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+      {!show && <InterestSheet key={round} open={adding} onClose={() => setAdding(false)} />}
     </section>
   );
 }

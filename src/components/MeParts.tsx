@@ -3,20 +3,21 @@
  * records and its rewrite, small cover strips, the one suggestion card with its 「改一下」 sheet, and the
  * sheets that change 最爱 and the frontispiece.
  */
-import { useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowDown, ArrowUp, Check, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, Check, Search, X } from 'lucide-react';
 import { useStore } from '../data/store';
 import type { Work } from '../data/types';
 import { KIND_ASPECT } from '../data/types';
 import { personId } from '../data/derive';
-import { chapterOrder, FAV_MAX, shownTo } from '../data/me';
+import { chapterOrder, FAV_MAX, INTEREST_LINE_MAX, INTEREST_NAME_MAX, interestMembers, ownInterest, shownTo, withMembers, type Interest } from '../data/me';
 import { asFavorites, asInterest, asPeriod, favCandidates, suggestions, whyFor, type FavPick, type Suggestion } from '../data/suggest';
 import { plain, spaced, type LeadCtx, type Seg } from '../data/lead';
 import { todayISO } from '../lib/today';
 import { titleOf, TITLE_MAX } from '../lib/naming';
 import { Cover } from './Cover';
 import { Sheet } from './Bits';
+import { searchLibrary } from './CommandPalette';
 
 /* ---------- what is on the page ---------- */
 
@@ -168,20 +169,101 @@ export function SuggestCard({ s }: { s: Suggestion }) {
 }
 
 /** a grid of covers to tick (a tick = in); used by the suggestion sheets and 最爱 */
-export function PickGrid({ works, on, toggle, label }: { works: Work[]; on: Set<string>; toggle: (id: string) => void; label: string }) {
+export function PickGrid({ works, on, toggle, label, titled = false }: { works: Work[]; on: Set<string>; toggle: (id: string) => void; label: string; titled?: boolean }) {
   return (
-    <div className="pick-grid" role="group" aria-label={label}>
+    <div className={`pick-grid ${titled ? 'titled' : ''}`} role="group" aria-label={label}>
       {works.map((w) => {
         const [cw, ch] = fit(w, 72, 100);
         const sel = on.has(w.id);
         return (
           <button key={w.id} className={`pick-cell ${sel ? 'on' : 'off'}`} aria-pressed={sel} aria-label={w.title} onClick={() => toggle(w.id)}>
-            <Cover work={w} w={cw} h={ch} paperPlaceholder />
+            <span className="pick-cv"><Cover work={w} w={cw} h={ch} paperPlaceholder /></span>
+            {/* a series looks alike on its covers: under each one its name */}
+            {titled && <span className="pick-t clamp-2" aria-hidden>{w.title}</span>}
             <i aria-hidden>{sel && <Check size={12} strokeWidth={2.5} />}</i>
           </button>
         );
       })}
     </div>
+  );
+}
+
+/**
+ * 添一个兴趣 / 改这个兴趣: its name, a line under it, and the works in it — ticked; a tap takes one out, and a
+ * search over the library finds more to put in. Saved in one go (存下), so a slip is undone by closing.
+ */
+export function InterestSheet({ open, onClose, interest, focus = 'name', onRemove }: {
+  open: boolean; onClose: () => void; interest?: Interest; focus?: 'name' | 'works'; onRemove?: () => void;
+}) {
+  const store = useStore();
+  const nav = useNavigate();
+  const { library, d } = store;
+  const works = useMemo(() => library.filter((w) => w.kind !== 'essay' && !w.isSample), [library]);
+  const [start] = useState(() => (interest ? interestMembers(interest, works) : []));
+  const [name, setName] = useState(interest?.name ?? '');
+  const [line, setLine] = useState(interest?.blurb ?? '');
+  // what is listed under 算在里面的: the members, then each one put in from the search, in that order
+  const [listed, setListed] = useState<Work[]>(start);
+  const [on, setOn] = useState(() => new Set(start.map((w) => w.id)));
+  const [q, setQ] = useState('');
+  const term = q.trim();
+  // what the search finds that isn't listed yet (any = it found something at all)
+  const { found, any } = useMemo(() => {
+    if (!term) return { found: [], any: false };
+    const have = new Set(listed.map((w) => w.id));
+    const all = searchLibrary(term, works, d).works;
+    return { found: all.filter((w) => !have.has(w.id)).slice(0, 24), any: all.length > 0 };
+  }, [term, works, d, listed]);
+  const search = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (!open || focus !== 'works') return;
+    const t = window.setTimeout(() => search.current?.focus({ preventScroll: true }), 0);
+    return () => window.clearTimeout(t);
+  }, [open, focus]);
+  const toggle = (id: string) => setOn((x) => { const n = new Set(x); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+  const put = (id: string) => {
+    const w = found.find((x) => x.id === id);
+    if (!w) return;
+    setListed((xs) => [...xs, w]);
+    setOn((x) => new Set([...x, id]));
+  };
+  const save = () => {
+    const n = name.trim();
+    if (!n) return;
+    if (interest) {
+      store.updateInterest(interest.id, { name: n.slice(0, INTEREST_NAME_MAX), blurb: line.trim().slice(0, INTEREST_LINE_MAX) || undefined, ...withMembers(interest, works, on) });
+    } else {
+      const id = store.addInterest(ownInterest(n, line, listed.filter((w) => on.has(w.id)).map((w) => w.id)));
+      store.toast(`添了一个兴趣：${n}`, { label: '看看', run: () => nav(`/interest/${id}`) });
+    }
+    onClose();
+  };
+  const title = interest ? '改这个兴趣' : '添一个兴趣';
+  return (
+    <Sheet open={open} onClose={onClose} label={title} className="sheet-tall">
+      <div className="sheet-body">
+        <h2 className="t-title">{title}</h2>
+        <p className="t-small c-2 sheet-say">{interest ? '不算的，点一下拿掉；要放进来的，在下面找。' : '一个作者、一种题材、一个系列都行。以后在它的页面上还能改。'}</p>
+        <label className="mp-field"><span className="label-head">名字</span><input className="ask-field" value={name} maxLength={INTEREST_NAME_MAX} onChange={(e) => setName(e.target.value)} /></label>
+        <label className="mp-field"><span className="label-head">一句话</span><input className="ask-field ask-field-quiet" value={line} maxLength={INTEREST_LINE_MAX} placeholder="可以不写" onChange={(e) => setLine(e.target.value)} /></label>
+        <p className="label-head pick-head">算在里面的 · {on.size} 部</p>
+        {listed.length > 0
+          ? <PickGrid works={listed} on={on} toggle={toggle} label="算在里面的" titled />
+          : <p className="t-small c-3 pick-none">在下面找到一部，点一下就放进来。</p>}
+        <label className="search-field pick-search">
+          <Search strokeWidth={1.5} />
+          <input ref={search} value={q} onChange={(e) => setQ(e.target.value)} placeholder="书名、人名" enterKeyHint="search" aria-label="找一部放进来" autoComplete="off" spellCheck={false} />
+        </label>
+        {found.length > 0 && <PickGrid works={found} on={new Set()} toggle={put} label="找到的" titled />}
+        {term && !found.length && <p className="t-small c-3 pick-none">{any ? '找到的都在里面了' : `这里没有「${term}」`}</p>}
+        <div className="sheet-actions pair">
+          {interest && onRemove
+            ? <button className="btn btn-secondary" onClick={() => { onRemove(); onClose(); }}>不要这个兴趣了</button>
+            : <button className="btn btn-secondary" onClick={onClose}>先不添</button>}
+          <button className="btn btn-primary" disabled={!name.trim()} onClick={save}>{interest ? '存下' : '添上'}</button>
+        </div>
+      </div>
+    </Sheet>
   );
 }
 

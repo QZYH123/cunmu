@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { fixMe, inPeriod, interestMembers, periodEssays, periodMembers, spanText, chapterOrder, isMetaTag, EMPTY_ME, type Period } from '../src/data/me';
+import { fixMe, inPeriod, interestMembers, ownInterest, withMember, withMembers, INTEREST_NAME_MAX, periodEssays, periodMembers, spanText, chapterOrder, isMetaTag, EMPTY_ME, type Period } from '../src/data/me';
 import { migrateV1toV2, migrateV2toV3, SCHEMA_VERSION, load, serialize } from '../src/data/persist';
 import type { Work } from '../src/data/types';
 
@@ -78,4 +78,39 @@ test('migration: odd shapes are mended, a bad birthday is dropped, a round trip 
   assert.deepEqual(back.me.favorites, s.me.favorites); assert.equal(back.birthday, '1995-06-03');
   load(serialize({ ...s, schemaVersion: 2 } as never), (t) => { bak = t; });
   assert.ok(bak.length > 0, 'an older save is copied aside before it is moved up');
+});
+
+test('interests by hand: a name, a line, the works picked; nothing joins by itself', () => {
+  const i = ownInterest('  塞尔达传说 ', '  一个系列。 ', ['a', 'b', 'a']);
+  assert.deepEqual(i, { name: '塞尔达传说', blurb: '一个系列。', rule: {}, include: ['a', 'b'], exclude: [] });
+  assert.equal(ownInterest('名', '   ', []).blurb, undefined, 'no line written, none kept');
+  assert.equal([...ownInterest('长'.repeat(40), '', []).name].length, INTEREST_NAME_MAX);
+  const ws = [w('a', '2020-01-01', { tags: ['科幻'] }), w('b', '2021-01-01'), w('c', '2022-01-01', { tags: ['科幻'] })];
+  assert.deepEqual(interestMembers(i, ws).map((x) => x.id), ['b', 'a'], 'a tag on a work does not bring it into a hand-made interest');
+});
+
+test('interests: putting a work in and taking it out, by rule or by hand', () => {
+  const ws = [w('a', '2020-01-01', { tags: ['科幻'] }), w('b', '2021-01-01'), w('c', '2022-01-01', { tags: ['科幻'] }), w('e', '2022-01-01', { kind: 'essay' })];
+  const i = { rule: { tags: ['科幻'] }, include: [] as string[], exclude: [] as string[] };
+  // out: one the rule brings goes on the out list; in again: off it, not onto the in list
+  const out = withMember(i, ws[0], false);
+  assert.deepEqual(out, { include: [], exclude: ['a'] });
+  assert.deepEqual(withMember({ ...i, ...out }, ws[0], true), { include: [], exclude: [] });
+  // in: one the rule doesn't bring goes on the in list; out again: off it, not onto the out list
+  const inn = withMember(i, ws[1], true);
+  assert.deepEqual(inn, { include: ['b'], exclude: [] });
+  assert.deepEqual(withMember({ ...i, ...inn }, ws[1], false), { include: [], exclude: [] });
+  // a whole edit: exactly what was ticked, essays never
+  const next = withMembers(i, ws, new Set(['b', 'c', 'e']));
+  assert.deepEqual(next, { include: ['b'], exclude: ['a'] });
+  assert.deepEqual(interestMembers({ ...i, ...next }, ws).map((x) => x.id), ['c', 'b']);
+  assert.deepEqual(withMembers({ ...i, ...next }, ws, new Set(['b', 'c'])), next, 'nothing changed, nothing moves');
+});
+
+test('backup: a hand-made interest goes out and comes back; an old file without one still reads', () => {
+  const me = { ...EMPTY_ME, interests: [{ ...ownInterest('塞尔达传说', '一个系列。', ['g-1', 'g-2']), id: 'i-1', createdAt: '2026-10-19T00:00:00Z' }, { id: 'i-2', name: '科幻', rule: { tags: ['科幻'] }, include: [], exclude: ['bgm-1'], createdAt: 'x', key: 'int:t:科幻' }] };
+  const back = fixMe(JSON.parse(JSON.stringify(me)));
+  assert.deepEqual(back.interests, me.interests);
+  assert.deepEqual(fixMe(undefined), EMPTY_ME, 'a file from before the 「我」 page');
+  assert.deepEqual(fixMe({ interests: [{ id: 'i', name: '旧的', rule: { tags: ['推理'] } }] }).interests[0], { id: 'i', name: '旧的', rule: { tags: ['推理'] }, include: [], exclude: [] });
 });

@@ -117,6 +117,41 @@ export function interestMembers(i: Pick<Interest, 'rule' | 'include' | 'exclude'
     || (people.size > 0 && coreNames(w).some((n) => people.has(n))))).sort(newestFirst);
 }
 
+/** an interest's name and its one line, at most (the same limits as the sheet that changes them) */
+export const INTEREST_NAME_MAX = 24;
+export const INTEREST_LINE_MAX = 80;
+
+/** an interest you start yourself: a name, a line if you wrote one, the works you picked. No rule: nothing
+ *  joins it by itself, only what you put in */
+export function ownInterest(name: string, blurb: string, ids: string[]): Omit<Interest, 'id' | 'createdAt'> {
+  const line = blurb.trim();
+  return { name: name.trim().slice(0, INTEREST_NAME_MAX), ...(line ? { blurb: line.slice(0, INTEREST_LINE_MAX) } : null), rule: {}, include: [...new Set(ids)], exclude: [] };
+}
+
+/**
+ * The hand lists after putting one work in or taking it out: in = off the out list, and on the in list
+ * unless the rule brings it anyway; out = off the in list, and on the out list when the rule would bring it.
+ */
+export function withMember(i: Pick<Interest, 'rule' | 'include' | 'exclude'>, w: Work, on: boolean): Pick<Interest, 'include' | 'exclude'> {
+  const byRule = interestMembers({ rule: i.rule, include: [], exclude: [] }, [w]).length > 0;
+  const include = i.include.filter((x) => x !== w.id);
+  const exclude = i.exclude.filter((x) => x !== w.id);
+  if (on && !byRule) include.push(w.id);
+  if (!on && byRule) exclude.push(w.id);
+  return { include, exclude };
+}
+
+/** the hand lists that make an interest's members exactly `want` (of these works; essays never belong) */
+export function withMembers(i: Pick<Interest, 'rule' | 'include' | 'exclude'>, works: Work[], want: Set<string>): Pick<Interest, 'include' | 'exclude'> {
+  const now = new Set(interestMembers(i, works).map((w) => w.id));
+  let cur = { include: i.include, exclude: i.exclude };
+  for (const w of works) {
+    if (w.kind === 'essay' || now.has(w.id) === want.has(w.id)) continue;
+    cur = withMember({ rule: i.rule, ...cur }, w, want.has(w.id));
+  }
+  return cur;
+}
+
 /** the last string inside a date written as 'YYYY', 'YYYY-MM' or 'YYYY-MM-DD' */
 const endOf = (d: string) => `${d}\uffff`;
 /** a dated work falls in a period when its date is inside it at the period's own precision ('2014' does not fall in 2014-03…05) */

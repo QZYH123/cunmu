@@ -114,6 +114,14 @@
 .pick-cell i { position: absolute; right: 5px; top: 5px; width: 18px; height: 18px; border-radius: var(--r-full); background: var(--ink); color: var(--on-ink); display: flex; align-items: center; justify-content: center; }
 .pick-cell.off i { background: var(--surface-1); box-shadow: var(--sh-input); }
 .sheet-tall .sheet-body { max-height: 80vh; overflow-y: auto; }
+.pick-cv { display: flex; align-items: flex-end; justify-content: center; }
+/* with names under the covers (an interest's works): covers on one baseline, the name below */
+.pick-grid.titled { row-gap: var(--s-5); }
+.pick-grid.titled .pick-cell { flex-direction: column; align-items: stretch; justify-content: flex-start; gap: var(--s-2); min-height: 0; }
+.pick-grid.titled .pick-cv { height: 100px; }
+.pick-t { font: var(--t-caption); color: var(--text-secondary); text-align: center; }
+.pick-search { margin-top: var(--s-6); view-transition-name: none; }
+.pick-none { margin-top: var(--s-3); }
 
 /* 最爱, edited */
 .fav-edit { margin-top: var(--s-5); }
@@ -233,3 +241,5 @@ html[data-show] .hero-empty, html[data-show] .maybe-same, html[data-show] .pull-
 /* the drawn image settles in the middle before it is handed over (P1-11) */
 .drawing-thumb { max-width: 60vw; max-height: 70vh; border-radius: var(--r-xs); box-shadow: var(--sh-object-inner); animation: settle-in var(--m-base) var(--e-out) both; }
 @keyframes settle-in { from { opacity: 0; transform: scale(var(--s-pop)); } }
+/* an interest with nothing in it yet (yours to fill) */
+.mp-empty { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: var(--s-4); margin-top: var(--s-7); }

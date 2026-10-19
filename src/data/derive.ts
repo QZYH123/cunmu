@@ -263,6 +263,11 @@ export function entryWhenParts(w: Pick<Work, 'finished' | 'date'>, year = new Da
   return { kind: 'month', y, m };
 }
 
+/** 「被提到」 when a row really names this work; 「同一作者」 when every row is only that relation */
+export function mentionTitle(list: { word?: string }[]): string {
+  return list.length > 0 && list.every((m) => !m.word) ? '同一作者' : '被提到';
+}
+
 export function entryWhen(w: Pick<Work, 'finished' | 'date'>, year = new Date().getFullYear()): string {
   const p = entryWhenParts(w, year);
   if (p.kind === 'unknown') return '时间未知';

@@ -6,6 +6,8 @@ import type { Kind } from '../data/types';
  * title they choose, and until then the plain 「我看过的」. (Metaphor stays in the design, never in names.)
  */
 export const DEFAULT_TITLE = '我看过的';
+/** the same words in every search field */
+export const SEARCH_PLACEHOLDER = '书名、人名、年份、随笔';
 export const TITLE_MAX = 12;
 export const titleOf = (t?: string | null) => (t ?? '').trim() || DEFAULT_TITLE;
 /** what goes into a file name: no path or reserved characters */

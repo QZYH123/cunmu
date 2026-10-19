@@ -7,6 +7,7 @@ import { afterAnimations, reduced, useScrolled } from '../lib/motion';
 import { flyBack, flyableHero } from '../lib/backFlight';
 import { DUR, EASE } from '../tokens';
 import { usePalette } from './CommandPalette';
+import { SEARCH_PLACEHOLDER } from '../lib/naming';
 
 const SW = 1.5;
 
@@ -107,7 +108,7 @@ export function DesktopBar({ onPlus, onShow }: { onPlus: () => void; onShow?: ()
         </div>
         <button className="desk-search" onClick={palette.open} aria-keyshortcuts={IS_MAC ? 'Meta+K /' : 'Control+K /'}>
           <Search strokeWidth={SW} />
-          <span>搜索条目、人物、年份</span>
+          <span>{SEARCH_PLACEHOLDER}</span>
           <kbd className="kbd">{IS_MAC ? '⌘K' : 'Ctrl K'}</kbd>
         </button>
         <div className="deskbar-right">

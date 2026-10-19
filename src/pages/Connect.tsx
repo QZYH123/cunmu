@@ -75,7 +75,7 @@ export function WereadSheet({ open, onClose, onManual }: { open: boolean; onClos
   };
 
   return (
-    <Sheet open={open} onClose={onClose} label="连接微信读书">
+    <Sheet open={open} onClose={onClose} label={step === 'manual' ? '粘贴微信读书笔记' : step === 'explain' ? '连接微信读书之前' : '连接微信读书'}>
       {step === 'explain' && (
         <div className="sheet-body weread" key="explain">
           <h2 className="t-title"><span className="phrase">连接微信读书之前，</span><span className="phrase">先说清三件事</span></h2>
@@ -155,7 +155,7 @@ export function WereadSheet({ open, onClose, onManual }: { open: boolean; onClos
 
       {step === 'manual' && (
         <div className="sheet-body weread" key="manual">
-          <h2 className="t-title">手动导入</h2>
+          <h2 className="t-title">粘贴微信读书笔记</h2>
           <p className="t-small c-2" style={{ marginTop: 'var(--s-3)' }}>可以一本本搜书添加，也可以把从微信读书复制出来的笔记粘贴到这里，划线会放进那本书的「摘抄」。</p>
           <textarea className="paste" placeholder={'《书名》\n作者\n\n◆ 章节\n>> 划线'} rows={5} value={paste} onChange={(e) => { setPaste(e.target.value); setHint(''); }} aria-label="粘贴划线和想法" />
           {hint && <p className="t-small c-2">{hint}</p>}
@@ -355,7 +355,7 @@ export function BangumiSheet({ open, onClose, start = 'name', user = '' }: { ope
           <h2 className="t-title"><span className="phrase">用个人令牌连接之前，</span><span className="phrase">先说清三件事</span></h2>
           <ExplainList items={[
             { t: '令牌要你自己去拿', d: <>在 Bangumi 网页上登录、生成一个个人令牌，有效期自己选，复制回来。网页有人机验证，国内网络偶尔打不开，多试一次就好。<a className="infolink" href="https://next.bgm.tv/demo/access-token" target="_blank" rel="noreferrer">去 Bangumi 生成 ↗</a></> },
-            { t: '令牌只存在这台设备上', d: '不上传到我们的服务器，也不跟着 iCloud 同步。换设备要重新填。' },
+            { t: '令牌只存在这台设备上', d: '不会放进导出的文件。换一台设备要重新填写。' },
             DEMO
               ? { t: '到期前会安静地提醒', d: '令牌快到期时，「··· › 设置 › 来源」里 Bangumi 那一行会写出到期日，不推送、不弹窗。到期后同步先停着，已经搬进来的都还在。' }
               : { t: '到期以后，换一个就好', d: '有效期最短 7 天。令牌到期或在 Bangumi 上删掉以后，「··· › 设置 › 来源」里 Bangumi 那一行会写明，不推送、不弹窗；换一个令牌就接着同步，已经搬进来的都还在。' },

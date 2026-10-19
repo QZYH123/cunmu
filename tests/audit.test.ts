@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { BANGUMI_FILE_NO_TOKEN, STEAM_FILE_NO_KEY, bangumiFromBackup, steamFromBackup } from '../src/data/restore';
-import { entryWhen } from '../src/data/derive';
+import { entryWhen, mentionTitle } from '../src/data/derive';
 import type { EffDate } from '../src/data/types';
 import { nameFromCard, sheetMembers } from '../src/data/suggest';
 import { essayBody, essayPlan } from '../src/lib/essay';
@@ -77,6 +77,12 @@ test('A-3: the sheet lists every member and the count is how many stay on', () =
   assert.equal(r.shown.length, 30);
   assert.equal(r.count, 29);
   assert.deepEqual(r.exclude, ['w0']);
+});
+
+test('B-19: a section of only same-author rows is titled 同一作者', () => {
+  assert.equal(mentionTitle([{ relation: '作品 · 同一作者' }]), '同一作者');
+  assert.equal(mentionTitle([{ word: '晚钟' }, { relation: '作品 · 同一作者' }]), '被提到');
+  assert.equal(mentionTitle([]), '被提到');
 });
 
 test('B-1: an entry shows the day that was picked', () => {

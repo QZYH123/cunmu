@@ -12,6 +12,7 @@ import { ListRow, RollingNumber } from '../components/Bits';
 import { useEnterClass, useFlip } from '../lib/motion';
 import { isDesk, useBreakpoint } from '../lib/useWidth';
 import { GROUP_CAP, PalettePanel, searchLibrary, searchPath, searchStateOf, type SearchState } from '../components/CommandPalette';
+import { SEARCH_PLACEHOLDER } from '../lib/naming';
 
 /** Matched characters in ink 600, the rest secondary 400 — weight, never colour highlight. */
 function Hl({ text, q }: { text: string; q: string }) {
@@ -101,13 +102,13 @@ export default function SearchPage() {
         <h1 className="t-title page-title">搜索</h1>
         <label className="search-field">
           <SearchIcon strokeWidth={1.5} />
-          <input ref={input} value={q} onChange={(e) => setQ(e.target.value)} placeholder="书、番、人、年份、随笔" enterKeyHint="search" aria-label="搜索" />
+          <input ref={input} value={q} onChange={(e) => setQ(e.target.value)} placeholder={SEARCH_PLACEHOLDER} enterKeyHint="search" aria-label="搜索" />
         </label>
         {!term && !recent.length && <p className="t-small c-3 quiet-hint">放进作品以后，可以在这里按书名、人名、年份找。</p>}
         {!term && recent.length > 0 && (
           <>
             <section className="home-recent">
-              <span className="label-head">最近看过</span>
+              <span className="label-head">最近</span>
               {recent.map((w, i) => <ListRow key={w.id} work={w} index={i} to={w.kind === 'essay' ? `/essay/${w.id}` : undefined} />)}
             </section>
             <section className="home-recent">

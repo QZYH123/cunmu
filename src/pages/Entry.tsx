@@ -11,7 +11,7 @@ import { ALL_BY_ID } from '@demo';
 import type { Credit, Kind, Work } from '../data/types';
 import { KIND_ASPECT, KIND_LABEL, SOURCE_LABEL, sourceLabelOf } from '../data/types';
 import { Cover } from '../components/Cover';
-import { cnMonth, entryWhen, entryWhenParts, personId } from '../data/derive';
+import { cnMonth, entryWhen, entryWhenParts, mentionTitle, personId } from '../data/derive';
 import { DateSheet } from '../components/DateSheet';
 import { useImageSrc } from '../lib/images';
 import type { UserImage } from '../data/types';
@@ -173,7 +173,9 @@ function WorkEntry({ work }: { work: Work }) {
   const [menu, setMenu] = useState<DOMRect | null>(null);
   const [sideRef, sideFits] = useFitsSticky<HTMLElement>();
   const linked = useMemo(() => new Set(store.linked), [store.linked]);
-  const mentionCount = useMentions(work.id).length;
+  const mentions = useMentions(work.id);
+  const mentionCount = mentions.length;
+  const mentionHead = mentionTitle(mentions);
 
   const parts = entryWhenParts(work);
   const y = parts.kind === 'unknown' ? 0 : parts.y;
@@ -239,7 +241,7 @@ function WorkEntry({ work }: { work: Work }) {
   // every work has a period, so 相关 always has somewhere to go (a work with no creator or genre was a dead end)
   const hasRelated = true;
 
-  const openMentions = () => { pendingJump.current = '被提到'; setMentionsOpen(true); };
+  const openMentions = () => { pendingJump.current = mentionHead; setMentionsOpen(true); };
   // arriving from the year page's quote: open all quotes and land on 摘抄
   const loc = useLocation();
   useEffect(() => {
@@ -252,7 +254,7 @@ function WorkEntry({ work }: { work: Work }) {
   useEffect(() => {
     if (mentionsOpen && pendingJump.current) { jumpTo(pendingJump.current); pendingJump.current = ''; }
   }, [mentionsOpen]);
-  const jump = (id: string) => (id === '被提到' && !mentionsOpen && bp !== 'phone' ? openMentions() : jumpTo(id));
+  const jump = (id: string) => (id === mentionHead && !mentionsOpen && bp !== 'phone' ? openMentions() : jumpTo(id));
 
   const fontsOk = useFontsFor(work.title + (epi ? clip(epi.text) : '') + core.map((c) => c.name).join(''));
   const epigraph: Epigraph | undefined = epi && { text: clip(epi.text), where: epi.where, onClick: () => { setAllQuotes(true); jumpTo('摘抄'); } };
@@ -269,11 +271,11 @@ function WorkEntry({ work }: { work: Work }) {
   );
 
   const infobox = rows.length > 0 && (
-    <InfoBox rows={rows} fold={fold} foldLabel={() => `全部 staff · ${staffCount}`} hide={HERO_KEYS} />
+    <InfoBox rows={rows} fold={fold} foldLabel={() => `全部职务 · ${staffCount}`} hide={HERO_KEYS} />
   );
   // the same box, sized to the cover when it stands in the wide hero's side column (polish r4)
   const heroFacts = rows.length > 0 && (
-    <InfoBox rows={rows} fold={fold} foldLabel={() => `全部 staff · ${staffCount}`} hide={HERO_KEYS} fit={coverH} />
+    <InfoBox rows={rows} fold={fold} foldLabel={() => `全部职务 · ${staffCount}`} hide={HERO_KEYS} fit={coverH} />
   );
   const review = hasWords && (
     <Section title="短评">
@@ -339,7 +341,7 @@ function WorkEntry({ work }: { work: Work }) {
   // 在看 isn't in the encyclopedia yet and the sample never is: no seal for either (v0.4 §3.19.1 / §3.19.3)
   const colophon = sample ? <Colophon date={work.collected} reason="示例内容，不是你收的" />
     : doing ? <Colophon date={work.collected} reason="来自 Bangumi · 在看" />
-      : <Colophon seal date={work.collected} source={sourceLabelOf(work) === SOURCE_LABEL.manual ? undefined : sourceLabelOf(work)} pinned={(store.me.profile.frontispiece ?? store.me.favorites[0]?.id) === work.id} />;
+      : <Colophon seal date={work.collected} source={sourceLabelOf(work) === SOURCE_LABEL.manual ? undefined : sourceLabelOf(work)} pinned={store.me.profile.frontispiece === work.id} />;
   const maybe = !sample && !doing ? <MaybeSame work={work} /> : null;
   const side = <SideMentions targetId={work.id} allOpen={mentionsOpen} onAll={openMentions} />;
   const fullMentions = (bp === 'phone' || mentionsOpen) && <Mentions targetId={work.id} open={bp !== 'phone'} />;
@@ -356,7 +358,7 @@ function WorkEntry({ work }: { work: Work }) {
     !work.cover || work.coverBroken
       ? { label: '设为首页封面', note: '这一条没有封面图' }
       : pinned
-        ? { label: '取消首页封面', run: () => store.setProfile({ frontispiece: '' }) }
+        ? { label: '改回第一部最爱', run: () => store.setProfile({ frontispiece: '' }) }
         : { label: '设为首页封面', run: () => store.setProfile({ frontispiece: work.id }) },
     ...(doing ? [] : [fav
       ? { label: '从最爱拿掉', run: () => store.removeFavorite(work.id) }
@@ -367,7 +369,7 @@ function WorkEntry({ work }: { work: Work }) {
       ? { label: '不再只给自己', run: () => store.setOnlyMe(work.id, false) }
       : { label: '只给自己', note: '给人看时不出现', run: () => store.setOnlyMe(work.id, true) }]),
     // a work of yours can get its picture and maker later, as 收录 promised; a synced one can have them changed
-    ...(editable ? [{ label: work.cover && !work.coverBroken ? '改封面、作者' : '补封面、作者', run: () => setEditing(true) }] : []),
+    ...(editable ? [{ label: work.cover && !work.coverBroken ? '改封面、主创' : '补封面、主创', run: () => setEditing(true) }] : []),
     { label: hasReview ? '改短评、加摘抄' : '写几句', run: () => nav(`/write?for=${work.id}`, { state: { from: 'entry' } }) },
     ...(doing ? [] : [{ label: `改${verb}时间`, run: () => openDate() }]),
     // synced works can go too (DECISIONS-r2 #10): the next sync leaves them out
@@ -381,7 +383,7 @@ function WorkEntry({ work }: { work: Work }) {
     quotes.length > 0 && { id: '摘抄', label: '摘抄', count: quotes.length },
     !!play && { id: '游玩', label: '游玩' },
     hasRelated && { id: '相关', label: '相关' },
-    mentionCount > 0 && { id: '被提到', label: '被提到', count: mentionCount },
+    mentionCount > 0 && { id: mentionHead, label: mentionHead, count: mentionCount },
   ].filter((x): x is TocItem => !!x);
   const withToc = desk && vw >= ENTRY_TOC_MIN;
   const tocShown = withToc && toc.length >= 2;

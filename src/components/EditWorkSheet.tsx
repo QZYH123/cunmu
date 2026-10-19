@@ -66,7 +66,7 @@ export function EditWorkSheet({ work, open, onClose }: { work: Work; open: boole
     onClose();
   };
 
-  const head = src || (work.cover && !work.coverBroken) ? '改封面、作者' : '补封面、作者';
+  const head = src || (work.cover && !work.coverBroken) ? '改封面、主创' : '补封面、主创';
   return (
     <Sheet open={open} onClose={onClose} label={head} className="edit-sheet">
       <div className="sheet-body">

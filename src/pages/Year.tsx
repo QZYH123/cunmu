@@ -108,7 +108,7 @@ export default function Year() {
   const often = [...met.entries()].filter(([, v]) => v.n >= 2).sort((a, b) => b[1].n - a[1].n || a[1].name.localeCompare(b[1].name, 'zh')).slice(0, 3);
   const info = (
     <InfoBox rows={[
-      { key: '看过', value: seen ? `${seen} 部 · ${byKind.map(([k, c]) => `${KIND_LABEL[k]} ${c}`).join(' ')}` : undefined },
+      { key: '这一年', value: seen ? `${seen} 部 · ${byKind.map(([k, c]) => `${KIND_LABEL[k]} ${c}`).join(' ')}` : undefined },
       { key: '写了', value: essays ? `${essays} 篇随笔` : undefined },
       { key: '多是', value: top.length ? top.join('、') : undefined },
       { key: '常遇见', value: often.length ? <>{often.map(([id, v], i) => <span key={id}>{i > 0 && '、'}{d.persons.has(id) ? <Link className="infolink" to={`/person/${id}`}>{v.name}</Link> : v.name}</span>)}</> : undefined },

@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../data/store';
-import { creatorLine, fmtYMD, linkify, whenOf, mentionsOf, type Segment } from '../data/derive';
+import { creatorLine, fmtYMD, linkify, mentionTitle, whenOf, mentionsOf, type Segment } from '../data/derive';
 import { KIND_LABEL } from '../data/types';
 import { Preview, Seal, Section, WorkPreviewBody } from './Bits';
 import { Avatar } from './Cover';
@@ -119,7 +119,7 @@ function MentionRows({ list }: { list: MentionItem[] }) {
         <Link key={m.from.id} to={m.from.kind === 'essay' ? `/essay/${m.from.id}` : `/entry/${m.from.id}`} className="mention">
           <div className="mention-head">
             <span className="mention-title">{m.from.title}</span>
-            <span className="t-caption c-3">{m.date}</span>
+            <span className="t-caption c-3">{fmtYMD(m.date)}</span>
           </div>
           {m.word ? (
             <p className="t-small c-2 clamp-2">{m.before}<b className="mention-word">{m.word}</b>{m.after}</p>
@@ -137,9 +137,10 @@ export function Mentions({ targetId, open = false, id }: { targetId: string; ope
   const list = useMentions(targetId);
   const [all, setAll] = useState(open);
   if (!list.length) return null;
+  const title = mentionTitle(list);
   const shown = all ? list : list.slice(0, 8);
   return (
-    <Section title="被提到" count={list.length} id={id}>
+    <Section title={title} count={list.length} id={id}>
       <div className="mentions">
         <MentionRows list={shown} />
         {list.length > 8 && !all && <button className="info-more mention-more" onClick={() => setAll(true)}>全部 · {list.length}　›</button>}
@@ -152,9 +153,10 @@ export function Mentions({ targetId, open = false, id }: { targetId: string; ope
 export function SideMentions({ targetId, onAll, allOpen }: { targetId: string; onAll: () => void; allOpen: boolean }) {
   const list = useMentions(targetId);
   if (!list.length) return null;
+  const title = mentionTitle(list);
   return (
-    <section className="side-mentions" aria-label={`被提到 · ${list.length}`}>
-      <h2 className="side-head">被提到<span className="count"> · {list.length}</span></h2>
+    <section className="side-mentions" aria-label={`${title} · ${list.length}`}>
+      <h2 className="side-head">{title}<span className="count"> · {list.length}</span></h2>
       <div className="mentions">
         <MentionRows list={list.slice(0, SIDE_MENTIONS)} />
         {list.length > SIDE_MENTIONS && !allOpen && <button className="info-more mention-more" onClick={onAll}>全部 · {list.length}　›</button>}

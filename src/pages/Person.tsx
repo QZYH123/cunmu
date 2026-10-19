@@ -130,7 +130,7 @@ export default function Person() {
           </header>
           <div className="page-x person-grid">
             <section className="person-works">
-              <h2 className="label-head home-label">我看过的</h2>
+              <h2 className="label-head home-label">这些作品</h2>
               <div className="person-list">{record}</div>
             </section>
             <aside className="person-side">
@@ -154,7 +154,7 @@ export default function Person() {
         </header>
         <div className="page-x person">
           <div className="person-info">{info}</div>
-          <Section title="我看过的" count={works.length}>
+          <Section title="这些作品" count={works.length}>
             <div className="person-list">{record}</div>
           </Section>
           <Mentions targetId={p.id} />

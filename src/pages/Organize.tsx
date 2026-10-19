@@ -93,7 +93,7 @@ export default function Organize() {
                   onChange={(nv) => setSettings({ ...settings, [def.key]: nv })}
                 />
                 <p className="t-small c-reading org-preview">{pre}<b className="w-500 c-ink"><RollingNumber value={String(n)} /></b>{post}</p>
-                {hidden > 0 && <p className="t-small c-3">其中 {hidden} 个会先收起，调回来还在</p>}
+                {hidden > 0 && <p className="t-small c-3">比默认少收 {hidden} 个，调回来还在。</p>}
               </section>
             );
           })}

@@ -317,7 +317,7 @@ export default function Category() {
         {works.length === 0 ? (
           <div className="cat-empty">
             <div className="shelf-line" />
-            <p className="t-ui c-2">{k === 'all' || !KIND_LABEL[k as Kind] ? '第一条会放在这里' : `第一${unit}${KIND_LABEL[k as Kind]}会放在这里`}</p>
+            <p className="t-ui c-2">{k === 'music' ? '第一张专辑会放在这里' : k === 'all' || !KIND_LABEL[k as Kind] ? '第一条会放在这里' : `第一${unit}${KIND_LABEL[k as Kind]}会放在这里`}</p>
             <button className="btn btn-secondary" onClick={() => (k === 'essay' ? nav('/write') : sheets.add())}>{k === 'essay' ? '写点什么' : '收录'}</button>
           </div>
         ) : (

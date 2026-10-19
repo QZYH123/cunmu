@@ -13,7 +13,7 @@ import { TopBar } from '../components/Shell';
 import { fmtMD, fmtNum } from '../data/derive';
 import { arrivedByRoute, haptic, inPageFade, reduced, useEnterClass, withViewTransition } from '../lib/motion';
 import { DUR, IMPORT_LINE_MAX, PULL_TO_WALL } from '../tokens';
-import { captionOf, titleOf } from '../lib/naming';
+import { captionOf, SEARCH_PLACEHOLDER, titleOf } from '../lib/naming';
 import { isDesk, useBreakpoint, useViewportH, useWidth } from '../lib/useWidth';
 import { useSheets } from '../App';
 
@@ -161,7 +161,7 @@ export default function Home({ onWeread, onBangumi, onAdd }: { onWeread: () => v
             />
           </label>
           <p className="empty-more t-small c-3">
-            <button className="btn-text quiet" onClick={onWeread}>连接微信读书</button><span aria-hidden> · </span>
+            <button className="btn-text quiet" onClick={onWeread}>粘贴微信读书笔记</button><span aria-hidden> · </span>
             <button className="btn-text quiet" onClick={() => sheets.douban()}>导入豆瓣备份</button><span aria-hidden> · </span>
             <button className="btn-text quiet" onClick={() => sheets.steam()}>从 Steam 搬游戏</button><span aria-hidden> · </span>
             <button className="btn-text quiet" onClick={() => store.setSample(true)}>看看示例</button>
@@ -242,7 +242,7 @@ export default function Home({ onWeread, onBangumi, onAdd }: { onWeread: () => v
             aria-label="搜索"
           >
             <Search strokeWidth={1.5} />
-            <span>书、番、人、年份、随笔</span>
+            <span>{SEARCH_PLACEHOLDER}</span>
           </button>
         )}
         <div className="home-index">

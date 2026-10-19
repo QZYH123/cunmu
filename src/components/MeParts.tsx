@@ -90,7 +90,7 @@ export function Lead({ segs, mine, onSave, className }: { segs: Seg[]; mine?: st
       {!show && (
         <p className="mh-auto t-caption c-3">
           {mine
-            ? <><button className="btn-text quiet" onClick={() => setEditing(true)}>改写</button><span aria-hidden> · </span><button className="btn-text quiet" onClick={() => onSave('')}>用按记录写的</button></>
+            ? <><button className="btn-text quiet" onClick={() => setEditing(true)}>改写</button><span aria-hidden> · </span><button className="btn-text quiet" onClick={() => onSave('')}>改回按记录写的</button></>
             : <><span>这一段是按记录写的</span><span aria-hidden> · </span><button className="btn-text quiet" onClick={() => setEditing(true)}>改写</button></>}
         </p>
       )}
@@ -337,7 +337,7 @@ export function FavEditSheet({ open, onClose }: { open: boolean; onClose: () => 
     <Sheet open={open} onClose={onClose} label="最爱" className="sheet-tall">
       <div className="sheet-body">
         <h2 className="t-title">最爱</h2>
-        <p className="t-small c-2 sheet-say">排在前面的大一些。每部下面一句你的话；不写，就用你在 Bangumi 写的那句。</p>
+        <p className="t-small c-2 sheet-say">排在最前的，默认用作首页那一张。每部下面可以写一句；不写，就沿用你给这部写过的那句。</p>
         <ol className="fav-edit">
           {favs.map(({ f, w }, i) => {
             const auto = whyFor(w);

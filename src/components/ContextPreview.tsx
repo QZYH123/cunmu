@@ -26,7 +26,8 @@ export const workActions = (w: Work, nav: (to: string) => void, close: () => voi
   { label: '在整面墙里看', run: () => { close(); onWallView ? onWallView(w) : nav(`/wall?at=${w.id}`); } },
   ...(matchMedia(FINE).matches && !isDesktop() ? [{ label: '新标签页打开', run: () => { close(); window.open(`#/entry/${w.id}`, '_blank', 'noopener'); } }] : []),
 ];
-export const workMeta = (w: Work) => [creatorLine(w), w.finished ? `${whenOf(w, 'ym')}${w.kind === 'essay' ? '写' : '看完'}` : ''].filter(Boolean).join(' · ');
+const doneVerb = (w: Work) => (w.kind === 'music' ? '听过' : w.kind === 'game' ? '玩过' : w.kind === 'essay' ? '写' : '看完');
+export const workMeta = (w: Work) => [creatorLine(w), w.finished ? `${whenOf(w, 'ym')} · ${doneVerb(w)}` : ''].filter(Boolean).join(' · ');
 
 export function ContextPreview() {
   const { d, show } = useStore();

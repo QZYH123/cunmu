@@ -12,6 +12,7 @@ import { HERO } from './CoverWall';
 import { afterAnimations, markFlight, reduced, withViewTransition } from '../lib/motion';
 import { BP, DUR } from '../tokens';
 import { isDesktop } from '../lib/native';
+import { SEARCH_PLACEHOLDER } from '../lib/naming';
 
 /* ---------- results (shared by the palette and the /search page) ---------- */
 
@@ -151,7 +152,7 @@ export function PalettePanel({ inline, onClose, onAdd, onHelp, start, onState }:
         <Search strokeWidth={1.5} />
         <input
           ref={input} value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={key}
-          placeholder="搜索条目、人物、年份" enterKeyHint="search" role="combobox" aria-expanded aria-controls={`${uid}-l`}
+          placeholder={SEARCH_PLACEHOLDER} enterKeyHint="search" role="combobox" aria-expanded aria-controls={`${uid}-l`}
           aria-activedescendant={hits[cur] ? `${uid}-${cur}` : undefined} autoComplete="off" spellCheck={false}
         />
       </label>

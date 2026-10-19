@@ -6,7 +6,7 @@ import { derive, type Derived, type Settings } from './derive';
 import { firstSeenClaim, resolveDates, sortWorks } from './resolve';
 import {
   DEFAULTS, NO_CONNECTIONS, connectionsFor, fixInf, load, migrateV1toV2, serialize, SCHEMA_VERSION,
-  type BangumiConnection, type CatSort, type CatView, type YearView, type ImportBatch, type PersistedV2, type Theme, type WorkNote, type WorkSourceRow,
+  type BangumiConnection, type CatSort, type CatGroup, type CatView, type YearView, type ImportBatch, type PersistedV2, type Theme, type WorkNote, type WorkSourceRow,
 } from './persist';
 import { withKnown, type BangumiPull } from '../lib/bangumi';
 import { planSteam, withStoreFacts, type AchSummary, type Play, type SteamConnection, type SteamGame, type StoreFacts } from '../lib/steam';
@@ -25,7 +25,7 @@ import { DUR } from '../tokens';
 import { TITLE_MAX } from '../lib/naming';
 
 export const TIERS = [0, 1, 3, 5, 12, 50, 500, 3000] as const;
-export type { Theme, CatView, YearView, CatSort, CatSortKey, WorkNote, ImportBatch, WorkSourceRow } from './persist';
+export type { Theme, CatView, YearView, CatSort, CatSortKey, CatGroup, WorkNote, ImportBatch, WorkSourceRow } from './persist';
 
 /** what the source says under your overrides (for 「恢复原样」) */
 /** the covers a file carries: your own pictures (by reference) and Bangumi's (by address, https only) */
@@ -153,6 +153,7 @@ interface Store extends PersistedV2 {
   setLeadPin: (id: string | null) => void;
   setCatView: (v: CatView) => void;
   setCatSort: (s: CatSort) => void;
+  setCatGroup: (g: CatGroup) => void;
   setYearView: (v: YearView) => void;
   /** 补封面、作者: a work of yours (typed, pasted, from 豆瓣) gets its name, its maker or its picture. A synced
    *  work (Bangumi, 微信读书) gets them as overrides in its note: a value equal to the source's drops the
@@ -802,6 +803,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setLeadPin: (id) => setS((x) => ({ ...x, leadPin: id })),
     setCatView: (v) => setS((x) => ({ ...x, catView: v })),
     setCatSort: (c) => setS((x) => ({ ...x, catSort: c })),
+    setCatGroup: (g) => setS((x) => ({ ...x, catGroup: g })),
     setYearView: (v) => setS((x) => ({ ...x, yearView: v })),
     editWork: (id, patch) => {
       if (isSampleId(id)) return;

@@ -3,7 +3,8 @@ import { arrowNav, useFly } from '../components/CoverWall';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { LayoutGrid, Library, List } from 'lucide-react';
-import { useStore, type CatSort, type CatSortKey, type CatView } from '../data/store';
+import { useStore, type CatGroup, type CatSort, type CatSortKey, type CatView } from '../data/store';
+import { byLetter, letterOf } from '../lib/letters';
 import { useSheets } from '../App';
 import type { Kind, Work } from '../data/types';
 import { KIND_ASPECT, KIND_LABEL, KIND_UNIT } from '../data/types';
@@ -19,7 +20,7 @@ import { useSectionSpy } from './Entry';
 import { CAT_GRID, DUR, TABLE_THUMB } from '../tokens';
 
 type View = CatView;
-type Group = 'all' | 'period' | 'genre';
+type Group = CatGroup;
 
 const hrefOf = (w: Work) => (w.kind === 'essay' ? `/essay/${w.id}` : `/entry/${w.id}`);
 
@@ -205,7 +206,7 @@ function Spines({ works }: { works: Work[] }) {
 
 export default function Category() {
   const { kind = 'book' } = useParams();
-  const { library, catView, setCatView, catSort, setCatSort, sample } = useStore();
+  const { library, catView, setCatView, catSort, setCatSort, catGroup, setCatGroup, sample } = useStore();
   // 「选几部」 (STYLE v0.4 §3.14.3): pick some, put them all in one year
   const pick = usePicker();
   const picking = pick.on;
@@ -221,7 +222,9 @@ export default function Category() {
   const view: View = views.includes(catView) ? catView : 'grid';
   const setView = (v: View) => setCatView(v);
   const table = desk && view === 'list';
-  const [group, setGroup] = useState<Group>('all');
+  // the grouping is remembered with the view and the table's sort
+  const group: Group = catGroup ?? 'all';
+  const letters = group === 'letter';
   const [limit, setLimit] = useState(120);
   const { h1, h1Gone } = useSectionSpy([kind]);
   const sentinel = useRef<HTMLDivElement>(null);
@@ -238,25 +241,26 @@ export default function Category() {
     return () => io.disconnect();
   }, [view, group]);
 
-  const sorted = useMemo(() => (table ? sortWorksBy(works, catSort) : works), [works, table, catSort]);
+  const sorted = useMemo(() => (letters ? byLetter(works, (w) => w.title) : table ? sortWorksBy(works, catSort) : works), [works, letters, table, catSort]);
   const groups = useMemo(() => {
     const works = sorted;
     const list = works.slice(0, limit);
     if (group === 'all') return [{ key: '', label: '', items: list, total: works.length }];
     const m = new Map<string, Work[]>();
     const totals = new Map<string, number>();
+    const groupOf = (w: Work) => (group === 'letter' ? letterOf(w.title) : group === 'period' ? w.finished.slice(0, 4) : w.genres.find(Boolean) || '其他');
     for (const w of works) {
-      const g = group === 'period' ? w.finished.slice(0, 4) : w.genres.find(Boolean) || '其他';
+      const g = groupOf(w);
       totals.set(g, (totals.get(g) ?? 0) + 1);
     }
     for (const w of list) {
       // 时间未知 is its own last group ('' key)
-      const g = group === 'period' ? w.finished.slice(0, 4) : w.genres.find(Boolean) || '其他';
+      const g = groupOf(w);
       if (!m.has(g)) m.set(g, []);
       m.get(g)!.push(w);
     }
     const entries = [...m.entries()];
-    if (group === 'genre') entries.sort((a, b) => totals.get(b[0])! - totals.get(a[0])!);
+    if (group === 'letter') { /* already A–Z, # last */ } else if (group === 'genre') entries.sort((a, b) => totals.get(b[0])! - totals.get(a[0])!);
     else {
       // years newest first — unless the table is sorted oldest-first by date, then oldest first
       const up = table && catSort.key === 'finished' && catSort.dir === 'asc' ? -1 : 1;
@@ -277,6 +281,7 @@ export default function Category() {
     return () => { window.removeEventListener('scroll', f); clearTimeout(t); };
   }, []);
   const railYears = group === 'period' ? groups.map((g) => g.key).filter((k) => k !== 'unknown') : [];
+  const railLetters = letters ? groups.map((g) => g.key) : [];
   useEffect(() => pick.stop(), [kind]); // eslint-disable-line react-hooks/exhaustive-deps
 
   let offset = 0;
@@ -320,9 +325,9 @@ export default function Category() {
             <div className="cat-tools">
               <Seg
                 className="cat-seg"
-                options={[{ value: 'all', label: '全部' }, { value: 'period', label: '按时期' }, { value: 'genre', label: '按类型' }]}
+                options={[{ value: 'all', label: '全部' }, { value: 'period', label: '按时期' }, { value: 'genre', label: '按类型' }, { value: 'letter', label: '按首字母' }]}
                 value={group}
-                onChange={(v) => { setGroup(v as Group); setSwitching((s) => s + 1); }}
+                onChange={(v) => { setCatGroup(v as Group); setSwitching((s) => s + 1); }}
               />
               {/* desktop: the view is a labelled control beside the grouping, not an icon to decode (P2-4) */}
               {desk && (
@@ -336,7 +341,8 @@ export default function Category() {
               )}
             </div>
             <div className="cat-body" key={switching}>
-              {table && <Table groups={groups} kind={k} sort={catSort} onSort={setCatSort} pick={pick} />}
+              {/* A–Z shows as the title column sorted up; sorting by any column leaves A–Z */}
+              {table && <Table groups={groups} kind={k} sort={letters ? { key: 'title', dir: 'asc' } : catSort} onSort={(s) => { if (letters) setCatGroup('all'); setCatSort(s); }} pick={pick} />}
               {!table && groups.map((g) => {
                 const start = offset;
                 offset += g.items.length;
@@ -367,6 +373,11 @@ export default function Category() {
       {railYears.length > 2 && (
         <nav className={`year-rail ${rail ? 'on' : ''}`} aria-label="年份速查">
           {railYears.map((y) => <button key={y} onClick={() => document.getElementById(`g-${y}`)?.scrollIntoView()}>{y.slice(2)}</button>)}
+        </nav>
+      )}
+      {railLetters.length > 2 && (
+        <nav className={`year-rail ${rail ? 'on' : ''}`} aria-label="首字母速查">
+          {railLetters.map((l) => <button key={l} onClick={() => document.getElementById(`g-${l}`)?.scrollIntoView()}>{l}</button>)}
         </nav>
       )}
     </div>

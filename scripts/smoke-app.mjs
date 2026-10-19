@@ -247,6 +247,21 @@ await withPage('搜索 → 条目 → 返回: back on 搜索 with its words, res
   await page.waitForFunction(() => location.hash === '#/all', null, { timeout: 5000 });
 });
 
+await withPage('按首字母: titles A–Z under letters, # last; the choice is remembered', async (page) => {
+  await page.goto(`${BASE}#/`, { waitUntil: 'domcontentloaded' });
+  await seedBooks(page, ['中国哲学简史', 'Animal Farm', '《百年孤独》', '1984', '阿Q正传', 'しろばんば', '龍族']);
+  await open(page, '/kind/book');
+  await page.getByRole('tab', { name: '按首字母' }).click();
+  const read = () => page.evaluate(() => [...document.querySelectorAll('.cat-body section')].map((s) => [s.querySelector('.group-head .t-h2')?.textContent, [...s.querySelectorAll('.cat-name')].map((n) => n.textContent).join('/')].join(':')));
+  const want = ['A:阿Q正传/Animal Farm', 'B:《百年孤独》', 'L:龍族', 'S:しろばんば', 'Z:中国哲学简史', '#:1984'];
+  const got = await read();
+  if (got.join('|') !== want.join('|')) throw new Error(`A–Z: ${got.join(' | ')}`);
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.locator('.cat-body section').first().waitFor({ timeout: 5000 });
+  const again = await read();
+  if (again.join('|') !== want.join('|')) throw new Error(`after a reload: ${again.join(' | ')}`);
+});
+
 const bgmRequests = () => bgmLog.filter((l) => /^GET /.test(l));
 const toast = (page, text) => page.locator('.toast, [role="status"]').filter({ hasText: text }).first();
 async function connectByName(page, name) {

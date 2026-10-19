@@ -28,6 +28,8 @@ export type CatView = 'grid' | 'spine' | 'list';
 export type YearView = 'spines' | 'covers';
 export type CatSortKey = 'title' | 'creator' | 'genre' | 'year' | 'finished' | 'playtime';
 export interface CatSort { key: CatSortKey; dir: 'asc' | 'desc' }
+/** how 全部 and each kind group what they list: 全部 / 按时期 / 按类型 / 按首字母 */
+export type CatGroup = 'all' | 'period' | 'genre' | 'letter';
 
 /** notes = work_user + quotes + user_images + the user's date claim, for one work */
 export interface WorkNote {
@@ -153,6 +155,7 @@ export interface PersistedV2 {
   fontScale: number;
   catView: CatView;
   catSort: CatSort;
+  catGroup: CatGroup;
   yearView: YearView;
   // prototype only (no production counterpart)
   dev: { tier: number; dataset: Dataset; wereadRemoved: boolean };
@@ -172,7 +175,7 @@ export const DEFAULTS: PersistedV2 = {
   settings: DEFAULT_SETTINGS,
   sample: { on: false },
   leadPin: null, theme: 'system', reduceMotion: false, fontScale: 1,
-  catView: 'grid', catSort: { key: 'finished', dir: 'desc' }, yearView: 'spines',
+  catView: 'grid', catSort: { key: 'finished', dir: 'desc' }, catGroup: 'all', yearView: 'spines',
   dev: { tier: DEMO ? 500 : 0, dataset: 'real', wereadRemoved: false },
 };
 /** connections for a dev tier: the demo library comes with Bangumi and WeRead; tier 0 with nothing */

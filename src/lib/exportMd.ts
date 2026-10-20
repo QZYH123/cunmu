@@ -13,7 +13,7 @@ const imgPath = (src: string) => `图片/${src.replace(/^idb:/, '')}.jpg`;
 /** one work or essay as a Markdown file anyone can open without the app */
 export function workMarkdown(w: Work, essayPhoto?: string): string {
   const out: string[] = [w.kind === 'essay' ? `# ${w.title || '无题'}` : `# 《${w.title}》`];
-  const meta = [KIND_LABEL[w.kind], creatorLine(w), w.year ? String(w.year) : '', `${w.kind === 'essay' ? '写于' : '看完'} ${whenOf(w)}`, w.kind === 'essay' ? '' : SOURCE_LABEL[w.source]].filter(Boolean);
+  const meta = [KIND_LABEL[w.kind], creatorLine(w), w.year ? String(w.year) : '', `${w.kind === 'essay' ? '写于' : w.kind === 'music' ? '听过' : w.kind === 'game' ? '玩过' : '看完'} ${whenOf(w)}`, w.kind === 'essay' ? '' : SOURCE_LABEL[w.source]].filter(Boolean);
   out.push('', meta.join(' · '), '');
   if (w.originalTitle) out.push(`原名：${w.originalTitle}`, '');
   if (essayPhoto) out.push(`![](../${imgPath(essayPhoto)})`, '');

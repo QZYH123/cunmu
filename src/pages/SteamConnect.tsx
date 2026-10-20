@@ -17,7 +17,7 @@ import { withViewTransition } from '../lib/motion';
 
 /** what went wrong, in plain words (a timeout is the common one from mainland China) */
 const SAY: Record<SteamError['kind'], string> = {
-  key: 'Steam 没认这个 Key。去 Steam 网页上看一眼，复制完整再试。',
+  key: 'Steam 不认这个 Key。到 Steam 的 Key 页面重新复制完整的 Key，再试一次。',
   private: '读到了这个账号，但看不到游戏。到 Steam 隐私设置里，把「个人资料」和「游戏详情」设成公开再试。',
   net: '现在连不上 Steam，过一会儿再试。在国内，Steam 有时要多试几次。',
   user: '没找到这个账号。填个人资料页的链接、链接里 /id/ 后面的名字，或者 17 位的 SteamID64。',
@@ -125,7 +125,7 @@ export function SteamSheet({ open, onClose }: { open: boolean; onClose: () => vo
               ) : who?.err && who.q === user.trim() ? (
                 <p className="t-small c-2 field-say" role="alert">{who.err}</p>
               ) : (
-                <p className="t-caption c-3 field-say">在 Steam 里点头像 › 个人资料，复制页面地址粘贴过来就行。</p>
+                <p className="t-caption c-3 field-say">在 Steam 里点头像 › 个人资料，复制页面地址，粘贴到这里。</p>
               )}
 
               <h3 className="label-head steam-step"><span className="ordinal">2</span>你的 Web API Key</h3>

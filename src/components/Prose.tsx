@@ -88,7 +88,7 @@ export function Prose({ paragraphs, selfId, className = 't-body prose', dropcap,
             { label: '不是这个，取消链接', run: () => { unlink(selfId, pv.seg.target!); setPv(null); } },
           ]}
         >
-          {target && <WorkPreviewBody work={target} meta={[creatorLine(target), target.year, target.finished ? `${whenOf(target, 'ym')}看完` : ''].filter(Boolean).join(' · ')} />}
+          {target && <WorkPreviewBody work={target} meta={[creatorLine(target), target.year, target.finished ? `${whenOf(target, 'ym')} · ${target.kind === 'music' ? '听过' : target.kind === 'game' ? '玩过' : '看完'}` : ''].filter(Boolean).join(' · ')} />}
           {person && (
             <>
               <Avatar name={person.name} size={40} />

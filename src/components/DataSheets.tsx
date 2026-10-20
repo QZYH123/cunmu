@@ -175,7 +175,7 @@ export function DeleteAllSheet({ open, onClose }: { open: boolean; onClose: () =
           : <button className="btn-text confirm-first" disabled={exporting || busy} onClick={exportFirst}>{exporting ? <><Spin />正在整理</> : '先导出一份 ›'}</button>}
         <KeyBlocks blocks={[
           { k: '会删掉', lines: ['这台设备上的全部内容。', ...(store.icloud ? ['iCloud 里的副本。'] : []), '保存的 Bangumi 连接（用户名或令牌）和 Steam Web API Key。'] },
-          { k: '删不到', lines: ['你之前导出的文件、手机备份里的副本，需要你自己处理。', 'Bangumi、微信读书上的记录不受影响。'] },
+          { k: '删不到', lines: ['你之前导出的文件、手机备份里的副本，需要你自己处理。', 'Bangumi、Steam、微信读书上的记录不受影响。'] },
         ]} />
         {store.icloud && (
           <div className="radio-group" role="radiogroup" aria-label="删哪里">

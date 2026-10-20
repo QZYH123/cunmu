@@ -30,7 +30,7 @@ function Gone({ what }: { what: string }) {
     <div className="page page-x read-x">
       <TopBar title={what} titleOn />
       <p className="t-small c-3 mp-gone">这一页已经不在了。</p>
-      <Link to="/" className="btn-text">回首页</Link>
+      <Link to="/" className="btn-text">回到首页 ›</Link>
     </div>
   );
 }

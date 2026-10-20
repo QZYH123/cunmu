@@ -8,7 +8,7 @@ import { readAchievements, readAppDetails, steamReachable, SteamError } from '..
 import { Section, Dots } from './Bits';
 
 const SAY: Record<SteamError['kind'], string> = {
-  key: 'Steam 没认这个 Key，到「设置 › 来源」换一个',
+  key: 'Steam 不认这个 Key，到「设置 › 来源」换一个',
   private: 'Steam 上的「游戏详情」不是公开的，读不到成就',
   net: '现在连不上 Steam，过一会儿再试',
   user: '没找到这个账号',
@@ -93,7 +93,7 @@ export function SteamPlay({ work }: { work: Work }) {
               {f.genres.length > 0 && <div className="info-row"><dt>商店分类</dt><dd>{f.genres.join(' · ')}</dd></div>}
             </dl>
           )}
-          <p className="t-caption c-3 steam-at">{a ? `成就读于 ${a.at.slice(0, 10)}` : ''}{a && f ? ' · ' : ''}{f ? '商店信息来自 Steam 中国区' : ''}</p>
+          <p className="t-caption c-3 steam-at">{a ? `成就读于 ${fmtYMD(a.at.slice(0, 10))}` : ''}{a && f ? ' · ' : ''}{f ? '商店信息来自 Steam 中国区' : ''}</p>
         </details>
       )}
       {canRead && (

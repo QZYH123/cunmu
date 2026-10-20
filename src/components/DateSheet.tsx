@@ -159,17 +159,24 @@ function bgmDayOf(w: Work): { day: string; seen: boolean } | null {
 }
 
 /**
- * Where the date came from, one grey line under the title (FEEDBACK 2026-10-10 §2): 「Bangumi 上标记于 2012-08-20」;
- * a batch marked in one go, which is why it reads 时间未知: 「Bangumi 上 2020-08-16 一次标了 40 部」.
+ * Where the date came from, one grey line under the title (FEEDBACK 2026-10-10 §2): 「Bangumi 上更新于 2012 年 8 月 20 日」;
+ * a batch marked in one go, which is why it reads 时间未知: 「Bangumi 上 2020 年 8 月 16 日一次更新了 40 部」.
  */
+/** 2012-08-20 → 2012 年 8 月 20 日 (VOICE §2.4); anything else is shown as it is */
+const fullDay = (d: string) => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(d);
+  return m ? `${m[1]} 年 ${+m[2]} 月 ${+m[3]} 日` : d;
+};
+
 function Provenance({ work }: { work: Work }) {
   const { library } = useStore();
   const b = bgmDayOf(work);
   const pile = !!b && !b.seen && work.date?.level === 4 && !work.date.locked;
   const n = useMemo(() => (pile && b ? library.filter((w) => bgmDayOf(w)?.day === b.day).length : 0), [pile, b?.day, library]); // eslint-disable-line react-hooks/exhaustive-deps
   const st = work.claims?.find((c) => c.source === 'steam_last_played');
-  if (!b) return st?.value ? <p className="t-caption c-3 tnum ds-prov">{`Steam 上最后玩于 ${st.value}`}</p> : null;
-  const text = b.seen ? `${b.day} 同步时在 Bangumi 上看到` : pile && n > 1 ? `Bangumi 上 ${b.day} 一次标了 ${n} 部` : `Bangumi 上标记于 ${b.day}`;
+  if (!b) return st?.value ? <p className="t-caption c-3 tnum ds-prov">{`Steam 上最后玩于 ${fullDay(st.value)}`}</p> : null;
+  const day = fullDay(b.day);
+  const text = b.seen ? `${day} 同步时在 Bangumi 上看到` : pile && n > 1 ? `Bangumi 上 ${day} 一次更新了 ${n} 部` : `Bangumi 上更新于 ${day}`;
   return <p className="t-caption c-3 tnum ds-prov">{text}</p>;
 }
 

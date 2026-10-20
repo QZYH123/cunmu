@@ -184,7 +184,7 @@ export const KIND_UNIT: Record<Kind, string> = {
   anime: '部',
   film: '部',
   music: '张',
-  game: '款',
+  game: '部',
   essay: '篇',
 };
 

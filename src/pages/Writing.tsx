@@ -61,7 +61,7 @@ export default function Writing() {
           </div>
         ) : (
           <div className="writing-empty">
-            <p className="t-ui c-2 empty-line">还没有写过。读完、看完想说几句，或者别的什么，都可以写在这里。</p>
+            <p className="t-ui c-2 empty-line">读完、看完想说的几句，或者别的什么，都可以写在这里。</p>
             <button className="btn btn-primary" onClick={(ev) => write(ev)}>写一篇</button>
           </div>
         )}

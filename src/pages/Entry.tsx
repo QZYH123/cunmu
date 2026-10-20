@@ -110,7 +110,7 @@ function PersonName({ c }: { c: Credit }) {
           <div className="staff-card">
             <span className="preview-title">{c.name}</span>
             <span className="t-small c-2">出现在 {count} 部作品里</span>
-            <button className="btn btn-secondary" onClick={() => { setCard(null); setFresh(true); promote(id); }}>收进档案</button>
+            <button className="btn btn-secondary" onClick={() => { setCard(null); setFresh(true); promote(id); }}>收进索引</button>
           </div>
         </Preview>
       )}
@@ -124,7 +124,7 @@ export default function Entry() {
   const { d } = store;
   const work = d.byId.get(id) ?? store.removedWorks.find((w) => w.id === id) ?? ALL_BY_ID.get(id);
   if (work?.kind === 'essay') return <Essay />;
-  if (!work) return <div className="page under-bar page-x"><TopBar /><p className="t-ui c-2 empty-line">这里还没有这一条。</p><Link to="/" className="btn-text quiet empty-back">回到首页 ›</Link></div>;
+  if (!work) return <div className="page under-bar page-x"><TopBar /><p className="t-ui c-2 empty-line">找不到这一条。</p><Link to="/" className="btn-text quiet empty-back">回到首页 ›</Link></div>;
   return <WorkEntry work={work} key={work.id} />;
 }
 

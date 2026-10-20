@@ -84,7 +84,7 @@ export default function MeHome() {
       const t = imageTarget();
       if (r === 'done') store.toast(t === 'album' ? '已存入相册' : t === 'download' ? '长图存好了，在下载里' : '长图存好了');
     } catch (e) {
-      store.toast(/denied/i.test(String((e as Error)?.message ?? e)) ? '没有存进相册：要先允许存储' : '这张图没画出来，再试一次');
+      store.toast(/denied/i.test(String((e as Error)?.message ?? e)) ? '没有存进相册：先在系统设置里允许存储，再试一次' : '这张图没画出来，再试一次');
     } finally {
       if (!was) store.setShow(false);
       setVeilOut(true);
@@ -226,7 +226,7 @@ function Favorites({ favs, desk, onEdit }: { favs: { f: { id: string; why?: stri
         {!show && <button className="btn-text quiet mh-sec-act" onClick={onEdit}>{favs.length ? '改一下' : '挑几部'}</button>}
       </div>
       {favs.length === 0
-        ? <p className="t-small c-3 mh-quiet">还没有。在任何一部的页面上点「放进最爱」，它就会在这里。</p>
+        ? <p className="t-small c-3 mh-quiet">在任何一部的页面上点「放进最爱」，它就会出现在这里。</p>
         : (
           <ol className="mh-favs" ref={list}>
             {favs.map(({ f, w }) => {

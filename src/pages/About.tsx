@@ -33,7 +33,7 @@ function DocPage({ title, children }: { title: string; children: React.ReactNode
  *  - network: lib/bangumiNet.ts + lib/bangumi.ts (api.bgm.tv), lib/coverCache.ts + <img> (lain.bgm.tv); nothing else
  *    is fetched (grep for fetch / CapacitorHttp); the Tauri CSP (scripts/apply-app-id.mjs) allows only those two hosts
  *  - sync: data/bangumiAgent.tsx (on open / return, when the last good sync is ≥ 6 h old)
- *  - Steam (r23): lib/steamNet.ts (api.steampowered.com, store.steampowered.com/api, app builds only), covers and
+ *  - Steam (r23): lib/steam.ts profileXmlUrl (steamcommunity.com, the first step, no key), lib/steamNet.ts (api.steampowered.com, store.steampowered.com/api, app builds only), covers and
  *    achievement icons from the Steam CDN; the key via lib/secrets.ts ('steam-key'), cleared on disconnect and 删除全部内容
  *  - Douban / WeRead: lib/douban.ts, lib/doubak.ts, pages/Connect.tsx (paste) read locally, no requests
  *  - Android asks for INTERNET only; iOS asks for nothing
@@ -59,11 +59,12 @@ export function Privacy() {
       <p>这些请求只发往 api.bgm.tv 和 lain.bgm.tv，带着一个写明这个应用的标识（{UA_NAME}，Bangumi 要求每个应用这样做），不带你写的任何东西。</p>
       <p>Steam（只在手机和电脑上的应用里；网页版连不上 Steam，只能打开你自己存的文件）：</p>
       <ul>
+        <li>连接 Steam 的第一步，填账号的时候，打开 steamcommunity.com 上这个账号的公开资料页，确认账号存在、资料是否公开。这一步不用 Key。</li>
         <li>从 Steam 搬进来、再读一次的时候，用你的 Key 读取这个账号的游戏和游玩时长（要求 Steam 上的个人资料和游戏详情是公开的）。</li>
         <li>在游戏页「游玩」一节里点读取，或在设置的 Steam 一行里读取全部游戏时，读取你在那部游戏里的进度记录（达成了哪些、它们的名字和图标、全球玩家里达成的比例），以及 Steam 商店里这部游戏的公开资料（类型、开发、发行、发售日期）。</li>
         <li>显示游戏封面和进度记录的小图标时，从 Steam 的图片服务器下载。</li>
       </ul>
-      <p>这些请求只发往 api.steampowered.com、store.steampowered.com 和 Steam 的图片服务器。Steam 不会自动同步，只在你点的时候读。读到的时长和进度记录存在这台设备上，会跟着导出的文件走。没连接 Bangumi 和 Steam、也没贴 Bangumi 链接的时候，{APP_NAME}不联网。</p>
+      <p>这些请求只发往 steamcommunity.com、api.steampowered.com、store.steampowered.com 和 Steam 的图片服务器。Steam 不会自动同步，只在你点的时候读。读到的时长和进度记录存在这台设备上，会跟着导出的文件走。没连接 Bangumi 和 Steam、也没贴 Bangumi 链接的时候，{APP_NAME}不联网。</p>
 
       <h2>个人令牌</h2>
       <p>用个人令牌连接时，令牌只存在这台设备上：iPhone 上在钥匙串里，Android 上由系统密钥库加密保存；Windows 和网页版存在本地存储里。它只用来向 Bangumi 证明是你，不会出现在导出的文件里。断开 Bangumi 或删除全部内容时，令牌一起删掉。</p>

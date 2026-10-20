@@ -73,6 +73,33 @@ test('xlsx: a date serial in a date-styled number cell becomes a date; text in t
   assert.deepEqual(sheets[0].rows[1], ['2023-05-20 00:00:00', '2023-05-20 23:41:08', '42']);
 });
 
+test('xlsx: the phonetic guide (rPh) beside Japanese text is not read as part of the title', async () => {
+  const files = xlsxFiles(null).map((f) => (f.name === 'xl/worksheets/sheet1.xml'
+    ? { ...f, data: f.data.replace('<is><t>a</t></is>', '<is><r><t>千と</t></r><r><t>千尋</t></r><rPh sb="0" eb="1"><t>セン</t></rPh></is>') }
+    : f));
+  files.push({ name: 'xl/sharedStrings.xml', data: '<?xml version="1.0"?><sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><si><t>攻殻</t><rPh sb="0" eb="2"><t>コウカク</t></rPh></si></sst>' });
+  const sheets = await readXlsx(await makeZip(files.map((f) => (f.name === 'xl/worksheets/sheet1.xml' ? { ...f, data: f.data.replace('<c s="0"><v>42</v></c>', '<c t="s"><v>0</v></c>') } : f))).arrayBuffer(), parse);
+  assert.equal(sheets[0].rows[0][0], '千と千尋');
+  assert.equal(sheets[0].rows[1][2], '攻殻');
+});
+
+test('xlsx: a 1904-date workbook reads the right day, and a [Red] number format is not a date', async () => {
+  const files = xlsxFiles(null).map((f) => {
+    if (f.name === 'xl/workbook.xml') return { ...f, data: f.data.replace('<sheets>', '<workbookPr date1904="1"/><sheets>') };
+    if (f.name === 'xl/styles.xml') return { ...f, data: f.data.replace('<cellXfs count="2"><xf numFmtId="0"/>', '<numFmts><numFmt numFmtId="164" formatCode="0.0;[Red]-0.0"/></numFmts><cellXfs count="2"><xf numFmtId="164"/>') };
+    return f;
+  });
+  const sheets = await readXlsx(await makeZip(files).arrayBuffer(), parse);
+  assert.deepEqual(sheets[0].rows[1], ['2027-05-21 00:00:00', '2023-05-20 23:41:08', '42']);
+});
+
+test('xlsx: a shared-string cell without its index reads empty, not as the first string', async () => {
+  const files = xlsxFiles(null);
+  files.push({ name: 'xl/sharedStrings.xml', data: '<?xml version="1.0"?><sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><si><t>攻殻</t></si></sst>' });
+  const sheets = await readXlsx(await makeZip(files.map((f) => (f.name === 'xl/worksheets/sheet1.xml' ? { ...f, data: f.data.replace('<c s="0"><v>42</v></c>', '<c t="s"/>') } : f))).arrayBuffer(), parse);
+  assert.equal(sheets[0].rows[1][2] ?? '', '');
+});
+
 /** a minimal workbook: either plain shared-string rows, or one row testing date styles */
 function xlsxFiles(rows: string[][] | null) {
   const NS = 'xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"';

@@ -6,8 +6,10 @@ const NS = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
 const colIndex = (ref: string) => { let n = 0; for (const ch of ref.replace(/\d+/g, '').toUpperCase()) n = n * 26 + (ch.charCodeAt(0) - 64); return n - 1; };
 /** elements by local name, as an array (works with the browser's DOM and with xmldom in tests) */
 const all = (el: Document | Element, name: string) => Array.from(el.getElementsByTagNameNS(NS, name));
+/** a rich string's text: its runs, never the phonetic guide (rPh) Excel keeps beside Japanese text */
+const textOf = (el: Element) => all(el, 't').filter((t) => (t.parentNode as Element | null)?.localName !== 'rPh').map((t) => t.textContent ?? '').join('');
 /** Excel's serial day (1900 system) → YYYY-MM-DD hh:mm:ss */
-const fromSerial = (x: number) => new Date(Math.round((x - 25569) * 86400000)).toISOString().replace('T', ' ').slice(0, 19);
+const fromSerial = (x: number, d1904 = false) => new Date(Math.round((x + (d1904 ? 1462 : 0) - 25569) * 86400000)).toISOString().replace('T', ' ').slice(0, 19);
 
 /**
  * A minimal .xlsx reader (client-side; the file never leaves the device): shared strings, inline strings,
@@ -26,8 +28,9 @@ export async function readXlsx(buf: ArrayBuffer, parse: (xml: string) => Documen
   if (rels) for (const r of Array.from(rels.getElementsByTagName('Relationship'))) target.set(r.getAttribute('Id') ?? '', r.getAttribute('Target') ?? '');
   const shared: string[] = [];
   const ss = xml('xl/sharedStrings.xml');
-  if (ss) for (const si of all(ss, 'si')) shared.push(all(si, 't').map((t) => t.textContent ?? '').join(''));
-  // which style ids are dates (built-in 14–22, 45–47, or a custom format with y/m/d in it)
+  if (ss) for (const si of all(ss, 'si')) shared.push(textOf(si));
+  // which style ids are dates (built-in 14–22, 45–47, or a custom format with y/m/d in it — outside quotes,
+  // [Red]-style brackets and \-escapes, so 「0.0;[Red]-0.0」 stays a number)
   const dateStyles = new Set<number>();
   const st = xml('xl/styles.xml');
   if (st) {
@@ -36,9 +39,11 @@ export async function readXlsx(buf: ArrayBuffer, parse: (xml: string) => Documen
     const xfs = all(st, 'cellXfs')[0];
     (xfs ? all(xfs, 'xf') : []).forEach((xf, i) => {
       const id = Number(xf.getAttribute('numFmtId'));
-      if ((id >= 14 && id <= 22) || (id >= 45 && id <= 47) || /[ymd]/i.test(custom.get(id)?.replace(/"[^"]*"/g, '') ?? '')) dateStyles.add(i);
+      if ((id >= 14 && id <= 22) || (id >= 45 && id <= 47) || /[ymd]/i.test(custom.get(id)?.replace(/"[^"]*"|\[[^\]]*\]|\\./g, '') ?? '')) dateStyles.add(i);
     });
   }
+  // a workbook saved in the 1904 date system (older Mac Excel) counts its days from 1904-01-01
+  const d1904 = /^(1|true)$/i.test(all(wb, 'workbookPr')[0]?.getAttribute('date1904') ?? '');
   const out: Sheet[] = [];
   for (const s of all(wb, 'sheet')) {
     const rid = s.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id') ?? s.getAttribute('r:id') ?? '';
@@ -56,11 +61,12 @@ export async function readXlsx(buf: ArrayBuffer, parse: (xml: string) => Documen
         const type = c.getAttribute('t');
         const v = all(c, 'v')[0]?.textContent ?? '';
         let val = '';
-        if (type === 's') val = shared[Number(v)] ?? '';
-        else if (type === 'inlineStr') val = all(c, 't').map((x) => x.textContent ?? '').join('');
+        // a shared-string cell without its index is empty, not the first string
+        if (type === 's') val = v.trim() ? shared[Number(v)] ?? '' : '';
+        else if (type === 'inlineStr') val = textOf(c);
         else if (type === 'b') val = v === '1' ? 'TRUE' : 'FALSE';
         // only a number can be a date serial (a t="str" cell in a date style is text already)
-        else if ((!type || type === 'n') && v && dateStyles.has(Number(c.getAttribute('s') ?? -1)) && Number.isFinite(Number(v))) val = fromSerial(Number(v));
+        else if ((!type || type === 'n') && v && dateStyles.has(Number(c.getAttribute('s') ?? -1)) && Number.isFinite(Number(v))) val = fromSerial(Number(v), d1904);
         else val = v;
         cells[i] = val;
       }

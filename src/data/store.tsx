@@ -15,6 +15,7 @@ import { planSteam, withStoreFacts, type AchSummary, type Play, type SteamConnec
 import { getBangumiToken, getSecret, setBangumiToken, setSecret } from '../lib/secrets';
 import { bangumiFromBackup, steamFromBackup } from './restore';
 import { clearSteamDraft } from '../lib/steamDraft';
+import { steamPriorOf, undoSteamPrior } from './steamUndo';
 import { withViewTransition } from '../lib/motion';
 import { clearCoverCache } from '../lib/coverCache';
 import type { CoverImage, Credit, Dataset, DateClaim, Quote, Work } from './types';
@@ -216,6 +217,28 @@ const layerNote = (w: Work, n?: WorkNote): Work => {
     ...(n.rating10 ? { rating10: n.rating10 } : null),
   };
 };
+/** 「合并」: what you wrote on the imported one joins the note of the one you had — pictures and your date too */
+export function foldNote(na: WorkNote, nb0: WorkNote | undefined): WorkNote {
+  const nb: WorkNote = { ...(nb0 ?? {}) };
+  if (na.rating10 && !nb.rating10) nb.rating10 = na.rating10;
+  if (na.review?.length) nb.review = [...(nb.review ?? []), ...na.review];
+  if (na.quotes?.length) nb.quotes = [...na.quotes, ...(nb.quotes ?? [])];
+  if (na.images?.length) nb.images = [...(nb.images ?? []), ...na.images];
+  if (na.date && !nb.date) nb.date = na.date;
+  return nb;
+}
+/** 「合并」: a 最爱, the frontispiece or 只给自己 on the imported one carries over to the one it folded into */
+export function repointMe(me: PersistedV2['me'], from: string, into: string): PersistedV2['me'] {
+  let out = me;
+  if (me.favorites.some((f) => f.id === from)) {
+    const favorites = me.favorites.some((f) => f.id === into) ? me.favorites.filter((f) => f.id !== from) : me.favorites.map((f) => (f.id === from ? { ...f, id: into } : f));
+    out = { ...out, favorites };
+  }
+  if (me.profile.frontispiece === from) out = { ...out, profile: { ...out.profile, frontispiece: into } };
+  // 只给自己 on either side: the merged one stays hidden
+  if (me.onlyMe.includes(from)) out = { ...out, onlyMe: [...new Set([...me.onlyMe.filter((i) => i !== from), into])] };
+  return out;
+}
 const nowISO = () => new Date().toISOString();
 let qn = 0;
 export const quoteId = () => `q-${Date.now().toString(36)}-${qn++}`;
@@ -542,15 +565,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const notes = { ...x.notes };
         const na = notes[from];
         if (na) {
-          const nb = { ...(notes[into] ?? {}) };
-          if (na.rating10 && !nb.rating10) nb.rating10 = na.rating10;
-          if (na.review?.length) nb.review = [...(nb.review ?? []), ...na.review];
-          if (na.quotes?.length) nb.quotes = [...na.quotes, ...(nb.quotes ?? [])];
-          notes[into] = { ...nb, updatedAt: nowISO() };
+          notes[into] = { ...foldNote(na, notes[into]), updatedAt: nowISO() };
           delete notes[from];
         }
         return {
           ...x, maybeSame, notes,
+          me: repointMe(x.me, from, into),
+          // the home cover set on the imported one now points at the one it folded into
+          leadPin: x.leadPin === from ? into : x.leadPin,
           extras: x.extras.filter((e) => e.id !== from),
           workSources: row ? [...x.workSources, row] : x.workSources,
           batches: x.batches.map((bt) => (bt.created.includes(from) ? { ...bt, created: bt.created.filter((i) => i !== from), merged: [...bt.merged, into] } : bt)),
@@ -596,12 +618,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           return n ? { ...w, play: { ...w.play, ...n.play! }, claims: n.claims } : w;
         });
         const plays = Object.fromEntries(Object.entries(plan.plays).map(([wid, p]) => [wid, { ...x.plays?.[wid], ...p }]));
+        const steamPrior = steamPriorOf(x.plays, x.extras, next, Object.keys(plan.plays));
         return {
           ...x,
           extras: [...extras, ...fresh.map((w) => ({ ...w, sources: w.sources?.map((r) => ({ ...r, batchId: id, firstSeenAt: at })) }))],
           plays,
           connections: { ...x.connections, steam: conn },
-          batches: fresh.length ? [...x.batches, { id, provider: 'steam' as const, label: `${at.slice(5, 7).replace(/^0/, '')} 月 ${at.slice(8, 10).replace(/^0/, '')} 日 · Steam · ${fresh.length} 部`, createdAt: at, created: fresh.map((w) => w.id), merged: Object.keys(plan.plays), skipped: [], quoteIds: [] }] : x.batches,
+          batches: fresh.length ? [...x.batches, { id, provider: 'steam' as const, label: `${at.slice(5, 7).replace(/^0/, '')} 月 ${at.slice(8, 10).replace(/^0/, '')} 日 · Steam · ${fresh.length} 部`, createdAt: at, created: fresh.map((w) => w.id), merged: Object.keys(plan.plays), skipped: [], quoteIds: [], steamPrior }] : x.batches,
         };
       });
       if (fresh.length) announce({ kind: fresh.length > 8 ? 'batch' : 'single', ids: fresh.map((w) => w.id), prevIds: prev });
@@ -713,8 +736,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           // you wrote on it: it stays, as a hand-added work (the import's part, its date included, goes)
           return [{ ...w, source: 'manual' as const, sources: [{ provider: 'manual' as const, externalId: w.id }], claims: [] }];
         });
+        // a Steam import: the playtime it changed on games already here goes back (an older batch recorded none)
+        // once Steam is disconnected, the playtime on games from other sources stays cleared, as disconnecting said
+        const prior = batch.steamPrior && !x.connections.steam ? { ...batch.steamPrior, plays: {} } : batch.steamPrior;
+        const y = undoSteamPrior({ ...x, extras }, prior);
         return {
-          ...x, extras, notes,
+          ...y, notes,
           workSources: x.workSources.filter((r) => r.batchId !== id),
           maybeSame: (x.maybeSame ?? []).filter((m) => m.batchId !== id),
           batches: x.batches.map((b) => (b.id === id ? { ...b, undoneAt: nowISO() } : b)),

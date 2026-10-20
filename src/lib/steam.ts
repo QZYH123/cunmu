@@ -115,11 +115,18 @@ export function parseOwnedGames(body: unknown): SteamGame[] | 'private' | null {
   const r = (j as { response?: { games?: unknown[] } } | null)?.response ?? (j as { games?: unknown[] } | null);
   if (!r || typeof r !== 'object') return null;
   const gs = (r as { games?: unknown[] }).games;
-  if (!Array.isArray(gs)) return Object.keys(r).length === 0 ? 'private' : null;
+  if (!Array.isArray(gs)) {
+    if (Object.keys(r).length === 0) return 'private';
+    // a public library with nothing in it: Steam sends the count and leaves the list out
+    return (r as { game_count?: unknown }).game_count === 0 ? [] : null;
+  }
   const out: SteamGame[] = [];
+  const seen = new Set<number>();
   for (const g of gs as Record<string, unknown>[]) {
     const appid = Number(g?.appid);
-    if (!Number.isFinite(appid) || appid <= 0) continue;
+    // a game listed twice (a file put together by hand) comes in once, so no two works share an id
+    if (!Number.isInteger(appid) || appid <= 0 || seen.has(appid)) continue;
+    seen.add(appid);
     out.push({
       appid,
       name: typeof g.name === 'string' && g.name.trim() ? g.name.trim() : `App ${appid}`,

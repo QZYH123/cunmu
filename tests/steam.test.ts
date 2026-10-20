@@ -130,3 +130,11 @@ test('steam: the public profile page names the account without a key; no such pr
   assert.equal(profileXmlUrl({ vanity: 'robin walker' }), 'https://steamcommunity.com/id/robin%20walker/?xml=1');
   assert.equal(profileXmlUrl({ id: '76561197960435530' }), 'https://steamcommunity.com/profiles/76561197960435530/?xml=1');
 });
+
+test('steam: an empty public library (only game_count: 0) is an empty list; a game listed twice comes in once', () => {
+  assert.deepEqual(parseOwnedGames('{"response":{"game_count":0}}'), []);
+  assert.equal(parseOwnedGames('{"response":{"game_count":2}}'), null);
+  const two = parseOwnedGames({ response: { game_count: 3, games: [{ appid: 10, name: 'A', playtime_forever: 5 }, { appid: 10, name: 'A', playtime_forever: 5 }, { appid: 1.5, name: 'B' }] } });
+  assert.ok(Array.isArray(two));
+  assert.deepEqual((two as { appid: number }[]).map((g) => g.appid), [10]);
+});

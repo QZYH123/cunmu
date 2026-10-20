@@ -72,6 +72,8 @@ export interface ImportBatch {
   /** prototype addition: short reviews appended to one you had already (undo takes the paragraph back out) */
   appended?: Record<string, string>;
   undoneAt?: string;
+  /** a Steam import: what it changed on games already here, for its undo (older batches have none) */
+  steamPrior?: import('./steamUndo').SteamPrior;
 }
 
 /** device-level, never synced or exported */

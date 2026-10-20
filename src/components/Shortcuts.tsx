@@ -26,7 +26,7 @@ const GROUPS: { title: string; rows: { label: string; keys: Keys }[] }[] = [
     { label: '关闭浮层', keys: [['Esc']] },
     { label: '快捷键说明', keys: [['?']] },
   ] },
-  { title: '封面墙 · 封面格 · 表格 · 年份', rows: [
+  { title: '封面墙 · 封面格 · 列表 · 年份', rows: [
     { label: '移动焦点', keys: [['←', '↑', '→', '↓']] },
     { label: '打开', keys: [['Enter']] },
     { label: '行首 / 行尾', keys: [['Home'], ['End']] },

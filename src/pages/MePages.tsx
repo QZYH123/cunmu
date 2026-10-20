@@ -229,10 +229,10 @@ export function PeriodPage() {
         {p.epigraph && <p className="mp-epigraph">{p.epigraph}</p>}
         {/* the stretch itself, in its order: one row of covers that scrolls sideways */}
         <div className="mp-shelf" ref={shelfRef} role="group" aria-label={`这段日子的 ${ms.length} 部`}>
-          {ms.slice(0, 80).map((w) => { const [cw, ch] = fit(w, 150 * 1.4, 150); return <FlyLink key={w.id} id={w.id} to={`/entry/${w.id}`} data-ctx={w.id} aria-label={w.title}><Cover work={w} w={cw} h={ch} paperPlaceholder /></FlyLink>; })}
+          {ms.map((w) => { const [cw, ch] = fit(w, 150 * 1.4, 150); return <FlyLink key={w.id} id={w.id} to={`/entry/${w.id}`} data-ctx={w.id} aria-label={w.title}><Cover work={w} w={cw} h={ch} paperPlaceholder /></FlyLink>; })}
         </div>
         <ScrollRail target={shelfRef} />
-        {ms.length > 4 && <p className="t-caption c-3 mp-more">按时间排着，往左滑看{ms.length > 80 ? '前 80 部' : '完'}</p>}
+        {ms.length > 4 && <p className="t-caption c-3 mp-more">按时间排着，往左滑看其余的</p>}
         <Lead segs={lead} mine={p.lead} onSave={(t) => store.updatePeriod(p.id, { lead: t.trim() || undefined })} />
         {quoted && (
           <blockquote className="mp-quote">

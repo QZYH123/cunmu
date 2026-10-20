@@ -1,14 +1,15 @@
 import { fmtPlaytime } from '../lib/steam';
 import { arrowNav, useFly } from '../components/CoverWall';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { LayoutGrid, Library, List } from 'lucide-react';
 import { useStore, type CatGroup, type CatSort, type CatSortKey, type CatView } from '../data/store';
-import { byLetter, letterOf } from '../lib/letters';
+import { byLetter } from '../lib/letters';
 import { useSheets } from '../App';
 import type { Kind, Work } from '../data/types';
 import { KIND_ASPECT, KIND_LABEL, KIND_UNIT } from '../data/types';
-import { creatorLine, fmtNum, listDate, whenOf } from '../data/derive';
+import { SORT_VAL, groupKeys, sortWorksBy } from '../data/catOrder';
+import { fmtNum, listDate, whenOf } from '../data/derive';
 import { PickBar, PickToggle, usePicker, type Picker } from '../components/Pick';
 import { hash, paperVar } from '../lib/hash';
 import { TopBar } from '../components/Shell';
@@ -60,27 +61,6 @@ export function Grid({ works, offset, pick, noYear }: { works: Work[]; offset: n
 
 /* ---------- desktop table (§8.3.7, P2-4) ---------- */
 
-const COLLATOR = new Intl.Collator('zh-Hans-CN', { numeric: true, sensitivity: 'base' });
-const yearOf = (w: Work) => w.year ?? null;
-/** Sort value per column; missing values always sort last, whatever the direction. */
-const SORT_VAL: Record<CatSortKey, (w: Work) => string | number | null> = {
-  title: (w) => w.title,
-  creator: (w) => creatorLine(w) || null,
-  genre: (w) => w.genres.filter(Boolean).slice(0, 2).join(' · ') || null,
-  year: yearOf,
-  finished: (w) => w.finished,
-  // r19 minutes played (Steam); works without a time sort last
-  playtime: (w) => w.play?.minutes ?? null,
-};
-export function sortWorksBy(works: Work[], { key, dir }: CatSort): Work[] {
-  const f = SORT_VAL[key];
-  const sign = dir === 'asc' ? 1 : -1;
-  return works.map((w, i) => ({ w, v: f(w), i })).sort((a, b) => {
-    if (a.v === null || b.v === null) return a.v === b.v ? a.i - b.i : a.v === null ? 1 : -1;
-    const c = typeof a.v === 'number' && typeof b.v === 'number' ? a.v - b.v : COLLATOR.compare(String(a.v), String(b.v));
-    return c ? c * sign : a.i - b.i;   // ties keep the library order (newest first)
-  }).map((x) => x.w);
-}
 /** Columns follow §8.3.7 (书名 | 作者 | 类型 | 年份 | 看完); the words follow the kind. */
 function columnsFor(k: Kind | 'all'): { key: CatSortKey; label: string; first: 'asc' | 'desc' }[] {
   const verb = k === 'music' ? '听过' : k === 'game' ? '玩过' : k === 'essay' ? '写于' : k === 'all' ? '日期' : '看完';
@@ -104,7 +84,7 @@ function Table({ groups, kind, sort, onSort, pick }: {
   const cell = (w: Work, key: CatSortKey) => {
     if (key === 'title') return null;
     if (key === 'playtime') return w.play ? fmtPlaytime(w.play.minutes) : <span className="c-3">—</span>;
-    if (key === 'finished') return w.finished ? (w.finished.length === 4 ? whenOf(w, 'year') : w.finished) : '';
+    if (key === 'finished') return w.finished ? (w.finished.length === 4 ? whenOf(w, 'year') : w.finished) : '时间未知';
     const v = SORT_VAL[key](w);
     return v === null ? <span className="c-3">—</span> : v;
   };
@@ -193,9 +173,12 @@ function Spines({ works }: { works: Work[] }) {
           {s.map((w) => {
             const dm = dims(w);
             return (
-              <Link key={w.id} to={hrefOf(w)} className="spine" style={{ width: dm.w, height: dm.h, background: paperVar(w.id) }} aria-label={w.title}>
-                <span>{w.title}</span>
-              </Link>
+              <span key={w.id} className="spine-slot" style={{ width: dm.w, height: dm.h }}>
+                <Link to={hrefOf(w)} className="spine" title={w.title} style={{ background: paperVar(w.id) }} aria-label={w.title}>
+                  <span>{w.title}</span>
+                </Link>
+                <span className="spine-full" aria-hidden>{w.title}</span>
+              </span>
             );
           })}
         </div>
@@ -207,6 +190,7 @@ function Spines({ works }: { works: Work[] }) {
 export default function Category() {
   const { kind = 'book' } = useParams();
   const { library, catView, setCatView, catSort, setCatSort, catGroup, setCatGroup, sample } = useStore();
+  const [params, setParams] = useSearchParams();
   // 「选几部」 (STYLE v0.4 §3.14.3): pick some, put them all in one year
   const pick = usePicker();
   const picking = pick.on;
@@ -223,13 +207,27 @@ export default function Category() {
   const setView = (v: View) => setCatView(v);
   const table = desk && view === 'list';
   // the grouping is remembered with the view and the table's sort
-  const group: Group = catGroup ?? 'all';
+  const GROUPS: Group[] = ['all', 'period', 'genre', 'letter'];
+  const fromUrl = params.get('group');
+  const group: Group = GROUPS.includes(fromUrl as Group) ? fromUrl as Group : (catGroup ?? 'all');
+  const setGroup = (v: Group) => {
+    const next = new URLSearchParams(params);
+    if (v === 'all') next.delete('group'); else next.set('group', v);
+    setParams(next, { replace: true });
+    setCatGroup(v);
+  };
+  // the remembered grouping is written into the URL so leaving and coming back lands on it
+  useEffect(() => {
+    if (params.get('group') || !catGroup || catGroup === 'all') return;
+    const next = new URLSearchParams(params);
+    next.set('group', catGroup);
+    setParams(next, { replace: true });
+  }, [catGroup]); // eslint-disable-line react-hooks/exhaustive-deps
   const letters = group === 'letter';
   const [limit, setLimit] = useState(120);
   const { h1, h1Gone } = useSectionSpy([kind]);
   const sentinel = useRef<HTMLDivElement>(null);
   const [switching, setSwitching] = useState(0);
-  const nextView = views[(views.indexOf(view) + 1) % views.length];
   const title = k === 'all' ? '全部' : KIND_LABEL[k];
   const unit = k === 'all' ? '条' : KIND_UNIT[k];
 
@@ -248,16 +246,16 @@ export default function Category() {
     if (group === 'all') return [{ key: '', label: '', items: list, total: works.length }];
     const m = new Map<string, Work[]>();
     const totals = new Map<string, number>();
-    const groupOf = (w: Work) => (group === 'letter' ? letterOf(w.title) : group === 'period' ? w.finished.slice(0, 4) : w.genres.find(Boolean) || '其他');
+    const keysOf = (w: Work) => groupKeys(w, group);
     for (const w of works) {
-      const g = groupOf(w);
-      totals.set(g, (totals.get(g) ?? 0) + 1);
+      for (const g of keysOf(w)) totals.set(g, (totals.get(g) ?? 0) + 1);
     }
     for (const w of list) {
       // 时间未知 is its own last group ('' key)
-      const g = groupOf(w);
-      if (!m.has(g)) m.set(g, []);
-      m.get(g)!.push(w);
+      for (const g of keysOf(w)) {
+        if (!m.has(g)) m.set(g, []);
+        m.get(g)!.push(w);
+      }
     }
     const entries = [...m.entries()];
     if (group === 'letter') { /* already A–Z, # last */ } else if (group === 'genre') entries.sort((a, b) => totals.get(b[0])! - totals.get(a[0])!);
@@ -305,9 +303,29 @@ export default function Category() {
         right={works.length > 0 && (
           <>
           {!sample.on && k !== 'essay' && <PickToggle p={pick} />}
-          {!desk && !picking && <button className="icon-btn" aria-label={{ grid: '封面格', spine: '书脊', list: '列表' }[nextView]} onClick={() => { setView(nextView); setSwitching((s) => s + 1); }}>
-            {nextView === 'grid' ? <LayoutGrid strokeWidth={1.5} /> : nextView === 'spine' ? <Library strokeWidth={1.5} /> : <List strokeWidth={1.5} />}
-          </button>}
+          {!desk && !picking && (
+            <div className="shelf-view" role="radiogroup" aria-label="视图" onKeyDown={(e) => {
+              if (!['ArrowLeft', 'ArrowRight'].includes(e.key)) return;
+              e.preventDefault();
+              const i = views.indexOf(view);
+              const j = (i + (e.key === 'ArrowLeft' ? -1 : 1) + views.length) % views.length;
+              setView(views[j]);
+              setSwitching((s) => s + 1);
+              (e.currentTarget.querySelectorAll('button')[j] as HTMLButtonElement | undefined)?.focus();
+            }}>
+              {views.map((v) => {
+                const label = { grid: '封面', spine: '书脊', list: '列表' }[v];
+                const Icon = v === 'grid' ? LayoutGrid : v === 'spine' ? Library : List;
+                const on = view === v;
+                return (
+                  <button key={v} type="button" role="radio" aria-checked={on} aria-label={label} title={label} tabIndex={on ? 0 : -1} className={on ? 'on' : ''} onClick={() => { setView(v); setSwitching((s) => s + 1); }}>
+                    <Icon aria-hidden strokeWidth={1.5} />
+                    <span className="shelf-view-word">{label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
           </>
         )}
       />
@@ -327,14 +345,14 @@ export default function Category() {
                 className="cat-seg"
                 options={[{ value: 'all', label: '全部' }, { value: 'period', label: '按时期' }, { value: 'genre', label: '按类型' }, { value: 'letter', label: '按首字母' }]}
                 value={group}
-                onChange={(v) => { setCatGroup(v as Group); setSwitching((s) => s + 1); }}
+                onChange={(v) => { setGroup(v as Group); setSwitching((s) => s + 1); }}
               />
               {/* desktop: the view is a labelled control beside the grouping, not an icon to decode (P2-4) */}
               {desk && (
                 <Seg
                   className="cat-seg cat-view-seg"
                   ariaLabel="视图"
-                  options={views.map((v) => ({ value: v, label: { grid: '封面', spine: '书脊', list: '表格' }[v] }))}
+                  options={views.map((v) => ({ value: v, label: { grid: '封面', spine: '书脊', list: '列表' }[v] }))}
                   value={view}
                   onChange={(v) => { setView(v as View); setSwitching((s) => s + 1); }}
                 />
@@ -342,7 +360,7 @@ export default function Category() {
             </div>
             <div className="cat-body" key={switching}>
               {/* A–Z shows as the title column sorted up; sorting by any column leaves A–Z */}
-              {table && <Table groups={groups} kind={k} sort={letters ? { key: 'title', dir: 'asc' } : catSort} onSort={(s) => { if (letters) setCatGroup('all'); setCatSort(s); }} pick={pick} />}
+              {table && <Table groups={groups} kind={k} sort={letters ? { key: 'title', dir: 'asc' } : catSort} onSort={(s) => { if (letters) setGroup('all'); setCatSort(s); }} pick={pick} />}
               {!table && groups.map((g) => {
                 const start = offset;
                 offset += g.items.length;

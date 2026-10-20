@@ -102,3 +102,19 @@ test('storage key: self-pedia/v1 moves to cunmu/library once, the old key goes o
   assert.equal(moveLegacy(full, 'cunmu/library', 'cunmu/library.bak', 'self-pedia/v1', 'self-pedia/v1.bak'), '{"keep":1}');
   assert.equal(full.m.get('self-pedia/v1'), '{"keep":1}', 'a full storage keeps the old key');
 });
+
+test('durable: a copy that is there but cannot be read or parsed, with no good copy beside it, throws instead of reading as no save', async () => {
+  const a = memFs({ op: 'read', nth: 1 });
+  a.files.set('cunmu/library.json', '{"v":1}');
+  await assert.rejects(createDurableStore(a.fs, 'cunmu/library').read());
+  const b = memFs();
+  b.files.set('cunmu/library.json', '{"v":1');
+  await assert.rejects(createDurableStore(b.fs, 'cunmu/library').read());
+  // a broken tmp alone is a cut-off first write, not a save
+  const c = memFs();
+  c.files.set('cunmu/library.json.tmp', '{"v":');
+  assert.equal(await createDurableStore(c.fs, 'cunmu/library').read(), null);
+  // a good prev beside a broken current is still read
+  b.files.set('cunmu/library.prev.json', '{"v":0}');
+  assert.deepEqual(await createDurableStore(b.fs, 'cunmu/library').read(), { text: '{"v":0}', from: 'prev' });
+});

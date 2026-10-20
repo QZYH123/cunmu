@@ -1,4 +1,5 @@
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { storage } from '../lib/storage';
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronLeft, MoreHorizontal, Plus, Search } from 'lucide-react';
 import { Menu } from './Bits';
@@ -192,10 +193,18 @@ function SlideLine({ group, id, className }: { group: string; id: string; classN
 const TabLine = ({ on, id }: { on: boolean; id: string }) => (on ? <SlideLine group="tab" id={id} className="tab-line" /> : null);
 const DeskLine = ({ on, id }: { on: boolean; id: string }) => (on ? <SlideLine group="desk" id={id} className="desk-line" /> : null);
 
+/** the save could not be read: nothing this session writes is kept (lib/storage.ts), and that stays said */
+export const SAVE_BLOCKED = '存档没能读出来。为了保护原有内容，这次打开期间的改动不会保存。';
+
+/** a save that did not get written; gone once one does */
+export const SAVE_FAILED = '最近的改动没能保存，设备的存储空间可能不够了。';
+
 export function Toasts() {
   const { toasts, dismissToast } = useStore();
   const t = toasts[0];
   const [leaving, setLeaving] = useState(false);
+  const blocked = storage.isBlocked();
+  const failing = useSyncExternalStore(storage.onFailingChange, storage.isFailing);
   useEffect(() => {
     if (!t) return;
     setLeaving(false);
@@ -203,13 +212,17 @@ export function Toasts() {
     const b = setTimeout(() => dismissToast(t.id), DUR.toast + DUR.fade);
     return () => { clearTimeout(a); clearTimeout(b); };
   }, [t, dismissToast]);
-  if (!t) return null;
+  if (!t && !blocked && !failing) return null;
   return (
-    <div className="toast-wrap" role="status">
-      <div className={`toast ${leaving ? 'leaving' : ''}`} key={t.id}>
-        <span>{t.text}</span>
-        {t.action && <button className="btn-text" onClick={() => { t.action!.run(); dismissToast(t.id); }}>{t.action.label}</button>}
-      </div>
+    <div className="toast-wrap">
+      {t && (
+        <div className={`toast ${leaving ? 'leaving' : ''}`} key={t.id} role="status">
+          <span>{t.text}</span>
+          {t.action && <button className="btn-text" onClick={() => { t.action!.run(); dismissToast(t.id); }}>{t.action.label}</button>}
+        </div>
+      )}
+      {blocked && <div className="toast save-blocked" role="alert"><span>{SAVE_BLOCKED}</span></div>}
+      {failing && !blocked && <div className="toast save-blocked" role="alert"><span>{SAVE_FAILED}</span></div>}
     </div>
   );
 }

@@ -15,6 +15,8 @@ import { isDesktop, isNative } from './native';
 import { BAK, KEY, LEGACY_BAK, LEGACY_KEY } from '../data/persist';
 
 const DIR = 'cunmu';
+/** a v1 save's raw text, kept once before it was migrated (删除全部内容 takes it too) */
+const BAK_FILE = `${DIR}/library.v1-bak.json`;
 
 /** Directory.Data through FsLike; a read that fails on a file that IS there throws (never "start fresh") */
 export const dataFs: FsLike = {
@@ -43,7 +45,11 @@ export const dataFs: FsLike = {
 const onDisk = () => isNative() || isDesktop();
 let fs: FsLike = dataFs;
 let durable = createDurableStore(fs, `${DIR}/library`);
-const writer = createWriter((t) => durable.write(t), 800);
+/** the last save did not get written (a full disk, a full browser storage): said until a save goes through */
+let failing = false;
+const failListeners = new Set<() => void>();
+const setFailing = (v: boolean) => { if (failing !== v) { failing = v; failListeners.forEach((f) => f()); } };
+const writer = createWriter((t) => durable.write(t).then(() => setFailing(false), (e) => { setFailing(true); throw e; }), 800);
 
 let initial: string | null = null;
 /** the copy could not be read although it is there: nothing is written this session, so nothing is lost */
@@ -116,21 +122,29 @@ export const storage = {
   /** a v1 save's raw text, kept once before it is migrated */
   keepBak(raw: string) {
     const v = JSON.stringify({ bakAt: new Date().toISOString(), text: raw });
-    if (onDisk()) { void fs.write(`${DIR}/library.v1-bak.json`, v).catch(() => undefined); return; }
+    // kept once, as on the web: a later migration (3 → 4) does not replace the oldest copy
+    if (onDisk()) { void fs.read(BAK_FILE).then((had) => (had === null ? fs.write(BAK_FILE, v) : undefined)).catch(() => undefined); return; }
     try { if (localStorage.getItem(BAK) === null) localStorage.setItem(BAK, v); } catch { /* full */ }
   },
+  /** the save is there but could not be read (or a newer version wrote it): keep it, write nothing this session */
+  block() { blocked = true; },
+  /** this session writes nothing (the notice in Shell.tsx says so) */
+  isBlocked: () => blocked,
   save(text: string) {
     lastText = text;
     if (blocked) return;
     if (onDisk()) { writer.schedule(text); return; }
-    try { localStorage.setItem(KEY, text); } catch { /* full */ }
+    try { localStorage.setItem(KEY, text); setFailing(false); } catch { setFailing(true); }
   },
+  /** a save that could not be written (Shell.tsx keeps a notice up while it is so) */
+  isFailing: () => failing,
+  onFailingChange(f: () => void) { failListeners.add(f); return () => { failListeners.delete(f); }; },
   flush: () => writer.flush(),
   /** the size of the save as last handed over, in bytes (复制诊断信息) */
   lastBytes: () => (lastText === null ? null : new TextEncoder().encode(lastText).length),
   /** 删除全部内容: every copy, both keys */
   async clear() {
-    if (onDisk()) { await writer.flush(); await durable.clear(); }
+    if (onDisk()) { await writer.flush(); await durable.clear(); await fs.remove(BAK_FILE); }
     try { for (const k of [KEY, BAK, LEGACY_KEY, LEGACY_BAK]) localStorage.removeItem(k); } catch { /* fine */ }
   },
 };

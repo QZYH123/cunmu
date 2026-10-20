@@ -194,6 +194,16 @@ await withPage('a prototype save (self-pedia/v1) moves to cunmu/library; the dem
   if (s.connections?.bangumi || s.connections?.weread?.connected) throw new Error('the demo connections came along');
 });
 
+await withPage('a save that cannot be read stays as it is, and the page says changes are not kept', async (page) => {
+  await page.goto(`${BASE}#/`, { waitUntil: 'domcontentloaded' });
+  const broken = '{"schemaVersion":4,"extras":[{"id":"m-1"';
+  await page.evaluate((t) => { localStorage.clear(); localStorage.setItem('cunmu/library', t); }, broken);
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.getByText('存档没能读出来', { exact: false }).waitFor({ timeout: 5000 });
+  await page.waitForTimeout(1200);
+  if ((await page.evaluate(() => localStorage.getItem('cunmu/library'))) !== broken) throw new Error('the unreadable save was written over');
+});
+
 /** a library of these books, typed in by hand (a current save, the way the app writes one) */
 const seedBooks = (page, titles) => page.evaluate((ts) => {
   localStorage.clear();
@@ -245,6 +255,22 @@ await withPage('搜索 → 条目 → 返回: back on 搜索 with its words, res
   if (q !== '第3卷' || on !== '系列作 第3卷') throw new Error(`⌘K back: 「${q}」, current 「${on}」`);
   await page.goBack();
   await page.waitForFunction(() => location.hash === '#/all', null, { timeout: 5000 });
+});
+
+await withPage('a save the browser refuses (storage full) is said, and the notice goes once a save works', async (page) => {
+  await page.goto(`${BASE}#/`, { waitUntil: 'domcontentloaded' });
+  await seedBooks(page, ['甲', '乙']);
+  await open(page, '/kind/book');
+  await page.evaluate(() => {
+    const real = Storage.prototype.setItem;
+    window.__full = true;
+    Storage.prototype.setItem = function (k, v) { if (window.__full && k === 'cunmu/library') throw new DOMException('full', 'QuotaExceededError'); return real.call(this, k, v); };
+  });
+  await page.getByRole('tab', { name: '按首字母' }).click();
+  await page.getByText('没能保存', { exact: false }).waitFor({ timeout: 3000 });
+  await page.evaluate(() => { window.__full = false; });
+  await page.getByRole('tab', { name: '按时期' }).click();
+  await page.getByText('没能保存', { exact: false }).waitFor({ state: 'detached', timeout: 3000 });
 });
 
 await withPage('按首字母: titles A–Z under letters, # last; the choice is remembered', async (page) => {

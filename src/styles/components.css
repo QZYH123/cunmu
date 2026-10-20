@@ -105,6 +105,7 @@
   animation: fade-in var(--m-quick) var(--e-move) both;
 }
 .toast::before { content: ''; position: absolute; left: var(--page-x); top: 0; width: var(--note-rule); height: var(--hairline); background: var(--line-2); }
+.toast.save-blocked { color: var(--text-reading); animation: none; }
 .toast.leaving { animation: fade-out var(--m-quick) var(--e-in) both; }
 .toast .btn-text { height: var(--hit); color: var(--ink); font: var(--t-small); padding: 0; text-decoration: underline; text-decoration-thickness: var(--hairline); text-underline-offset: var(--underline-offset); flex: none; }
 

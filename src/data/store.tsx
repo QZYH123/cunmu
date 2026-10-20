@@ -13,6 +13,7 @@ import { withKnown, type BangumiPull } from '../lib/bangumi';
 import { planSteam, withStoreFacts, type AchSummary, type Play, type SteamConnection, type SteamGame, type StoreFacts } from '../lib/steam';
 import { getBangumiToken, getSecret, setBangumiToken, setSecret } from '../lib/secrets';
 import { bangumiFromBackup, steamFromBackup } from './restore';
+import { clearSteamDraft } from '../lib/steamDraft';
 import { withViewTransition } from '../lib/motion';
 import { clearCoverCache } from '../lib/coverCache';
 import type { CoverImage, Credit, Dataset, DateClaim, Quote, Work } from './types';
@@ -219,7 +220,7 @@ const batchId = () => `b-${Date.now().toString(36)}`;
 const MONTH_DAY = (d = new Date()) => `${d.getMonth() + 1} 月 ${d.getDate()} 日`;
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const [s, setS] = useState<PersistedV2>(() => load(storage.initialText(), storage.keepBak));
+  const [s, setS] = useState<PersistedV2>(() => load(storage.initialText(), storage.keepBak, storage.block));
   const [arrival, setArrival] = useState<Arrival | null>(null);
   const arrivalRef = useRef<Arrival | null>(null);
   const [toasts, setToasts] = useState<ToastMsg[]>([]);
@@ -807,6 +808,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       await setSecret('steam-key', null);
       await clearCoverCache();
       clearSpineColours();
+      clearSteamDraft();
       setS((x) => ({ ...DEFAULTS, ...CLEAN, dev: { tier: 0, dataset: x.dev.dataset, wereadRemoved: false }, connections: NO_CONNECTIONS, theme: x.theme, reduceMotion: x.reduceMotion, fontScale: x.fontScale }));
     },
     promote: (id) => setS((x) => ({ ...x, promoted: [...new Set([...x.promoted, id])] })),

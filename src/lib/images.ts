@@ -62,9 +62,15 @@ function db(): Promise<IDBDatabase> {
 const tx = async <T,>(mode: IDBTransactionMode, f: (s: IDBObjectStore) => IDBRequest<T>): Promise<T> => {
   const d = await db();
   return new Promise((res, rej) => {
-    const r = f(d.transaction(STORE, mode).objectStore(STORE));
-    r.onsuccess = () => res(r.result);
+    const t = d.transaction(STORE, mode);
+    const r = f(t.objectStore(STORE));
     r.onerror = () => rej(r.error);
+    // a write is kept only once its transaction completes: a full disk aborts it after the request succeeded
+    if (mode === 'readonly') r.onsuccess = () => res(r.result);
+    else {
+      t.oncomplete = () => res(r.result);
+      t.onabort = () => rej(t.error ?? r.error ?? new Error('aborted'));
+    }
   });
 };
 

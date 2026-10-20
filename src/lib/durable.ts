@@ -32,10 +32,16 @@ export function createDurableStore(fs: FsLike, base: string): DurableStore {
   const cur = `${base}.json`, tmp = `${base}.json.tmp`, prev = `${base}.prev.json`;
   return {
     async read() {
+      // a copy that is there but cannot be read or parsed is not 「no save」: with no good copy beside it this
+      // throws, so the caller writes nothing over it (a file Windows has locked for a moment, a cut-off write)
+      let there: unknown = null;
       for (const [p, from] of [[cur, 'current'], [tmp, 'tmp'], [prev, 'prev']] as const) {
-        const t = await fs.read(p).catch(() => null);
+        // a broken tmp alone is a write cut off before it counted, not a save
+        const t = await fs.read(p).catch((e: unknown) => { if (from !== 'tmp') there ??= e ?? new Error(`durable: ${p} could not be read`); return null; });
         if (parses(t)) return { text: t, from };
+        if (t !== null && from !== 'tmp') there ??= new Error(`durable: ${p} does not parse`);
       }
+      if (there) throw there;
       return null;
     },
     async write(text) {

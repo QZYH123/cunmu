@@ -17,6 +17,9 @@ import { captionOf, SEARCH_PLACEHOLDER, titleOf } from '../lib/naming';
 import { isDesk, useBreakpoint, useViewportH, useWidth } from '../lib/useWidth';
 import { useSheets } from '../App';
 
+/** a browser that blocks site storage throws on sessionStorage: the home page still opens */
+const devKept = () => { try { return sessionStorage.getItem('dev') === '1'; } catch { return false; } };
+
 export default function Home({ onWeread, onBangumi, onAdd }: { onWeread: () => void; onBangumi: () => void; onAdd: () => void }) {
   const store = useStore();
   const sheets = useSheets();
@@ -120,12 +123,12 @@ export default function Home({ onWeread, onBangumi, onAdd }: { onWeread: () => v
   }, [nav]);
 
   /* ----- dev tier switch (prototype only; ?dev=1 or tap the title three times) ----- */
-  const [dev, setDev] = useState(() => new URLSearchParams(location.search).has('dev') || sessionStorage.getItem('dev') === '1');
+  const [dev, setDev] = useState(() => new URLSearchParams(location.search).has('dev') || devKept());
   const taps = useRef<number[]>([]);
   const onTitleTap = () => {
     const now = Date.now();
     taps.current = [...taps.current.filter((t) => now - t < 600), now];
-    if (taps.current.length >= 3) { const v = !dev; setDev(v); sessionStorage.setItem('dev', v ? '1' : ''); taps.current = []; }
+    if (taps.current.length >= 3) { const v = !dev; setDev(v); try { sessionStorage.setItem('dev', v ? '1' : ''); } catch { /* storage blocked */ } taps.current = []; }
   };
   const devPill = dev && (
     <div className="dev-pill" aria-label="假数据档位（原型调试）">

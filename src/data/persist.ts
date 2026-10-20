@@ -287,16 +287,24 @@ export function fixCoverAspect(w: Work): Work {
   return { ...w, cover: { ...w.cover, aspect: KIND_ASPECT[w.kind] ?? KIND_ASPECT.book } };
 }
 
-export function load(text: string | null = null, keepBak?: (raw: string) => void): PersistedV2 {
+export function load(text: string | null = null, keepBak?: (raw: string) => void, unreadable?: () => void): PersistedV2 {
   let s: PersistedV2 = DEFAULTS;
   try {
     const j = text ? JSON.parse(text) : null;
+    // a save written by a newer version is not read as a v1 one (that would drop most of it)
+    // text that is JSON but not a save (null, a list, a bare string — a broken write) is unreadable, not a first open
+    if (text && (!j || typeof j !== 'object' || Array.isArray(j))) throw new Error('not a save');
+    if (j && typeof j.schemaVersion === 'number' && j.schemaVersion > SCHEMA_VERSION) throw new Error('newer save');
     if (j) {
       if (j.schemaVersion !== SCHEMA_VERSION && text) keepBak?.(text);
       const m = migrateV1toV2(j, new Date().toISOString());
       s = forApp({ ...DEFAULTS, ...m, notes: normalizeNoteQuotes<WorkNote>(m.notes), extras: (m.extras ?? []).map(fixCoverAspect).map((w) => (w.quotes === undefined ? w : { ...w, quotes: normalizeQuotes(w.quotes) })), dev: { ...DEFAULTS.dev, ...m.dev }, settings: { ...DEFAULT_SETTINGS, ...fixInf(m.settings as unknown as Record<string, unknown>) } });
     }
-  } catch { /* unreadable: start fresh (storage.ts keeps the unreadable text aside before the first save) */ }
+  } catch {
+    // unreadable, or from a newer version: start fresh, and `unreadable` stops this session from writing over it
+    s = DEFAULTS;
+    if (text) unreadable?.();
+  }
   // URL overrides (?tier=50&data=real&theme=dark&motion=reduce&font=1.5) — the screenshot and smoke scripts;
   // an app build takes only the appearance ones
   const q = new URLSearchParams(typeof location === 'undefined' ? '' : location.search);

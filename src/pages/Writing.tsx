@@ -45,15 +45,15 @@ export default function Writing() {
         {essays.length ? (
           <div className={`writing-list ${enter ? 'stagger' : ''}`}>
             {essays.map((e, i) => {
-              const img = e.images?.[0];
+              const src = e.cover?.medium || e.images?.[0]?.src;
               return (
-                <article key={e.id} className={`writing-item ${img ? 'has-img' : ''} ${landed === e.id ? 'landed' : ''}`} style={enter ? staggerStyle(i) : undefined}>
+                <article key={e.id} className={`writing-item ${src ? 'has-img' : ''} ${landed === e.id ? 'landed' : ''}`} style={enter ? staggerStyle(i) : undefined}>
                   <Link to={`/essay/${e.id}`} className="writing-link" onClick={(ev) => open(ev, e.id)}>
                     <span className="writing-t" style={back === e.id ? { viewTransitionName: TITLE_VT } : undefined}>{e.title || '随笔'}{me.onlyMe.includes(e.id) && <Pill>只给自己</Pill>}</span>
                     <span className="writing-d">{fmtYMD(dayOf(e))}</span>
                     {e.body?.[0] && <span className="writing-x">{e.body.slice(0, 2).join(' ')}</span>}
                   </Link>
-                  {img && <Link to={`/essay/${e.id}`} className="writing-img" tabIndex={-1} aria-hidden><img src={img.src} alt="" loading="lazy" decoding="async" /></Link>}
+                  {src && <Link to={`/essay/${e.id}`} className="writing-img" tabIndex={-1} aria-hidden><img src={src} alt="" loading="lazy" decoding="async" /></Link>}
                   <Link to={`/write?id=${e.id}`} state={{ from: 'writing' }} className="btn-text quiet writing-edit" aria-label={`改「${e.title || '随笔'}」`}>改</Link>
                 </article>
               );

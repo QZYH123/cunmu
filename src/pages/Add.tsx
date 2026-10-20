@@ -13,6 +13,7 @@ import { Sheet } from '../components/Bits';
 import { Cover, thumbSize } from '../components/Cover';
 import { creatorLine, fmtNum } from '../data/derive';
 import { todayISO } from '../lib/today';
+import { QUOTES_THERE } from '../data/quotes';
 import { DUR } from '../tokens';
 import { parseWeread } from './Connect';
 
@@ -129,6 +130,7 @@ export function AddSheet({ open, onClose, initial = '' }: { open: boolean; onClo
   const putQuotes = (books: ReturnType<typeof parseWeread>) => {
     const { first, quotes: n, fresh } = store.importPaste(books);
     onClose();
+    if (!n) { store.toast(QUOTES_THERE); return; }
     if (books.length === 1) nav(`/entry/${first}`);
     store.toast(books.length === 1
       ? (fresh ? `收下《${books[0].title}》，带 ${n} 条摘抄` : `《${books[0].title}》多了 ${n} 条摘抄`)

@@ -12,7 +12,7 @@ import { KIND_ASPECT } from '../data/types';
 import { personId } from '../data/derive';
 import { chapterOrder, FAV_MAX, INTEREST_LINE_MAX, INTEREST_NAME_MAX, interestMembers, ownInterest, shownTo, withMembers, type Interest } from '../data/me';
 import { asFavorites, asInterest, asPeriod, favCandidates, nameFromCard, sheetMembers, suggestions, whyFor, type FavPick, type Suggestion } from '../data/suggest';
-import { plain, spaced, type LeadCtx, type Seg } from '../data/lead';
+import { keptLead, plain, spaced, type LeadCtx, type Seg } from '../data/lead';
 import { todayISO } from '../lib/today';
 import { titleOf, TITLE_MAX } from '../lib/naming';
 import { Cover } from './Cover';
@@ -78,7 +78,7 @@ export function Lead({ segs, mine, onSave, className }: { segs: Seg[]; mine?: st
           onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); setEditing(false); } }}
         />
         <div className="mh-rewrite-acts">
-          <button className="btn btn-primary" onClick={() => { onSave(ta.current?.value ?? ''); setEditing(false); }}>存下</button>
+          <button className="btn btn-primary" onClick={() => { onSave(keptLead(ta.current?.value ?? '', plain(segs)) ?? ''); setEditing(false); }}>存下</button>
           <button className="btn-text quiet" onClick={() => setEditing(false)}>不改了</button>
         </div>
       </div>
@@ -162,7 +162,7 @@ export function SuggestCard({ s }: { s: Suggestion }) {
         <button className="btn-text" onClick={() => setEditing(true)}>改一下</button>
       </div>
       {s.type === 'fav'
-        ? <FavPickSheet open={editing} onClose={() => setEditing(false)} pool={s.pool} preset={s.picks.map((p) => p.id)} onDone={(ids) => { store.addFavorites(asFavorites(s.pool.filter((p) => ids.includes(p.id)))); if (!ids.length) no(); }} />
+        ? <FavPickSheet open={editing} onClose={() => setEditing(false)} pool={s.pool} preset={s.picks.map((p) => p.id)} onDone={(ids) => { if (ids.length) store.addFavorites(asFavorites(s.pool.filter((p) => ids.includes(p.id)))); }} />
         : <EditSuggestionSheet s={s} open={editing} onClose={() => setEditing(false)} />}
     </section>
   );
@@ -311,7 +311,7 @@ function FavPickSheet({ open, onClose, pool, preset, onDone }: { open: boolean; 
         <PickGrid works={works} on={on} toggle={toggle} label="最爱" />
         <div className="sheet-actions pair">
           <button className="btn btn-secondary" onClick={onClose}>先不放</button>
-          <button className="btn btn-primary" onClick={() => { onDone(works.filter((w) => on.has(w.id)).map((w) => w.id)); onClose(); }}>放进最爱 · {on.size}</button>
+          <button className="btn btn-primary" disabled={on.size === 0} onClick={() => { if (!on.size) return; onDone(works.filter((w) => on.has(w.id)).map((w) => w.id)); onClose(); }}>放进最爱 · {on.size}</button>
         </div>
       </div>
     </Sheet>

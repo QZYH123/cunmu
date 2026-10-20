@@ -103,10 +103,10 @@ function Table({ groups, kind, sort, onSort, pick }: {
   const nav = useNavigate();
   const cell = (w: Work, key: CatSortKey) => {
     if (key === 'title') return null;
-    if (key === 'playtime') return w.play ? fmtPlaytime(w.play.minutes) : <span className="c-4">—</span>;
+    if (key === 'playtime') return w.play ? fmtPlaytime(w.play.minutes) : <span className="c-3">—</span>;
     if (key === 'finished') return w.finished ? (w.finished.length === 4 ? whenOf(w, 'year') : w.finished) : '';
     const v = SORT_VAL[key](w);
-    return v === null ? <span className="c-4">—</span> : v;
+    return v === null ? <span className="c-3">—</span> : v;
   };
   // ↑ ↓ move between rows (Home / End to the ends); the table is one tab stop (roving tabindex)
   const rowKeys = (e: React.KeyboardEvent<HTMLTableElement>) => {

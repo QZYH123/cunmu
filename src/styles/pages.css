@@ -447,7 +447,7 @@
   border-bottom: var(--hairline) solid var(--line-2);
 }
 .cat-table thead button {
-  display: inline-flex; align-items: center; gap: var(--s-1); height: var(--s-9); padding: 0 var(--s-3);
+  display: inline-flex; align-items: center; gap: var(--s-1); height: var(--hit); padding: 0 var(--s-3);
   font: var(--t-label); letter-spacing: var(--track-label); color: var(--text-tertiary);
   border-radius: var(--r-xs); transition: color var(--m-instant) var(--e-move);
 }
@@ -457,7 +457,7 @@
 .cat-table :is(.th-year, .td-year, .th-finished, .td-finished) { text-align: right; }
 .cat-table :is(.th-year, .th-finished) button { flex-direction: row-reverse; }
 .cat-table tbody td {
-  height: var(--row-compact); padding: 0 var(--s-3); vertical-align: middle;
+  height: auto; min-height: var(--row-compact); padding: var(--s-2) var(--s-3); vertical-align: middle;
   border-bottom: var(--hairline) solid var(--line-inner);
   font: var(--t-small); color: var(--text-secondary);
 
@@ -468,7 +468,9 @@
 .cat-table .td-title .cover { flex: none; }
 .cat-table :is(.td-year, .td-finished) { font-variant-numeric: tabular-nums; }
 .cat-table td .ellipsis { display: block; min-width: 0; }
-.cat-table .td-title .ellipsis { flex: 1; }
+.cat-table .td-title .ellipsis {
+  flex: 1; min-width: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; white-space: normal;
+}
 .cat-table tbody tr:has(.td-title a:focus-visible) { outline: 2px solid color-mix(in srgb, var(--link) 60%, transparent); outline-offset: -2px; }
 .cat-table .group-row th {
   text-align: left; font-weight: inherit; padding: var(--s-8) var(--s-3) var(--s-3);
@@ -516,7 +518,10 @@ section:first-child > .group-head { margin-top: 0; }
   opacity: 0; transition: opacity var(--m-quick) var(--e-move); pointer-events: none;
 }
 .year-rail.on { opacity: 1; pointer-events: auto; }
-.year-rail button { font: var(--t-caption); color: var(--text-tertiary); writing-mode: vertical-rl; padding: var(--s-1) 0; }
+.year-rail button {
+  font: var(--t-caption); color: var(--text-tertiary); writing-mode: vertical-rl; padding: var(--s-1) 0;
+  width: 100%; display: flex; align-items: center; justify-content: center;
+}
 
 /* ---------- index · desktop (§8.3.7, P2-5) ---------- */
 .index-cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: var(--s-8); }
@@ -1220,7 +1225,7 @@ p.confirm-first { height: auto; }
 .edit-field .t-label { flex: none; min-width: 3em; }
 /* a synced work: what the source has, under the field it differs in */
 .edit-source { margin-top: var(--s-1); }
-.edit-source .btn-text { font-size: inherit; min-height: 0; }
+.edit-source .btn-text { font-size: inherit; min-height: var(--hit); }
 .edit-field + .edit-source { padding-left: calc(3em + var(--s-4)); }
 /* a pointer-and-files desktop can drop the backup on the sheet; a phone can't, so it isn't told */
 .drop-hint { margin-top: var(--s-3); text-align: center; }
@@ -1242,7 +1247,7 @@ p.confirm-first { height: auto; }
 .lic-meta { font: var(--t-caption); color: var(--text-tertiary); margin-top: var(--s-1); overflow-wrap: anywhere; }
 .lic-more { margin-top: var(--s-5); }
 .lic-more summary { font: var(--t-ui); color: var(--text-secondary); cursor: pointer; min-height: var(--hit); display: flex; align-items: center; }
-.lic-text { font: var(--t-caption); color: var(--text-secondary); white-space: pre-wrap; overflow-wrap: anywhere; margin-top: var(--s-2); }
+.lic-text { font: var(--t-small); color: var(--text-secondary); white-space: pre-wrap; overflow-wrap: anywhere; margin-top: var(--s-2); }
 .diag-text { display: block; width: 100%; margin-top: var(--s-4); padding: var(--s-3); font: var(--t-caption); color: var(--text-secondary); background: var(--surface-2); border-radius: var(--r-sm); resize: none; }
 /* reduced motion: the light never crosses the cover, even if a sweep was already on its way */
 :root[data-motion="reduce"] .cover-sheen { display: none; }

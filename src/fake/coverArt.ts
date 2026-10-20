@@ -42,6 +42,34 @@ const SANS = "'Noto Sans CJK SC','PingFang SC',sans-serif";
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 
+function channel(hex: string, i: number) {
+  return parseInt(hex.slice(1 + i * 2, 3 + i * 2), 16);
+}
+function lum(hex: string) {
+  const lin = (c: number) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+  return 0.2126 * lin(channel(hex, 0) / 255) + 0.7152 * lin(channel(hex, 1) / 255) + 0.0722 * lin(channel(hex, 2) / 255);
+}
+function ratio(a: string, b: string) {
+  const x = lum(a), y = lum(b);
+  const [hi, lo] = x > y ? [x, y] : [y, x];
+  return (hi + 0.05) / (lo + 0.05);
+}
+const PRINT_INK = '#1C1B19';
+const PRINT_PAPER = '#F4F1EA';
+/** Ink that holds 4.5:1 on every ground behind it. The layout's own colours go first, so a cover
+ *  keeps its colour when that colour already reads; near-black and warm paper are only the fallback. */
+function inkOn(grounds: string[], ...cands: string[]): string {
+  // #000 is only for grounds so bright that warm black and paper both miss 4.5 (a pure red).
+  const all = [...cands, PRINT_INK, PRINT_PAPER, '#000000'];
+  const worst = (c: string) => Math.min(...grounds.map((g) => ratio(g, c)));
+  for (const c of all) if (worst(c) >= 4.5) return c;
+  return all.reduce((best, c) => (worst(c) > worst(best) ? c : best));
+}
+function mix(fg: string, bg: string, a: number): string {
+  const c = [0, 1, 2].map((i) => Math.round(channel(fg, i) * a + channel(bg, i) * (1 - a)));
+  return '#' + c.map((v) => v.toString(16).padStart(2, '0')).join('');
+}
+
 export const ART_SIZE: Record<Kind, [number, number]> = {
   book: [240, 360],
   anime: [240, 343],
@@ -72,21 +100,21 @@ function book(id: string, title: string, author: string): string {
     case 0: // band
       body = `<rect width="${W}" height="${H}" fill="${a}"/><rect y="${H * 0.36}" width="${W}" height="${H * 0.3}" fill="${d}"/>`
         + `<rect y="${H * 0.36}" width="${W}" height="3" fill="${b}"/><rect y="${H * 0.66 - 3}" width="${W}" height="3" fill="${b}"/>`
-        + hText(title.slice(0, 8), W / 2, H * 0.53, short ? 26 : 20, a, 'middle')
-        + hText(author, W / 2, H * 0.88, 13, d, 'middle', SANS, 400);
+        + hText(title.slice(0, 8), W / 2, H * 0.53, short ? 26 : 20, inkOn([d], a, b, c), 'middle')
+        + hText(author, W / 2, H * 0.88, 14, inkOn([a], d, b, c), 'middle', SANS, 400);
       break;
     case 1: // sun
       body = `<rect width="${W}" height="${H}" fill="${a}"/><circle cx="${W * (0.4 + r() * 0.3)}" cy="${H * 0.52}" r="${W * 0.34}" fill="${b}"/>`
         + `<circle cx="${W * 0.78}" cy="${H * 0.3}" r="${W * 0.08}" fill="${c}"/>`
-        + hText(title.slice(0, 9), 20, 52, short ? 24 : 19, d)
-        + hText(author, 20, H - 24, 12, d, 'start', SANS, 400);
+        + hText(title.slice(0, 9), 20, 52, short ? 24 : 19, inkOn([a], d, b, c))
+        + hText(author, 20, H - 28, 14, inkOn([a], d, b, c), 'start', SANS, 400);
       break;
     case 2: { // stripes
       let x = 0; let s = '';
       while (x < W) { const w = 10 + r() * 34; s += `<rect x="${x}" width="${w + 1}" height="${H * 0.7}" fill="${[a, b, c, d][Math.floor(r() * 4)]}"/>`; x += w; }
       body = `<rect width="${W}" height="${H}" fill="${d}"/>${s}`
-        + hText(title.slice(0, 9), 18, H * 0.82, short ? 24 : 18, a)
-        + hText(author, 18, H * 0.92, 12, a, 'start', SANS, 400);
+        + hText(title.slice(0, 9), 18, H * 0.82, short ? 24 : 18, inkOn([d], a, b, c))
+        + hText(author, 18, H * 0.92, 14, inkOn([d], a, b, c), 'start', SANS, 400);
       break;
     }
     case 3: // landscape
@@ -94,29 +122,29 @@ function book(id: string, title: string, author: string): string {
         + `<rect width="${W}" height="${H}" fill="url(#g)"/>`
         + `<path d="M0 ${H * 0.62} L${W * 0.3} ${H * 0.44} L${W * 0.55} ${H * 0.58} L${W * 0.8} ${H * 0.4} L${W} ${H * 0.55} V${H} H0Z" fill="${c}"/>`
         + `<path d="M0 ${H * 0.74} L${W * 0.4} ${H * 0.6} L${W} ${H * 0.72} V${H} H0Z" fill="${a}"/>`
-        + vText(title, W - 30, 48, 20, a)
-        + hText(author, 18, H - 22, 12, d, 'start', SANS, 400);
+        + vText(title, W - 30, 48, 20, inkOn([b], a, c, d))
+        + hText(author, 18, H - 28, 14, inkOn([a], d, b, c), 'start', SANS, 400);
       break;
     case 4: // big glyph
       body = `<rect width="${W}" height="${H}" fill="${d}"/>`
-        + `<text x="${W * 0.62}" y="${H * 0.72}" font-family="${SERIF}" font-weight="700" font-size="${W * 1.05}" fill="${a}" text-anchor="middle">${esc(title[0])}</text>`
-        + hText(title.slice(0, 9), 18, 40, 18, c)
-        + hText(author, 18, H - 22, 12, a, 'start', SANS, 400);
+        + `<text x="${W * 0.62}" y="${H * 0.72}" font-family="${SERIF}" font-weight="700" font-size="${W * 1.05}" fill="${inkOn([d], a, b, c)}" text-anchor="middle">${esc(title[0])}</text>`
+        + hText(title.slice(0, 9), 18, 40, 18, inkOn([d], c, a, b))
+        + hText(author, 18, H - 28, 14, inkOn([d], a, c, b), 'start', SANS, 400);
       break;
     case 5: { // dots
       let s = '';
       for (let y = 0; y < 7; y++) for (let x = 0; x < 5; x++) s += `<circle cx="${30 + x * 45}" cy="${110 + y * 30}" r="${4 + r() * 9}" fill="${r() > 0.75 ? c : b}"/>`;
       body = `<rect width="${W}" height="${H}" fill="${a}"/>${s}`
-        + hText(title.slice(0, 9), 20, 60, short ? 24 : 18, d)
-        + hText(author, 20, H - 24, 12, d, 'start', SANS, 400);
+        + hText(title.slice(0, 9), 20, 60, short ? 24 : 18, inkOn([a], d, b, c))
+        + hText(author, 20, H - 28, 14, inkOn([a], d, b, c), 'start', SANS, 400);
       break;
     }
     default: // arch
       body = `<rect width="${W}" height="${H}" fill="${b}"/>`
         + `<path d="M${W * 0.18} ${H * 0.86} V${H * 0.42} A${W * 0.32} ${W * 0.32} 0 0 1 ${W * 0.82} ${H * 0.42} V${H * 0.86}Z" fill="${a}"/>`
         + `<circle cx="${W / 2}" cy="${H * 0.5}" r="${W * 0.1}" fill="${c}"/>`
-        + hText(title.slice(0, 9), W / 2, 48, short ? 22 : 17, a, 'middle')
-        + hText(author, W / 2, H - 16, 12, a, 'middle', SANS, 400);
+        + hText(title.slice(0, 9), W / 2, 48, short ? 22 : 17, inkOn([b], a, c, d), 'middle')
+        + hText(author, W / 2, H - 22, 14, inkOn([b], a, c, d), 'middle', SANS, 400);
   }
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${body}</svg>`;
 }
@@ -135,8 +163,8 @@ function poster(id: string, title: string, kind: Kind): string {
     ? `<rect x="${W * 0.38}" y="${H * 0.42}" width="${W * 0.24}" height="${H * 0.5}" rx="${W * 0.12}" fill="#111" opacity=".85"/><circle cx="${W / 2}" cy="${H * 0.38}" r="${W * 0.09}" fill="#111" opacity=".85"/>`
     : `<path d="M${W * 0.2} ${H} Q${W * 0.5} ${H * 0.35} ${W * 0.8} ${H}Z" fill="${a}"/><circle cx="${W / 2}" cy="${H * 0.5}" r="${W * 0.16}" fill="${d}"/>`;
   const label = film
-    ? hText(title.slice(0, 8), W / 2, H * 0.2, title.length > 5 ? 22 : 30, d, 'middle', SANS, 700)
-    : hText(title.slice(0, 10), 16, H - 22, title.length > 6 ? 18 : 24, d, 'start', SANS, 700);
+    ? hText(title.slice(0, 8), W / 2, H * 0.2, title.length > 5 ? 22 : 30, inkOn([a], d, b, c), 'middle', SANS, 700)
+    : hText(title.slice(0, 10), 16, H - 28, title.length > 6 ? 18 : 24, inkOn([c], d, b, a), 'start', SANS, 700);
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${sky}<rect width="${W}" height="${H}" fill="url(#g)"/>${shapes}${figure}${label}</svg>`;
 }
 
@@ -149,7 +177,7 @@ function music(id: string, title: string, artist: string): string {
   if (t === 0) for (let i = 6; i > 0; i--) body += `<circle cx="${S * 0.62}" cy="${S * 0.45}" r="${i * 17}" fill="${i % 2 ? b : c}"/>`;
   else if (t === 1) for (let i = 0; i < 14; i++) { const h = 20 + r() * 120; body += `<rect x="${18 + i * 15}" y="${150 - h}" width="9" height="${h}" fill="${i % 3 ? b : c}"/>`; }
   else for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) body += `<rect x="${24 + x * 50}" y="${18 + y * 42}" width="40" height="32" fill="${[b, c, d][Math.floor(r() * 3)]}"/>`;
-  body += hText(title.slice(0, 12), 18, S - 38, 17, d, 'start', SANS, 700) + hText(artist, 18, S - 18, 11, d, 'start', SANS, 400);
+  body += hText(title.slice(0, 12), 18, S - 42, 17, inkOn([a], d, b, c), 'start', SANS, 700) + hText(artist, 18, S - 20, 14, inkOn([a], d, b, c), 'start', SANS, 400);
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${S}" height="${S}" viewBox="0 0 ${S} ${S}">${body}</svg>`;
 }
 
@@ -162,7 +190,7 @@ function game(id: string, title: string): string {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><rect width="${W}" height="${H}" fill="#14141a"/>`
     + `<rect width="${W}" height="${H}" fill="${a}" opacity=".55"/>${px}`
     + `<polygon points="${W / 2},${H * 0.22} ${W * 0.82},${H * 0.6} ${W / 2},${H * 0.8} ${W * 0.18},${H * 0.6}" fill="${d}" opacity=".9"/>`
-    + hText(title.slice(0, 10), W / 2, H - 26, title.length > 6 ? 18 : 24, '#fff', 'middle', SANS, 700)
+    + hText(title.slice(0, 10), W / 2, H - 28, title.length > 6 ? 18 : 24, inkOn([mix(a, '#14141a', 0.55)], '#F4F1EA', '#1C1B19', d, b, c), 'middle', SANS, 700)
     + `</svg>`;
 }
 

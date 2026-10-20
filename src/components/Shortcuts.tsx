@@ -87,10 +87,10 @@ export function Shortcuts({ onAdd }: { onAdd: () => void }) {
                 <span className="keys-keys">
                   {r.keys.map((alt, ai) => (
                     <Fragment key={ai}>
-                      {ai > 0 && <span className="keys-or t-caption c-4">或</span>}
+                      {ai > 0 && <span className="keys-or t-caption c-3">或</span>}
                       {alt.map((key, ki) => (
                         <Fragment key={ki}>
-                          {ki > 0 && alt.length === 2 && r.label === '回首页' && <span className="keys-or t-caption c-4">然后</span>}
+                          {ki > 0 && alt.length === 2 && r.label === '回首页' && <span className="keys-or t-caption c-3">然后</span>}
                           <kbd className="kbd">{key}</kbd>
                         </Fragment>
                       ))}

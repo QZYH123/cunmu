@@ -13,8 +13,8 @@ import { Sheet } from '../components/Bits';
 import { Cover, thumbSize } from '../components/Cover';
 import { creatorLine, fmtNum } from '../data/derive';
 import { todayISO } from '../lib/today';
-import { QUOTES_THERE } from '../data/quotes';
 import { DUR } from '../tokens';
+import { QUOTES_THERE } from '../data/quotes';
 import { parseWeread } from './Connect';
 
 const KINDS: Kind[] = ['book', 'anime', 'film', 'music', 'game'];
@@ -41,8 +41,6 @@ export function recognise(text: string): Pasted | null {
   }
   return null;
 }
-export const isBackupFile = (f: File) => /\.(xlsx|ndjson)$/i.test(f.name);
-
 /**
  * 收录 (方案 5.2, r5 #3): one field takes anything — a name to search, a Bangumi link (that work, or that
  * account), a 豆瓣 link, a WeRead 「复制笔记」 paste — and a 豆瓣 backup can be dropped on it. A name the
@@ -137,12 +135,12 @@ export function AddSheet({ open, onClose, initial = '' }: { open: boolean; onClo
       : (fresh === books.length ? `收下 ${books.length} 本书，带 ${n} 条摘抄` : `${books.length} 本书多了 ${n} 条摘抄`));
   };
   const onDrop = (e: DragEvent) => {
-    const f = e.dataTransfer.files?.[0];
+    const files = [...(e.dataTransfer.files ?? [])];
     setOver(false);
-    if (!f) return;
+    if (!files.length) return;
     e.preventDefault();
     e.stopPropagation();
-    if (isBackupFile(f)) handOff(() => sheets.douban(f));
+    handOff(() => sheets.douban(files));
   };
 
   const row = (w: Work, onClick: () => void) => {

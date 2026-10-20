@@ -7,7 +7,7 @@ import { fmtNum } from '../data/derive';
 import { QUOTES_THERE } from '../data/quotes';
 import type { Quote } from '../data/types';
 import { todayISO } from '../lib/today';
-import { BgmError, DONE, DOING, KIND_OF, planSync, type BgmCollection, type BgmUser, type SyncResult } from '../lib/bangumi';
+import { bangumiUsername, BgmError, DONE, DOING, KIND_OF, planSync, type BgmCollection, type BgmUser, type SyncResult } from '../lib/bangumi';
 import { bgmClient } from '../lib/bangumiNet';
 import { setBangumiToken } from '../lib/secrets';
 import { Sheet, Dots } from '../components/Bits';
@@ -265,10 +265,12 @@ export function BangumiSheet({ open, onClose, start = 'name', user = '' }: { ope
   }
 
   function read(given?: string) {
-    const u = (given ?? name).trim();
-    if (!u || (busy && !given)) return;
+    const raw = (given ?? name).trim();
+    if (!raw || (busy && !given)) return;
+    const u = bangumiUsername(raw);
+    if (!u) { setErr('没找到这个用户名。它在你 Bangumi 个人主页地址的最后一段。'); return; }
+    if (u !== name.trim()) setName(u);
     if (!DEMO) {
-      if (!/^[A-Za-z0-9_]+$/.test(u)) { setErr('没找到这个用户名。它在你 Bangumi 个人主页地址的最后一段。'); return; }
       void fetchAll(() => bgmClient().user(u), 'public');
       return;
     }

@@ -78,8 +78,9 @@ export function SteamSheet({ open, onClose }: { open: boolean; onClose: () => vo
   };
   const readFile = async (f: File) => {
     const games = parseOwnedGames(await f.text().catch(() => ''));
+    if (games === 'private') { setErr(SAY.private); return; }
     if (!games) { setErr('这个文件读不出来。要的是 GetOwnedGames 返回的那份 JSON。'); return; }
-    if (!games.length) { setErr(SAY.private); return; }
+    if (!games.length) { setErr(EMPTY_OWNED); return; }
     setErr('');
     setFound({ games, steamId: conn?.steamId ?? 'file' });
   };
@@ -232,6 +233,12 @@ export async function runSteamDetails(store: ReturnType<typeof useStore>, onStep
   onStep(n, todo.length);
   return { read: n };
 }
+
+/** a saved list that parsed and has no games in it */
+export const EMPTY_OWNED = '这份列表里没有游戏。';
+
+/** the web build cannot ask Steam; the row on 设置 says so (the word lives in this file) */
+export const STEAM_WEB = '成就要在手机或 Windows 上的存目里读。';
 
 /** r21 the Steam row's words for the batch read (games only, STYLE v0.4 §3.19.8: 成就 allowed here) */
 export const STEAM_ACH = {

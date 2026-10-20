@@ -25,7 +25,8 @@ import { storage } from '../lib/storage';
 import type { Kind } from '../data/types';
 import { runBangumiSync } from '../data/bangumiAgent';
 import { BANGUMI_FILE_NO_TOKEN, STEAM_FILE_NO_KEY } from '../data/restore';
-import { runSteamDetails, runSteamSync, STEAM_ACH } from './SteamConnect';
+import { steamReachable } from '../lib/steamNet';
+import { runSteamDetails, runSteamSync, STEAM_ACH, STEAM_WEB } from './SteamConnect';
 import { TopBar } from '../components/Shell';
 import { AboutYou } from '../components/AboutYou';
 
@@ -132,10 +133,11 @@ export default function Me() {
       captions={[
         ...(steam.lastOkSyncAt ? [`上次读取：${ymdLong(steam.lastOkSyncAt)}`] : []),
         ...(steam.problem === 'key' ? ['Key 用不了了，换一个就能接着读。搬进来的都还在。'] : steam.problem === 'absent' ? [STEAM_FILE_NO_KEY] : steam.problem === 'private' ? ['读不到游戏：Steam 上的「游戏详情」可能不是公开的。'] : steam.problem === 'net' ? ['上次没连上 Steam，过一会儿再试。'] : []),
+        ...(!steamReachable() ? [STEAM_WEB] : []),
       ]}
       actions={[
         { label: steamBusy ? '正在读取' : '再读一次', run: () => void steamAgain() },
-        { label: detailStep ? STEAM_ACH.reading(detailStep[0], detailStep[1]) : STEAM_ACH.read, run: () => void readDetails() },
+        ...(steamReachable() ? [{ label: detailStep ? STEAM_ACH.reading(detailStep[0], detailStep[1]) : STEAM_ACH.read, run: () => void readDetails() }] : []),
         { label: '断开 Steam', run: () => setLayer('steam-off') },
       ]}
     />

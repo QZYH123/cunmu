@@ -7,6 +7,7 @@ import { todayISO } from './today';
 import { getImage } from './images';
 import { makeZip, type ZipFile } from './zip';
 import { DUR } from '../tokens';
+import { referencedImageIds } from '../data/backupImages';
 
 const imgPath = (src: string) => `图片/${src.replace(/^idb:/, '')}.jpg`;
 
@@ -49,12 +50,19 @@ export async function buildExportZip(works: Work[], backup: CunmuExport, essayPh
     if (photo) pics.add(photo);
     for (const im of w.images ?? []) pics.add(im.src);
   }
-  for (const src of pics) {
-    if (!src.startsWith('idb:')) continue;
+  for (const src of exportPictures(pics, backup)) {
     const b = await getImage(src.slice(4));
     if (b) files.push({ name: imgPath(src), data: new Uint8Array(await b.arrayBuffer()) });
   }
   return { blob: makeZip(files), name: exportFileName(title, todayISO()), count: works.length };
+}
+
+/** every 'idb:' picture the ZIP should carry: the ones the Markdown shows, and every one cunmu.json points at
+ *  (a removed work's, a 在看 work's note) so a restore elsewhere finds them all */
+export function exportPictures(shown: Iterable<string>, backup: unknown): string[] {
+  const all = new Set([...shown].filter((s) => s.startsWith('idb:')));
+  for (const id of referencedImageIds(backup)) all.add(`idb:${id}`);
+  return [...all];
 }
 
 /** hands the file to the browser (the app hands it to the system share / save sheet) */

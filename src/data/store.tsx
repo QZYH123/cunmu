@@ -8,6 +8,7 @@ import { firstSeenClaim, resolveDates, sortWorks } from './resolve';
 import {
   DEFAULTS, NO_CONNECTIONS, connectionsFor, fixInf, load, migrateV1toV2, serialize, SCHEMA_VERSION,
   type BangumiConnection, type CatSort, type CatGroup, type CatView, type YearView, type ImportBatch, type PersistedV2, type Theme, type WorkNote, type WorkSourceRow,
+  fixCoverAspect,
 } from './persist';
 import { withKnown, type BangumiPull } from '../lib/bangumi';
 import { planSteam, withStoreFacts, type AchSummary, type Play, type SteamConnection, type SteamGame, type StoreFacts } from '../lib/steam';
@@ -32,8 +33,10 @@ export type { Theme, CatView, YearView, CatSort, CatSortKey, CatGroup, WorkNote,
 
 /** what the source says under your overrides (for 「恢复原样」) */
 /** the covers a file carries: your own pictures (by reference) and Bangumi's (by address, https only) */
+/** Steam's image hosts (the ones the desktop policy lets through) */
+const STEAM_COVER = /^https:\/\/(shared\.cloudflare\.steamstatic\.com|cdn\.cloudflare\.steamstatic\.com|cdn\.akamai\.steamstatic\.com|steamcdn-a\.akamaihd\.net)\//;
 export const travels = (c: Work['cover'] | undefined): Work['cover'] =>
-  c && (c.medium.startsWith('idb:') || (!DEMO && /^https:\/\/lain\.bgm\.tv\//.test(c.medium))) ? c : null;
+  c && (c.medium.startsWith('idb:') || (!DEMO && (/^https:\/\/lain\.bgm\.tv\//.test(c.medium) || STEAM_COVER.test(c.medium)))) ? c : null;
 
 export interface SourceValues { title: string; maker: string; cover: CoverImage | null }
 
@@ -768,10 +771,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       // app: Bangumi's works come back as its last pull (the next sync brings their covers back)
       const fromPull = (w: { id: string; sources?: Work['sources'] }) => !DEMO && /^bgm-\d+$/.test(w.id) && !!w.sources?.some((r) => r.provider === 'bangumi_account');
       const eb = j.connections?.bangumi;
-      const pullWorks = eb ? j.works.filter(fromPull).map(({ sourceKey: _k, ...w }) => ({ ...w, cover: travels(w.cover), finished: '' } as Work)) : [];
+      const pullWorks = eb ? j.works.filter(fromPull).map(({ sourceKey: _k, ...w }) => fixCoverAspect({ ...w, cover: travels(w.cover), finished: '' } as Work)) : [];
       // works the demo catalogue provides come back with it; the rest are yours and come back as they were
       const extras = j.works.filter((w) => !fromPull(w) && (!catalogue.has(w.id) || w.kind === 'essay'))
-        .map(({ sourceKey: _k, ...w }) => ({ ...w, cover: travels(w.cover), finished: '' } as Work))
+        .map(({ sourceKey: _k, ...w }) => fixCoverAspect({ ...w, cover: travels(w.cover), finished: '' } as Work))
         .map((w) => (w.quotes === undefined ? w : { ...w, quotes: normalizeQuotes(w.quotes) }));
       const prev = ownIds();
       setS((x) => ({

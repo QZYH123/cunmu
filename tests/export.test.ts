@@ -30,3 +30,15 @@ test('export file name: Cunmu, your name, the day — never the retired 「我�
   assert.equal(exportFileName(' 沈 舟/的 ', '2026-10-11'), 'Cunmu-沈-舟-的-2026-10-11.zip');   // no path characters, no spaces
   for (const t of ['', undefined, '沈舟']) assert.doesNotMatch(exportFileName(t, '2026-10-11'), /我的百科|百科/);
 });
+
+test('export ZIP: carries every picture cunmu.json points at, not only the listed works', async () => {
+  const { exportPictures } = await import('../src/lib/exportMd');
+  const backup = { works: [{ id: 'gone', cover: { thumb: 'idb:c1', medium: 'idb:c1' } }], notes: { 'bgm-1': { images: [{ src: 'idb:n1' }] } } };
+  assert.deepEqual(exportPictures(['idb:a', 'https://x/y.jpg', 'idb:a'], backup).sort(), ['idb:a', 'idb:c1', 'idb:n1']);
+});
+
+test('export: a Steam cover travels like a Bangumi one; other hosts do not', async () => {
+  const c = (medium: string) => ({ thumb: medium, medium, aspect: 0.47 });
+  assert.ok((await import('../src/data/store')).travels(c('https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/1/library_600x900.jpg')));
+  assert.equal((await import('../src/data/store')).travels(c('https://evil.example/steamstatic.com/x.jpg')), null);
+});

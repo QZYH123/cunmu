@@ -106,15 +106,16 @@ export const ownedGamesUrl = (key: string, id: string) =>
 export const resolveVanityUrl = (key: string, name: string) =>
   `${STEAM_API}/ISteamUser/ResolveVanityURL/v1/?key=${encodeURIComponent(key)}&vanityurl=${encodeURIComponent(name)}&format=json`;
 
-/** a GetOwnedGames response (as text or parsed): its games, or null if it isn't one. An empty `response`
- *  is what Steam sends for a profile whose game details are private. */
-export function parseOwnedGames(body: unknown): SteamGame[] | null {
+/** a GetOwnedGames response (as text or parsed): its games, `'private'` for an empty `response`
+ *  (Steam's signal that game details are private), or null if it isn't one.
+ *  `games: []` is a real list with nothing in it — not private. */
+export function parseOwnedGames(body: unknown): SteamGame[] | 'private' | null {
   let j = body;
   if (typeof j === 'string') { try { j = JSON.parse(j); } catch { return null; } }
   const r = (j as { response?: { games?: unknown[] } } | null)?.response ?? (j as { games?: unknown[] } | null);
   if (!r || typeof r !== 'object') return null;
   const gs = (r as { games?: unknown[] }).games;
-  if (!Array.isArray(gs)) return Object.keys(r).length === 0 ? [] : null;
+  if (!Array.isArray(gs)) return Object.keys(r).length === 0 ? 'private' : null;
   const out: SteamGame[] = [];
   for (const g of gs as Record<string, unknown>[]) {
     const appid = Number(g?.appid);

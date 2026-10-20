@@ -84,11 +84,11 @@ export async function resolveSteamUser(key: string, input: string): Promise<{ st
   return { steamId: j.response.steamid, vanity: u.vanity };
 }
 
-/** every owned game with its time; [] from Steam for a profile whose game details aren't public → 'private' */
+/** every owned game with its time; an empty `response` (private game details) → 'private'. An empty list is an empty library. */
 export async function readOwnedGames(key: string, steamId: string): Promise<SteamGame[]> {
   const games = parseOwnedGames(await call(ownedGamesUrl(key, steamId)));
   if (games === null) throw new SteamError('net');
-  if (!games.length) throw new SteamError('private');
+  if (games === 'private') throw new SteamError('private');
   return games;
 }
 

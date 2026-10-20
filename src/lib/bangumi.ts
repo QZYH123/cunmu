@@ -15,6 +15,15 @@ import { KIND_ASPECT } from '../data/types';
 
 const DAY_MS = 86400000;
 
+/** a typed username, or the username in a Bangumi profile link (`/user/…` on bgm.tv, bangumi.tv, chii.in). A subject link is not a username. */
+export function bangumiUsername(input: string): string | null {
+  const t = input.trim();
+  const m = t.match(/(?:bgm\.tv|bangumi\.tv|chii\.in)\/user\/([A-Za-z0-9_]+)/i);
+  if (m) return m[1];
+  if (/^[A-Za-z0-9_]+$/.test(t)) return t;
+  return null;
+}
+
 export const API = 'https://api.bgm.tv';
 export const PAGE = 100;
 export const MIN_GAP_MS = 1000;

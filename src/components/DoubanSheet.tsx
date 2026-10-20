@@ -45,7 +45,7 @@ async function rowsOf(files: File[]): Promise<{ rows: DoubanRow[] } | { error: D
  * 豆瓣备份导入 (STYLE v0.4 §3.16, 方案 5.7). The file is read here, in the page, and never leaves the
  * device or gets kept. Formats: lib/douban.ts (豆伴 xlsx, checked against its exporter) and lib/doubak.ts.
  */
-export function DoubanSheet({ open, onClose, file: given = null }: { open: boolean; onClose: () => void; file?: File | null }) {
+export function DoubanSheet({ open, onClose, file: given = null }: { open: boolean; onClose: () => void; file?: File[] | null }) {
   const store = useStore();
   const nav = useNavigate();
   const file = useRef<HTMLInputElement>(null);
@@ -56,7 +56,7 @@ export function DoubanSheet({ open, onClose, file: given = null }: { open: boole
     if (!open) return;
     setStep('explain'); setPlan(null);
     // a backup dropped on 收录 or on the window — or on this sheet while it asks for one: straight to reading it
-    if (given) void read([given]);
+    if (given?.length) void read(given);
   }, [open, given]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const read = async (f: File[]) => {

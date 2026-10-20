@@ -15,7 +15,7 @@ import Home from './pages/Home';
 import MeHome from './pages/MeHome';
 import { InterestPage, PeriodPage } from './pages/MePages';
 import { WereadSheet, BangumiSheet } from './pages/Connect';
-import { AddSheet, isBackupFile } from './pages/Add';
+import { AddSheet } from './pages/Add';
 import { DoubanSheet } from './components/DoubanSheet';
 import { PaletteProvider } from './components/CommandPalette';
 import { ContextPreview } from './components/ContextPreview';
@@ -71,20 +71,20 @@ function useDocTitle() {
   }, [pathname, store.d, store.removedWorks, store.title, store.me]);
 }
 
-/** r5 #3: a 豆瓣 backup dropped anywhere on the window (a pointer-and-files desktop) goes straight to the import */
-function useBackupDrop(onFile: (f: File) => void) {
+/** r5 #3: files dropped anywhere on the window go to the 豆瓣 sheet — a backup is read, anything else shows that sheet's own error */
+function useBackupDrop(onFiles: (files: File[]) => void) {
   useEffect(() => {
     const over = (e: DragEvent) => { if (e.dataTransfer?.types.includes('Files')) e.preventDefault(); };
     const drop = (e: DragEvent) => {
-      const f = e.dataTransfer?.files?.[0];
-      if (!f) return;
+      const files = [...(e.dataTransfer?.files ?? [])];
+      if (!files.length) return;
       e.preventDefault();
-      if (isBackupFile(f)) onFile(f);
+      onFiles(files);
     };
     window.addEventListener('dragover', over);
     window.addEventListener('drop', drop);
     return () => { window.removeEventListener('dragover', over); window.removeEventListener('drop', drop); };
-  }, [onFile]);
+  }, [onFiles]);
 }
 
 function Layout() {
@@ -95,7 +95,7 @@ function Layout() {
   const [open, setOpen] = useState<null | 'weread' | 'bangumi' | 'douban' | 'add' | 'steam'>(null);
   const [bgmStart, setBgmStart] = useState<'name' | 'token'>('name');
   const [bgmUser, setBgmUser] = useState('');
-  const [backup, setBackup] = useState<File | null>(null);
+  const [backup, setBackup] = useState<File[] | null>(null);
   // 「添加《…》」 from a search that found nothing hands its words to the sheet (a click event is not a query)
   const [addQ, setAddQ] = useState('');
   const sheets: Sheets = {
@@ -106,14 +106,18 @@ function Layout() {
       setBgmUser(start && typeof start === 'object' && 'user' in start ? String((start as { user: string }).user) : '');
       setOpen('bangumi');
     },
-    douban: (file) => { setBackup(file instanceof File ? file : null); setOpen('douban'); },
+    douban: (file) => {
+      const files = file instanceof File ? [file] : Array.isArray(file) && file.every((f) => f instanceof File) ? file : null;
+      setBackup(files);
+      setOpen('douban');
+    },
     add: (q) => { setAddQ(typeof q === 'string' ? q : ''); setOpen('add'); },
     steam: () => setOpen('steam'),
   };
   const close = () => setOpen(null);
   // the app was closed while the person was getting a Steam key: open 从 Steam 搬进来 again where they were
   useEffect(() => { if (steamReachable() && readSteamDraft()?.away) setOpen('steam'); }, []);
-  const onBackup = useCallback((f: File) => { setBackup(f); setOpen('douban'); }, []);
+  const onBackup = useCallback((files: File[]) => { setBackup(files); setOpen('douban'); }, []);
   useBackupDrop(onBackup);
   return (
     <SheetCtx.Provider value={sheets}>

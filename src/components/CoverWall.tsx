@@ -325,8 +325,8 @@ function TileTip({ work, rect }: { work: Work; rect: DOMRect }) {
 /**
  * Arrow keys move a roving focus between the items of a 2D layout by geometry (rows are in DOM
  * order): ← → step, ↑ ↓ go to the nearest item by centre in the row above / below, Home / End go to
- * the first / last item. Only the focused item keeps tabIndex 0. Used by the home wall and the
- * category cover grid; the full wall, which is virtualised, has its own (FullWall.tsx).
+ * the first / last item of the current row (行首 / 行尾). Only the focused item keeps tabIndex 0.
+ * Used by the home wall and the category cover grid; the full wall, which is virtualised, has its own (FullWall.tsx).
  */
 export function arrowNav(e: KeyboardEvent<HTMLElement>, item: string) {
   const cur = (e.target as HTMLElement).closest<HTMLElement>(item);
@@ -336,8 +336,10 @@ export function arrowNav(e: KeyboardEvent<HTMLElement>, item: string) {
   let next: HTMLElement | undefined;
   if (e.key === 'ArrowRight') next = items[i + 1];
   else if (e.key === 'ArrowLeft') next = items[i - 1];
-  else if (e.key === 'Home') next = items[0];
-  else if (e.key === 'End') next = items[items.length - 1];
+  else if (e.key === 'Home' || e.key === 'End') {
+    const row = items.filter((t) => t.offsetTop === cur.offsetTop);
+    next = e.key === 'Home' ? row[0] : row[row.length - 1];
+  }
   else {
     const top = cur.offsetTop;
     const cx = cur.offsetLeft + cur.offsetWidth / 2;
@@ -657,12 +659,31 @@ function Display({ works, width, bp, newIds }: { works: Work[]; width: number; b
   const avail = width - 40;
   const total = works.reduce((s, w) => s + wallAspectOf(w) * H, 0) + gap * (works.length - 1);
   if (total > avail) H = Math.floor(H * (avail - gap * (works.length - 1)) / (total - gap * (works.length - 1)));
+  const onKey = (e: KeyboardEvent<HTMLDivElement>) => {
+    const cur = (e.target as HTMLElement).closest<HTMLButtonElement>('.display-item');
+    if (!cur || e.altKey || e.metaKey || e.ctrlKey) return;
+    const items = [...e.currentTarget.querySelectorAll<HTMLButtonElement>('.display-item')];
+    const i = items.indexOf(cur);
+    const next = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? items[i + 1]
+      : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? items[i - 1]
+      : e.key === 'Home' ? items[0]
+      : e.key === 'End' ? items[items.length - 1]
+      : undefined;
+    if (!next || next === cur) return;
+    e.preventDefault();
+    e.stopPropagation();
+    cur.tabIndex = -1;
+    next.tabIndex = 0;
+    next.focus();
+  };
   return (
-    <div className="display-row" data-id="display">
-      {works.map((w) => (
+    <div className="display-row" data-id="display" onKeyDown={onKey}>
+      {works.map((w, i) => (
         <button
           key={w.id}
           className={`display-item ${newIds.includes(w.id) ? 'drop' : ''}`}
+          tabIndex={i === 0 ? 0 : -1}
+          data-ctx={w.id}
           onClick={(e) => {
             const c = e.currentTarget.querySelector<HTMLElement>('.cover');
             if (c) c.style.viewTransitionName = HERO;

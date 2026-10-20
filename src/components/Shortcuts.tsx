@@ -4,15 +4,13 @@ import { Sheet } from './Bits';
 import { IS_MAC } from './Shell';
 import { reduced } from '../lib/motion';
 import { BP } from '../tokens';
-import { OPEN_HELP } from '../lib/shortcutHelp';
+import { layerOpen, OPEN_HELP } from '../lib/shortcutHelp';
 
 /**
  * Desktop keyboard shortcuts (§8.2, P2-7): N 收录 · W 整面墙 · G then H 回首页 · [ / ] entry sections ·
  * ? this help. ⌘K / / live in the palette; arrows / Enter / Esc live with the things they move.
  */
 const isTyping = (t: EventTarget | null) => t instanceof HTMLElement && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
-/** another layer owns the keyboard while it's open */
-const layerOpen = () => !!document.querySelector('.sheet, .palette-scrim, .preview-layer, .menu');
 const SEQ_MS = 1200;   // G … H
 
 type Keys = string[][];   // alternatives, each a sequence: [['⌘K'], ['/']] or [['G', 'H']]

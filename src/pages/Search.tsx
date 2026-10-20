@@ -3,10 +3,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Search as SearchIcon } from 'lucide-react';
 import { useStore } from '../data/store';
-import { useSheets } from '../App';
 import type { Work } from '../data/types';
 import { KIND_LABEL, KIND_ORDER } from '../data/types';
-import { creatorLine, fmtNum, whenOf } from '../data/derive';
+import { fmtNum } from '../data/derive';
+import { SEARCH_EMPTY, searchMeta } from '../lib/searchText';
 import { Avatar, Cover } from '../components/Cover';
 import { ListRow, RollingNumber } from '../components/Bits';
 import { useEnterClass, useFlip } from '../lib/motion';
@@ -44,7 +44,6 @@ function useKeptSearch(): [SearchState, (s: SearchState) => void] {
 
 export default function SearchPage() {
   const { d, library } = useStore();
-  const sheets = useSheets();
   const loc = useLocation();
   const enter = useEnterClass();
   const desk = isDesk(useBreakpoint());
@@ -84,7 +83,7 @@ export default function SearchPage() {
       {w.kind !== 'essay' && <Cover work={w} w={32} h={w.kind === 'music' ? 32 : 48} paperPlaceholder />}
       <div className="list-main">
         <span className="t-ui ellipsis"><Hl text={w.title} q={term} /></span>
-        <span className="list-meta ellipsis c-3">{[KIND_LABEL[w.kind], creatorLine(w), w.finished && whenOf(w, 'year')].filter(Boolean).join(' · ')}</span>
+        <span className="list-meta ellipsis c-3">{searchMeta(w, term, true)}</span>
       </div>
     </Link>
   );
@@ -92,7 +91,7 @@ export default function SearchPage() {
   if (desk) {
     return (
       <div className="page under-bar search-desk">
-        <div className="page-x"><PalettePanel inline onAdd={sheets.add} start={start} onState={keep} /></div>
+        <div className="page-x"><PalettePanel inline start={start} onState={keep} /></div>
       </div>
     );
   }
@@ -151,11 +150,12 @@ export default function SearchPage() {
             {results!.interests.length > 0 && (
               <section className="result-group">
                 <div className="t-label c-3">兴趣 · <RollingNumber value={String(results!.interests.length)} /></div>
-                {results!.interests.slice(0, GROUP_CAP).map(([g, ws]) => (
+                {cap('兴趣', results!.interests)[0].map(([g, ws]) => (
                   <Link key={g} to={`/index/interests?g=${encodeURIComponent(g)}`} className="list-row search-row no-thumb">
                     <div className="list-main"><span className="t-ui"><Hl text={g} q={term} /></span><span className="list-meta c-3">{fmtNum(ws.length)} 条</span></div>
                   </Link>
                 ))}
+                {more('兴趣', cap('兴趣', results!.interests)[1])}
               </section>
             )}
             {results!.years.length > 0 && (
@@ -171,8 +171,7 @@ export default function SearchPage() {
           </div>
         ) : term ? (
           <div className="no-result">
-            <p className="t-ui c-2">这里没有「{term}」</p>
-            <button className="btn btn-secondary" onClick={() => sheets.add(term)}>收录《{term}》</button>
+            <p className="t-ui c-2">{SEARCH_EMPTY}</p>
           </div>
         ) : null}
       </div>

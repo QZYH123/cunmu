@@ -121,7 +121,7 @@ function Layout() {
   useBackupDrop(onBackup);
   return (
     <SheetCtx.Provider value={sheets}>
-      <PaletteProvider onAdd={sheets.add}>
+      <PaletteProvider>
       <div className="app">
         <DesktopBar onPlus={sheets.add} onShow={() => { store.setShow(true); navTo('/'); window.scrollTo(0, 0); }} />
         <ShowBar />

@@ -35,8 +35,14 @@ function fullRows(aspects: number[], width: number, H: number): Row[] {
 export default function FullWall() {
   const { library, sample } = useStore();
   const nav = useNavigate();
-  const [params] = useSearchParams();
-  const [kind, setKind] = useState<'all' | Kind>('all');
+  const [params, setParams] = useSearchParams();
+  const rawKind = params.get('k');
+  const kind: 'all' | Kind = rawKind && (KIND_ORDER as readonly string[]).includes(rawKind) ? rawKind as Kind : 'all';
+  const setKind = (v: 'all' | Kind) => {
+    const next = new URLSearchParams(params);
+    if (v === 'all') next.delete('k'); else next.set('k', v);
+    setParams(next, { replace: true });
+  };
   const [ref, width] = useWidth<HTMLDivElement>();
   const bp = useBreakpoint();
   // the year rail (r5 #1): beside the wall on tablet / desktop it has its own margin; on a phone it floats over the edge
@@ -72,13 +78,13 @@ export default function FullWall() {
   const onWallKey = (e: KeyboardEvent<HTMLDivElement>) => {
     const el = (e.target as HTMLElement).closest<HTMLElement>('.tile[data-id]');
     const i = el ? indexOf.get(el.dataset.id!) : undefined;
-    if (i === undefined || e.altKey || e.metaKey) return;
+    if (i === undefined || e.altKey) return;
     const ri = rowOf[i];
     const row = rows[ri];
     const t = row.tiles.find((x) => x.index === i)!;
     const cx = t.x + t.w / 2;
     const page = Math.max(1, Math.floor((window.innerHeight - (barRef.current?.getBoundingClientRect().bottom ?? 0)) / row.h) - 1);
-    const ctrl = e.ctrlKey;
+    const ctrl = e.ctrlKey || e.metaKey;
     let next: number | undefined;
     switch (e.key) {
       case 'ArrowRight': next = ctrl ? undefined : i + 1; break;
@@ -178,6 +184,7 @@ export default function FullWall() {
         </div>
         {!sample.on && <PickToggle p={pick} />}
       </div>
+      {!library.length && <p className="t-small c-3 quiet-hint fullwall-empty">放进作品以后，封面会铺在这里。</p>}
       <div
         className={`fullwall wall-plain ${gutter ? 'with-rail' : ''} ${lifted ? 'dimmed' : ''}`} ref={wallRef} style={{ height }} key={kind}
         onKeyDown={onWallKey}

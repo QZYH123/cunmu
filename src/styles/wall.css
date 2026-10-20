@@ -211,6 +211,7 @@
 .dev-pill button.on { color: var(--ink); font-weight: var(--w-bold); }
 
 /* ---------- 整面墙 ---------- */
+.fullwall-empty { position: relative; z-index: 2; padding: var(--s-8) var(--page-x) 0; }
 .fullwall-bar {
   position: sticky; top: 0; z-index: 20; display: flex; align-items: center;
   padding: env(safe-area-inset-top) var(--s-2) 0 var(--s-1);

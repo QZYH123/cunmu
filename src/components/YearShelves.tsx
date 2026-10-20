@@ -17,6 +17,7 @@ import { ScrollRail } from './ScrollRail';
 import { fmtPlaytime } from '../lib/steam';
 import { DUR, SHELF } from '../tokens';
 import { FlyLink } from './FlyLink';
+import { arrowNav } from './CoverWall';
 
 /**
  * 索引 · 年份: one row per year, in one of two layouts (the user's choice, remembered on the device):
@@ -417,13 +418,13 @@ const CoverGridRow = memo(function CoverGridRow({ row, cw }: { row: Row; cw: num
           </span>
         )}
       </Link>
-      <ul className="ygrid" aria-label={row.unknown ? '时间未知的作品' : `${row.label} 年的作品`} style={{ ['--ygrid-w' as string]: `${cw}px` }}>
-        {row.works.map((w) => {
+      <ul className="ygrid" aria-label={row.unknown ? '时间未知的作品' : `${row.label} 年的作品`} style={{ ['--ygrid-w' as string]: `${cw}px` }} onKeyDown={(e) => arrowNav(e, '.ygrid-link')}>
+        {row.works.map((w, i) => {
           const d = coverDim(w, 100);
           const h = Math.round((cw * d.h) / d.w);
           return (
             <li key={w.id} className={`ygrid-item kind-${w.kind}`}>
-              <FlyLink id={w.id} to={`/entry/${w.id}`} className="ygrid-link" aria-label={`${w.title}，${KIND_LABEL[w.kind]}`}>
+              <FlyLink id={w.id} to={`/entry/${w.id}`} className="ygrid-link" tabIndex={i === 0 ? 0 : -1} aria-label={`${w.title}，${KIND_LABEL[w.kind]}`}>
                 <span className="ygrid-cover"><Cover work={w} w={cw} h={h} paperPlaceholder /></span>
                 <span className="ygrid-title">{w.title}</span>
                 <span className="ygrid-kind" aria-hidden>{KIND_LABEL[w.kind]}{w.play ? ` · ${fmtPlaytime(w.play.minutes)}` : ""}</span>

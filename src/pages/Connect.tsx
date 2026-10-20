@@ -4,6 +4,7 @@ import { Lock } from 'lucide-react';
 import { useStore } from '../data/store';
 import { DEMO, WEREAD_BATCH, doingFor, masterFor } from '@demo';
 import { fmtNum } from '../data/derive';
+import { QUOTES_THERE } from '../data/quotes';
 import type { Quote } from '../data/types';
 import { todayISO } from '../lib/today';
 import { BgmError, DONE, DOING, KIND_OF, planSync, type BgmCollection, type BgmUser, type SyncResult } from '../lib/bangumi';
@@ -62,6 +63,7 @@ export function WereadSheet({ open, onClose, onManual }: { open: boolean; onClos
     if (!books.length) { setHint('认不出是哪本书。在第一行写上《书名》，再粘贴一次。'); return; }
     const { first, quotes: n } = store.importPaste(books);
     onClose();
+    if (!n) { store.toast(QUOTES_THERE); return; }
     if (books.length === 1) nav(`/entry/${first}`);
     store.toast(books.length === 1 ? `《${books[0].title}》多了 ${n} 条摘抄` : `${books.length} 本书多了 ${n} 条摘抄`);
   };

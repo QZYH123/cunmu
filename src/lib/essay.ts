@@ -11,9 +11,7 @@ export function essayPlan(input: { existing: boolean; title: string; paragraphs:
   return input.existing ? 'drop' : 'skip';
 }
 
-/** words stay as written; a title with no words is copied into the body; a picture alone leaves the body empty */
-export function essayBody(title: string, paragraphs: string[]): string[] {
-  if (paragraphs.length) return paragraphs;
-  const t = title.trim();
-  return t ? [t] : [];
+/** words stay as written; a title alone does not become the body; a picture alone leaves the body empty */
+export function essayBody(_title: string, paragraphs: string[]): string[] {
+  return paragraphs;
 }

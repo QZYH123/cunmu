@@ -19,6 +19,16 @@ export const spaced = (segs: Seg[]): Seg[] => segs.flatMap((s, i) => {
 });
 export const plain = (segs: Seg[]) => spaced(segs).map((s) => s.text).join('');
 
+/**
+ * A rewrite is kept only when it says something the generated paragraph does not.
+ * Empty, or the same words as the generated paragraph, stays the generated one (its links included).
+ */
+export function keptLead(typed: string, auto: string): string | undefined {
+  const t = typed.trim();
+  if (!t || t === auto.trim()) return undefined;
+  return t;
+}
+
 const KIND_WORD: Record<Exclude<Kind, 'essay'>, string> = { anime: '动画', book: '书', film: '影视', game: '游戏', music: '音乐' };
 const VERBS: [Kind[], string][] = [[['anime', 'film'], '看过'], [['book'], '读过'], [['game'], '玩过'], [['music'], '听过']];
 

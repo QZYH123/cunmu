@@ -6,10 +6,12 @@ import type { ImportBatch } from '../data/persist';
 import { useSheets } from '../App';
 import { countCrossRefs, fmtNum, fmtYMD } from '../data/derive';
 import { Seg, Sheet } from '../components/Bits';
-import { DeleteAllSheet, DisconnectBangumiSheet, ExportSheet, UndoImportSheet } from '../components/DataSheets';
+import { DeleteAllSheet, DisconnectBangumiSheet, ExportSheet, KeyBlocks, UndoImportSheet } from '../components/DataSheets';
 import { useEnterClass } from '../lib/motion';
 import { readZip } from '../lib/zip';
-import { putImage } from '../lib/images';
+import { getImage, putImage } from '../lib/images';
+import { missingImageIds, referencedImageIds, restoreNotice } from '../data/backupImages';
+import { STEAM_OFF_DROPS, STEAM_OFF_KEEPS } from '../data/steamOff';
 import { DEFAULT_TITLE, TITLE_MAX, titleOf } from '../lib/naming';
 import { MiniRow } from '../components/YearMini';
 import { useElementWidth } from '../lib/useWidth';
@@ -88,7 +90,7 @@ export default function Me() {
   const enter = useEnterClass();
   const [confirm, setConfirm] = useState(false);
   const [alsoBooks, setAlsoBooks] = useState(false);
-  const [layer, setLayer] = useState<null | 'export' | 'delete' | 'bgm-off'>(null);
+  const [layer, setLayer] = useState<null | 'export' | 'delete' | 'bgm-off' | 'steam-off'>(null);
   const [undo, setUndo] = useState<ImportBatch | null>(null);
   const restoreFile = useRef<HTMLInputElement>(null);
   const sample = store.sample.on;
@@ -134,7 +136,7 @@ export default function Me() {
       actions={[
         { label: steamBusy ? '正在读取' : '再读一次', run: () => void steamAgain() },
         { label: detailStep ? STEAM_ACH.reading(detailStep[0], detailStep[1]) : STEAM_ACH.read, run: () => void readDetails() },
-        { label: '断开 Steam', run: () => { store.disconnectSteam(); store.toast('断开了。搬进来的游戏还在'); } },
+        { label: '断开 Steam', run: () => setLayer('steam-off') },
       ]}
     />
   ) : <Row name="Steam" right={<Go label="连接" />} onClick={sheets.steam} captions={['只搬游戏，连同时长']} />;
@@ -207,7 +209,15 @@ export default function Me() {
     try {
       for (const [id, blob] of p.images) await putImage(id, blob);
       if (!(await store.importBackup(p.json))) throw new Error('format');
-      store.toast(p.count ? `恢复了 ${fmtNum(p.count)} 条` : '恢复好了');
+      const want = referencedImageIds(p.json);
+      const onDevice: string[] = [];
+      for (const id of want) {
+        if (p.images.some(([x]) => x === id)) continue;
+        if (await getImage(id)) onDevice.push(id);
+      }
+      const missing = missingImageIds(want, p.images.map(([id]) => id), onDevice);
+      const base = p.count ? `恢复了 ${fmtNum(p.count)} 条` : '恢复好了';
+      store.toast(restoreNotice(base, missing.length > 0));
     } catch {
       store.toast('这个文件读不出来，换一个存目导出的文件再试');
     }
@@ -443,6 +453,20 @@ export default function Me() {
           <div className="sheet-actions pair">
             <button className="btn btn-secondary" onClick={() => pending && void applyRestore(pending)}><span className="btn-danger-text">换掉</span></button>
             <button className="btn btn-secondary" onClick={() => setPending(null)}>先不换</button>
+          </div>
+        </div>
+      </Sheet>
+
+      <Sheet open={layer === 'steam-off'} onClose={() => setLayer(null)} label="断开 Steam">
+        <div className="sheet-body">
+          <h2 className="t-title">断开 Steam</h2>
+          <KeyBlocks blocks={[
+            { k: '会删掉', lines: [...STEAM_OFF_DROPS] },
+            { k: '会留下', lines: [STEAM_OFF_KEEPS] },
+          ]} />
+          <div className="sheet-actions pair">
+            <button className="btn btn-secondary" onClick={() => { store.disconnectSteam(); setLayer(null); }}><span className="btn-danger-text">断开</span></button>
+            <button className="btn btn-secondary" onClick={() => setLayer(null)}>先不断开</button>
           </div>
         </div>
       </Sheet>

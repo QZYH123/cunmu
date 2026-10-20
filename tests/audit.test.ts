@@ -53,13 +53,13 @@ test('C-2: a restore with no Steam key on the device says the file has none', ()
 });
 
 const approx = { approx: true } as EffDate;
-test('A-4: an essay with only a picture is saved; a cleared one is dropped; a title still fills the body', () => {
+test('A-4 / A-8: an essay with only a picture is saved; a title alone does not become the body', () => {
   assert.equal(essayPlan({ existing: false, title: '', paragraphs: [], photo: true }), 'save');
   assert.equal(essayPlan({ existing: false, title: '  ', paragraphs: [], photo: false }), 'skip');
   assert.equal(essayPlan({ existing: true, title: '', paragraphs: [], photo: false }), 'drop');
   assert.equal(essayPlan({ existing: true, title: '', paragraphs: [], photo: true }), 'save');
   assert.deepEqual(essayBody('', []), []);
-  assert.deepEqual(essayBody('无题', []), ['无题']);
+  assert.deepEqual(essayBody('无题', []), []);
   assert.deepEqual(essayBody('无题', ['一段']), ['一段']);
 });
 

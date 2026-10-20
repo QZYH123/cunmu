@@ -1,4 +1,5 @@
-import { normalizeNoteQuotes, normalizeQuotes } from './quotes';
+import { freshQuotes, normalizeNoteQuotes, normalizeQuotes } from './quotes';
+import { withoutSteam } from './steamOff';
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { DEMO, doingFor, masterFor } from '@demo';
 import { SAMPLE_WORKS } from './generate';
@@ -457,9 +458,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const addQuotes: Record<string, Quote[]> = {};
       let first = '';
       for (const b of books) {
-        const qs = b.quotes.map((q) => { const qid = quoteId(); quoteIds.push(qid); return { ...q, id: qid, provider: 'weread_paste' as const, batchId: id }; });
-        const have = own.find((w) => w.kind === 'book' && w.title === b.title);
-        if (have) { addQuotes[have.id] = [...(addQuotes[have.id] ?? []), ...qs]; merged.push(have.id); first ||= have.id; continue; }
+        const have = own.find((w) => w.kind === 'book' && w.title === b.title) ?? created.find((w) => w.title === b.title);
+        const prior = [...(have?.quotes ?? []), ...(have ? addQuotes[have.id] ?? [] : [])];
+        const freshQs = freshQuotes(b.quotes, prior);
+        if (!freshQs.length) continue;
+        const qs = freshQs.map((q) => { const qid = quoteId(); quoteIds.push(qid); return { ...q, id: qid, provider: 'weread_paste' as const, batchId: id }; });
+        if (have && own.some((w) => w.id === have.id)) {
+          addQuotes[have.id] = [...(addQuotes[have.id] ?? []), ...qs];
+          if (!merged.includes(have.id)) merged.push(have.id);
+          first ||= have.id;
+          continue;
+        }
+        if (have) { addQuotes[have.id] = [...(addQuotes[have.id] ?? []), ...qs]; first ||= have.id; continue; }
         const wid = `paste-${Date.now().toString(36)}-${created.length}`;
         // decided: a pasted book has no date of its own — 时间未知, not the day of the paste
         created.push({
@@ -471,6 +481,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         first ||= wid;
       }
       const n = quoteIds.length;
+      if (!n) return { first: '', quotes: 0, fresh: 0 };
       const prev = ownIds();
       setS((x0) => {
         const x = leaveSample(x0);
@@ -604,7 +615,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       return { ...x, plays: { ...x.plays, [wid]: { ...p, ...patch } } };
     }),
     disconnectSteam: () => {
-      setS((x) => ({ ...x, plays: {}, connections: { ...x.connections, steam: null } }));
+      setS((x) => withoutSteam(x));
       void setSecret('steam-key', null);
     },
     setSteamProblem: (p) => setS((x) => {

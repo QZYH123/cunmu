@@ -5,6 +5,7 @@ import { useStore } from '../data/store';
 import type { CoverImage, Work } from '../data/types';
 import { MAKER, makerOf, sourceLabelOf } from '../data/types';
 import { putImage, shrinkToBlob } from '../lib/images';
+import { NAME_EMPTY, titleReady } from '../data/guards';
 
 /**
  * 补封面、作者 (r7 sim #3): what 「只用名字放进来」 promised — 「封面、作者以后能补上」. For a work of yours
@@ -53,6 +54,7 @@ export function EditWorkSheet({ work, open, onClose }: { work: Work; open: boole
     } catch { setErr(true); }
   };
   const save = async () => {
+    if (!titleReady(title)) return;
     let cover: CoverImage | null | undefined;
     if (pic) {
       const id = `cover-${work.id}-${Date.now().toString(36)}`;
@@ -90,8 +92,9 @@ export function EditWorkSheet({ work, open, onClose }: { work: Work; open: boole
         </div>
         <label className="key-field plain edit-field">
           <span className="t-label c-3">名字</span>
-          <input value={title} onChange={(e) => setTitle(e.target.value)} aria-label="名字" autoComplete="off" />
+          <input value={title} onChange={(e) => setTitle(e.target.value)} aria-label="名字" autoComplete="off" aria-invalid={!titleReady(title) || undefined} />
         </label>
+        {!titleReady(title) && <p className="t-small c-2 field-say">{NAME_EMPTY}</p>}
         {src && title.trim() && title.trim() !== src.title && <SourceSays from={from} value={src.title} onBack={() => setTitle(src.title)} />}
         <label className="key-field plain edit-field">
           <span className="t-label c-3">{MAKER[work.kind]}</span>
@@ -99,7 +102,7 @@ export function EditWorkSheet({ work, open, onClose }: { work: Work; open: boole
         </label>
         {src && maker.trim() !== src.maker && <SourceSays from={from} value={src.maker} onBack={() => setMaker(src.maker)} />}
         <div className="sheet-actions">
-          <button className="btn btn-primary" onClick={() => void save()}>好了</button>
+          <button className="btn btn-primary" disabled={!titleReady(title)} onClick={() => void save()}>好了</button>
         </div>
       </div>
     </Sheet>

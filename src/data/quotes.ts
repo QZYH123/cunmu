@@ -48,3 +48,27 @@ export function normalizeNoteQuotes<N extends { quotes?: Quote[] }>(notes: unkno
 export function epigraphOf(quotes: Quote[]): Quote | undefined {
   return quotes.find((q) => q.starred) ?? quotes.filter((q) => !!q.date).sort((a, b) => a.date.localeCompare(b.date))[0];
 }
+
+/** same highlight twice: the words and the chapter both match */
+export const quoteKey = (q: { text: string; where?: string }) => `${(q.where ?? '').trim()}\u0000${q.text.trim()}`;
+
+/**
+ * Highlights not already on the work, and not repeated in this paste. An empty line is dropped.
+ * The chapter (`where`) is part of the match: the same words in another chapter stay.
+ */
+export function freshQuotes(incoming: Quote[], have: Quote[]): Quote[] {
+  const seen = new Set(have.map(quoteKey));
+  const out: Quote[] = [];
+  for (const q of incoming) {
+    const text = q.text.trim();
+    if (!text) continue;
+    const k = quoteKey({ text, where: q.where });
+    if (seen.has(k)) continue;
+    seen.add(k);
+    out.push({ ...q, text });
+  }
+  return out;
+}
+
+/** pasted highlights that were all already here */
+export const QUOTES_THERE = '这些摘抄已经在了';

@@ -2,7 +2,7 @@
   "appId": "com.qzyh123.cunmu",
   "appName": "Cunmu",
   "webDir": "dist",
-  "appendUserAgent": "QZYH123/cunmu/0.1.0 (https://github.com/QZYH123/cunmu)",
+  "appendUserAgent": "QZYH123/cunmu/0.1.1 (https://github.com/QZYH123/cunmu)",
   "android": {
     "minWebViewVersion": 105,
     "allowMixedContent": false

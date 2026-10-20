@@ -4,6 +4,7 @@ import type { Work } from '../data/types';
 import { paperVar } from '../lib/hash';
 import { creatorLine, isLatin } from '../data/derive';
 import { localCover } from '../lib/coverCache';
+import { TYPE_FLOOR } from '../tokens';
 
 /**
  * What fits in a vertical run of `avail` px at `fs`: CJK by whole characters, Latin by whole words —
@@ -54,8 +55,8 @@ export function fitVertical(text: string, fs: number, avail: number): string {
   return cs.slice(0, end || max).join('').trim();
 }
 
-/** Font size for literal covers: width 120 → 17px, 48 → 9px (linear, §3.3). Text below 11px is
- *  dropped (only paper + spine remain) so no glyph ever renders under the 11px floor (§2.3). */
+/** Font size for literal covers: width 120 → 17px, 48 → 9px (linear, §3.3). The slope stays;
+ *  anything under the auxiliary floor falls back to one character at that floor. */
 export const literalFont = (w: number) => w / 9 + 11 / 3;
 /** --t-caption's size, for fitting the author line */
 const LITERAL_AUTHOR_FS = 13.5;
@@ -63,7 +64,7 @@ const LITERAL_AUTHOR_FS = 13.5;
 export function LiteralCover({ work, w, h }: { work: Work; w: number; h: number }) {
   if (work.kind === 'essay') {
     const full = w >= 100;
-    const fs = full ? Math.max(12, w * 0.12) : Math.max(11, w * 0.32);
+    const fs = full ? Math.max(TYPE_FLOOR, w * 0.12) : Math.max(TYPE_FLOOR, w * 0.32);
     return (
       <div className="literal" style={{ background: 'var(--paper-6)' }} aria-hidden>
         <div className="literal-essay-rule" />
@@ -75,10 +76,10 @@ export function LiteralCover({ work, w, h }: { work: Work; w: number; h: number 
   }
   const fs = literalFont(w);
   const showAuthor = w >= 100 && h >= 140;
-  // Too narrow for a vertical title at ≥ 11px: fall back to the wall's single-character rule (§3.9.3).
-  if (fs < 11) {
+  // Too narrow for a vertical title at the auxiliary floor: one character, still at that floor (§3.9.3).
+  if (fs < TYPE_FLOOR) {
     return (
-      <div className="literal literal-center" style={{ background: paperVar(work.id), fontSize: Math.max(11, w * 0.42) }} aria-hidden>
+      <div className="literal literal-center" style={{ background: paperVar(work.id), fontSize: Math.max(TYPE_FLOOR, w * 0.42) }} aria-hidden>
         <span>{Array.from(work.title)[0]}</span>
       </div>
     );

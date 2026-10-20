@@ -231,8 +231,12 @@
   border-top: var(--hairline) solid var(--line-inner);
 }
 .list-row.no-thumb + .list-row.no-thumb::before { left: var(--s-3); }
-.list-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.list-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--s-2); }
 .list-title { font: var(--t-ui); font-weight: var(--w-strong); color: var(--ink); }
+/* a long title takes a second line instead of disappearing behind an ellipsis */
+.list-title.ellipsis {
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; white-space: normal;
+}
 .list-meta { font: var(--t-caption); letter-spacing: var(--track-caption); color: var(--text-secondary); }
 .list-date { font: var(--t-caption); letter-spacing: var(--track-caption); color: var(--text-tertiary); white-space: nowrap; text-align: right; min-width: 3.4em; }
 
@@ -502,7 +506,7 @@
 .ds-cell { height: var(--hit); position: relative; border-radius: var(--r-sm); font: var(--t-ui); font-variant-numeric: tabular-nums; color: var(--text-secondary); }
 .ds-days .ds-cell { height: 40px; }
 .ds-cell.on { color: var(--ink); font-weight: var(--w-strong); }
-.ds-cell:disabled { color: var(--text-quaternary); }
+.ds-cell:disabled { color: var(--text-disabled); }
 .ds-year:active, .ds-cell:active { background: var(--surface-2); transform: scale(.97); }
 .ds-text { height: var(--hit); font: var(--t-ui); font-weight: var(--w-strong); color: var(--text-secondary); text-align: left; }
 .ds-text:active, .ds-text.is-on { color: var(--ink); }
@@ -607,6 +611,7 @@ html[data-show] .prail { top: var(--s-2); bottom: var(--s-2); }
 .shelf-view-word { display: none; }
 @media (min-width: 640px) { .shelf-view-word { display: inline; } }
 @media (hover: hover) and (pointer: fine) { .shelf-view button:hover:not(.on) { color: var(--text-secondary); } }
+@media (pointer: coarse) { .shelf-view button { height: var(--hit); } }
 
 /* r23 a 44px place to land a finger on the small things, drawn invisibly round them — nothing moves.
    Segment tabs (全部 › 书 番 …), the 全部成就 disclosure, the quiet 「回到首页 ›」 links. */

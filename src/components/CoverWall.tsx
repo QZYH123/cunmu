@@ -6,7 +6,7 @@ import type { Work } from '../data/types';
 import { KIND_ASPECT } from '../data/types';
 import { justifyCached, justifyLead, type Row } from '../lib/justify';
 import { paperVar } from '../lib/hash';
-import { DUR, EASE, TILE_TIP, WALL_CAP_VH, WALL_LEAD, WALL_LITERAL_GAP, WALL_WIDE_SCALE, WALL_INTRO, WALL_PARALLAX, WALL_TIERS, type Breakpoint } from '../tokens';
+import { DUR, EASE, TILE_TIP, TYPE_FLOOR, WALL_CAP_VH, WALL_LEAD, WALL_LITERAL_GAP, WALL_WIDE_SCALE, WALL_INTRO, WALL_PARALLAX, WALL_TIERS, type Breakpoint } from '../tokens';
 import { arrivedByRoute, haptic, inPageFade, markFlight, reduced, useLongPress, withViewTransition } from '../lib/motion';
 import { Preview, WorkPreviewBody } from './Bits';
 import { Cover } from './Cover';
@@ -207,15 +207,15 @@ function WallLiteral({ work, w, h }: { work: Work; w: number; h: number }) {
     return (
       <div className="literal" style={{ background: 'var(--paper-6)' }}>
         <div className="literal-essay-rule" />
-        <div className="literal-essay-title" style={{ fontSize: Math.max(11, big ? w * 0.13 : w * 0.34), textAlign: big ? 'left' : 'center' }}>
+        <div className="literal-essay-title" style={{ fontSize: Math.max(TYPE_FLOOR, big ? w * 0.13 : w * 0.34), textAlign: big ? 'left' : 'center' }}>
           {big ? work.title : work.title.slice(0, 1)}
         </div>
       </div>
     );
   }
-  if (big) return <div className="literal"><div className="literal-title" style={{ fontSize: Math.max(11, w * 0.14) }}>{work.title}</div></div>;
+  if (big) return <div className="literal"><div className="literal-title" style={{ fontSize: Math.max(TYPE_FLOOR, w * 0.14) }}>{work.title}</div></div>;
   const text = mid ? work.title.slice(0, 2) : work.title.slice(0, 1);
-  const fs = Math.max(11, mid ? Math.min(w * 0.3, h * 0.34) : w * 0.42);
+  const fs = Math.max(TYPE_FLOOR, mid ? Math.min(w * 0.3, h * 0.34) : w * 0.42);
   return <div className="literal literal-center" style={{ fontSize: fs }}><span className={mid ? 'vertical' : ''}>{text}</span></div>;
 }
 

@@ -3,13 +3,13 @@
 .mh-main { min-width: 0; }
 .mh-head { }
 .dateline { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 .55em; font: var(--t-caption); letter-spacing: var(--track-caption); color: var(--text-tertiary); }
-.dl-sep { color: var(--text-quaternary); }
+.dl-sep { color: var(--text-tertiary); }
 .dl-n { font: var(--t-serif-caption); color: var(--text-secondary); font-variant-numeric: tabular-nums; letter-spacing: 0; }
 .dl-acc { color: var(--accent); display: inline-flex; align-items: center; gap: var(--s-2); }
 .dl-dot { width: 5px; height: 5px; border-radius: var(--r-full); background: var(--accent); display: inline-block; }
 .dateline.is-round .dl-n { color: var(--accent); text-decoration: underline; text-decoration-thickness: var(--hairline); text-underline-offset: .35em; }
 .mh-name { font: var(--t-masthead); color: var(--ink); margin-top: var(--s-4); text-wrap: balance; overflow-wrap: anywhere; }
-.mh-line { font: var(--t-epigraph); color: var(--text-secondary); margin-top: var(--s-3); text-wrap: pretty; }
+.mh-line { font: var(--t-epigraph); color: var(--text-secondary); margin-top: var(--s-3); text-wrap: pretty; max-width: var(--read-col); }
 .mh-draft { font: var(--t-caption); color: var(--text-tertiary); margin-top: var(--s-5); display: flex; gap: .6em; align-items: center; }
 .mh-draft::before { content: ''; width: 5px; height: 5px; border-radius: var(--r-full); background: var(--text-quaternary); }
 
@@ -21,7 +21,7 @@
 .mh-plate-q { font: var(--t-plate-quote); color: var(--text-reading); text-wrap: pretty; }
 
 /* the paragraph and where it came from */
-.mh-lead { font: var(--t-body); color: var(--text-reading); margin-top: var(--s-9); text-wrap: pretty; }
+.mh-lead { font: var(--t-body); color: var(--text-reading); margin-top: var(--s-9); text-wrap: pretty; max-width: var(--read-col); }
 .mh-lead + .mh-lead { margin-top: var(--s-4); }
 .mh-auto { margin-top: var(--s-3); display: flex; align-items: center; flex-wrap: wrap; gap: 0 var(--s-1); }
 .mh-auto .btn-text { padding: 0 var(--s-1); height: auto; min-height: var(--hit); font: var(--t-caption); color: var(--text-secondary); }

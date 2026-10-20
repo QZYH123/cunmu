@@ -90,6 +90,9 @@
 .mh-photos.n3 .mh-photo:first-child { grid-row: 1 / 3; aspect-ratio: auto; }
 .mh-photo img { width: 100%; height: 100%; object-fit: cover; display: block; filter: var(--cover-filter); }
 .mh-pcap { margin-top: var(--s-3); }
+.mh-photos.more { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: var(--s-3); }
+.mh-photos.more .mh-photo { grid-row: auto; aspect-ratio: 5 / 4; }
+button.mh-pcap { font: var(--t-caption); color: var(--text-tertiary); }
 
 /* 全部, and the seal */
 .mh-all { margin-top: calc(var(--space-h2) + var(--s-6)); padding-top: var(--s-8); border-top: var(--hairline) solid var(--line-1); }

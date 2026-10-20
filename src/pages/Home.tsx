@@ -36,7 +36,7 @@ export default function Home({ onWeread, onBangumi, onAdd }: { onWeread: () => v
   const bgmDone = store.bangumiOn;
   const doubanDone = store.batches.some((b) => b.provider === 'douban_xlsx' && !b.undoneAt);
   const steamDone = !!store.connections.steam;
-  const wantLine = !store.sample.on && !store.importLineOff && !(bgmDone && doubanDone) && library.length > 0 && library.length < IMPORT_LINE_MAX;
+  const wantLine = !store.sample.on && !store.importLineOff && !(bgmDone && doubanDone && steamDone) && library.length > 0 && library.length < IMPORT_LINE_MAX;
   const [lineState, setLineState] = useState<'on' | 'fading' | 'off'>(wantLine ? 'on' : 'off');
   useEffect(() => {
     if (wantLine) { setLineState('on'); return; }
@@ -182,13 +182,15 @@ export default function Home({ onWeread, onBangumi, onAdd }: { onWeread: () => v
   // this year: the month and day; other years, or only the year known (a Bangumi import this year): the year (r9: was a bare 「约」)
   const yearOf = (w: Work) => `${w.date?.approx ? '约 ' : ''}${w.finished.slice(0, 4)}`;
   const recentDate = (w: Work) => (!w.finished ? '' : (w.finished.startsWith(thisYear) && fmtMD(w.finished)) || yearOf(w));
+  const importBits = [
+    !bgmDone && <button key="bgm" type="button" className="btn-text quiet" onClick={onBangumi}>从 Bangumi 搬</button>,
+    !doubanDone && <button key="douban" type="button" className="btn-text quiet" onClick={() => sheets.douban()}>导入豆瓣备份</button>,
+    !steamDone && <button key="steam" type="button" className="btn-text quiet" onClick={() => sheets.steam()}>从 Steam 搬游戏</button>,
+  ].filter(Boolean);
   const importLine = lineState !== 'off' && (
     <p className={`home-import t-small c-3 ${lineState === 'fading' ? 'is-fading' : ''}`}>
       <span>看过的也能一次带进来：</span>
-      {!bgmDone && <button className="btn-text quiet" onClick={onBangumi}>从 Bangumi 搬</button>}
-      {!bgmDone && !doubanDone && <span aria-hidden>·</span>}
-      {!doubanDone && <button className="btn-text quiet" onClick={() => sheets.douban()}>导入豆瓣备份</button>}
-      {!steamDone && <><span aria-hidden>·</span><button className="btn-text quiet" onClick={() => sheets.steam()}>从 Steam 搬游戏</button></>}
+      {importBits.map((node, i) => <span key={i}>{i > 0 && <span aria-hidden>·</span>}{node}</span>)}
       <button className="btn-text quiet home-import-off" onClick={store.hideImportLine}>不用了</button>
     </p>
   );

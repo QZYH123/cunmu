@@ -130,7 +130,13 @@ export default function MeHome() {
   }, [d, me, favs, works, show]);
 
   const essays = view.visible.filter((w) => w.kind === 'essay');
-  const photos = useMemo(() => view.visible.flatMap((w) => (w.images ?? []).map((im) => ({ im, w }))).sort((a, b) => (a.im.addedAt < b.im.addedAt ? 1 : -1)), [view.visible]);
+  const photos = useMemo(() => view.visible.flatMap((w) => {
+    const shots = (w.images ?? []).map((im) => ({ im, w }));
+    if (w.kind === 'essay' && w.cover?.medium && !shots.some((s) => s.im.src === w.cover!.medium)) {
+      shots.push({ im: { id: `cover-${w.id}`, src: w.cover.medium, aspect: w.cover.aspect, addedAt: w.finished || w.collected }, w });
+    }
+    return shots;
+  }).sort((a, b) => (a.im.addedAt < b.im.addedAt ? 1 : -1)), [view.visible]);
   const firstWork = useMemo(() => works.filter((w) => w.finished).reduce<Work | null>((a, w) => (!a || w.finished < a.finished ? w : a), null), [works]);
   const people = useMemo(() => oftenMet(works, 3, (n) => d.persons.has(personId(n))), [works, d]);
 
@@ -321,7 +327,11 @@ function Periods({ list, works, today }: { list: Period[]; works: Work[]; today:
 
 function Writing({ essays, photos }: { essays: Work[]; photos: { im: { id: string; src: string; aspect: number; addedAt: string }; w: Work }[] }) {
   const { me, show } = useStore();
+  const [rest, setRest] = useState(false);
   if (!essays.length && !photos.length) return null;
+  const extra = photos.slice(3);
+  const sameWork = extra.length > 0 && extra.every((p) => p.w.id === extra[0].w.id);
+  const photoTo = (w: Work) => (w.kind === 'essay' ? `/essay/${w.id}` : `/entry/${w.id}`);
   return (
     <section className="mh-sec" aria-labelledby="mh-writ">
       <div className="section-head mh-sec-head"><h2 id="mh-writ" className="t-h2">写过的、拍过的</h2>{!show && essays.length > 0 && <Link to="/writing" className="btn-text quiet mh-sec-act">全部随笔 ›</Link>}</div>
@@ -341,7 +351,18 @@ function Writing({ essays, photos }: { essays: Work[]; photos: { im: { id: strin
           ))}
         </div>
       )}
-      {photos.length > 3 && <p className="t-caption c-3 mh-pcap">另外 {photos.length - 3} 张</p>}
+      {rest && extra.length > 0 && (
+        <div className="mh-photos more">
+          {extra.map(({ im, w }) => (
+            <Link key={im.id} to={photoTo(w)} className="mh-photo" aria-label={w.title}>
+              <img src={im.src} alt="" loading="lazy" decoding="async" />
+            </Link>
+          ))}
+        </div>
+      )}
+      {photos.length > 3 && !rest && (sameWork
+        ? <Link to={photoTo(extra[0].w)} className="t-caption c-3 mh-pcap">另外 {photos.length - 3} 张</Link>
+        : <button type="button" className="btn-text quiet mh-pcap" onClick={() => setRest(true)}>另外 {photos.length - 3} 张</button>)}
     </section>
   );
 }
@@ -354,14 +375,16 @@ function ImportLine() {
   const doubanDone = store.batches.some((b) => b.provider === 'douban_xlsx' && !b.undoneAt);
   const steamDone = !!store.connections.steam;
   const own = store.library.filter((w) => !w.isSample).length;
-  if (store.sample.on || store.importLineOff || (bgmDone && doubanDone) || !own || own >= IMPORT_LINE_MAX) return null;
+  if (store.sample.on || store.importLineOff || (bgmDone && doubanDone && steamDone) || !own || own >= IMPORT_LINE_MAX) return null;
+  const bits = [
+    !bgmDone && <button key="bgm" type="button" className="btn-text quiet" onClick={() => sheets.bangumi()}>从 Bangumi 搬</button>,
+    !doubanDone && <button key="douban" type="button" className="btn-text quiet" onClick={() => sheets.douban()}>导入豆瓣备份</button>,
+    !steamDone && <button key="steam" type="button" className="btn-text quiet" onClick={() => sheets.steam()}>从 Steam 搬游戏</button>,
+  ].filter(Boolean);
   return (
     <p className="home-import mh-import t-small c-3">
       <span>看过的也能一次带进来：</span>
-      {!bgmDone && <button className="btn-text quiet" onClick={() => sheets.bangumi()}>从 Bangumi 搬</button>}
-      {!bgmDone && !doubanDone && <span aria-hidden>·</span>}
-      {!doubanDone && <button className="btn-text quiet" onClick={() => sheets.douban()}>导入豆瓣备份</button>}
-      {!steamDone && <><span aria-hidden>·</span><button className="btn-text quiet" onClick={() => sheets.steam()}>从 Steam 搬游戏</button></>}
+      {bits.map((node, i) => <span key={i}>{i > 0 && <span aria-hidden>·</span>}{node}</span>)}
       <button className="btn-text quiet home-import-off" onClick={store.hideImportLine}>不用了</button>
     </p>
   );

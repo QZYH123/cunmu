@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useStore } from '../data/store';
 import { fmtNum, listDate } from '../data/derive';
@@ -10,6 +10,7 @@ import { staggerStyle, useEnterClass } from '../lib/motion';
 import { YearShelves } from '../components/YearShelves';
 import { ShelfViewToggle } from '../components/ShelfView';
 import { useSectionSpy } from './Entry';
+import { capped, INDEX_PEOPLE_CAP, INDEX_WORK_CAP } from '../data/lists';
 
 type Tab = 'people' | 'periods' | 'interests';
 
@@ -23,6 +24,11 @@ export default function IndexPage() {
   const people = useMemo(() => [...d.persons.values()].sort((a, b) => b.works.length - a.works.length || a.name.localeCompare(b.name, 'zh')), [d]);
   const interests = useMemo(() => [...d.interests.entries()].sort((a, b) => b[1].length - a[1].length), [d]);
   const g = q.get('g');
+  const [peopleOpen, setPeopleOpen] = useState(false);
+  const [openWorks, setOpenWorks] = useState<string | null>(null);
+  const peopleView = capped(people, INDEX_PEOPLE_CAP, peopleOpen);
+  const interestWorks = d.interests.get(g ?? '') ?? [];
+  const worksView = capped(interestWorks, INDEX_WORK_CAP, openWorks === g);
   const desk = isDesk(useBreakpoint());
   // r23 an empty library: one quiet line per tab saying what will be here (never 「暂无」)
   const hint = tab === 'people' ? (people.length ? '' : '放进作品以后，作者、导演这些人会排在这里。')
@@ -51,8 +57,9 @@ export default function IndexPage() {
           {hint && <p className="t-small c-3 quiet-hint">{hint}</p>}
           {tab === 'people' && (
             // desktop: three card-free columns — photo, name, count (§8.3.7)
+            <>
             <div className={desk ? 'index-cols' : undefined}>
-              {people.slice(0, 400).map((p, i) => (
+              {peopleView.shown.map((p, i) => (
                 <Link key={p.id} to={`/person/${p.id}`} className="list-row person-row" style={staggerStyle(i)}>
                   <Avatar name={p.name} size={40} />
                   <div className="list-main">
@@ -63,6 +70,8 @@ export default function IndexPage() {
                 </Link>
               ))}
             </div>
+            {peopleView.rest > 0 && <button type="button" className="btn-text quiet index-more" onClick={() => setPeopleOpen(true)}>还有 {fmtNum(peopleView.rest)} 人</button>}
+            </>
           )}
           {tab === 'periods' && <YearShelves />}
           {tab === 'interests' && !g && (
@@ -80,8 +89,9 @@ export default function IndexPage() {
           )}
           {tab === 'interests' && g && (
             <div>
-              <h2 className="group-head"><span className="t-h2">{g}</span><span className="t-caption c-3">{d.interests.get(g)?.length ?? 0}</span></h2>
-              {(d.interests.get(g) ?? []).slice(0, 200).map((w, i) => <ListRow key={w.id} work={w} index={i} date={listDate(w)} />)}
+              <h2 className="group-head"><span className="t-h2">{g}</span><span className="t-caption c-3">{interestWorks.length}</span></h2>
+              {worksView.shown.map((w, i) => <ListRow key={w.id} work={w} index={i} date={listDate(w)} />)}
+              {worksView.rest > 0 && <button type="button" className="btn-text quiet index-more" onClick={() => setOpenWorks(g)}>还有 {fmtNum(worksView.rest)} 条</button>}
             </div>
           )}
         </div>

@@ -91,8 +91,8 @@ export function YearPager({ year }: { year: number }) {
       if (e.metaKey || e.ctrlKey || e.altKey || e.defaultPrevented) return;
       const t = e.target as HTMLElement;
       if (t.closest('input, textarea, [contenteditable], [role="dialog"], .tile, [role="slider"]')) return;
-      if (e.key === 'ArrowLeft' && prev) { e.preventDefault(); nav(`/year/${prev}`, { replace: true }); }
-      if (e.key === 'ArrowRight' && next) { e.preventDefault(); nav(`/year/${next}`, { replace: true }); }
+      if (e.key === 'ArrowLeft' && prev) { e.preventDefault(); nav(`/year/${prev}`); }
+      if (e.key === 'ArrowRight' && next) { e.preventDefault(); nav(`/year/${next}`); }
     };
     window.addEventListener('keydown', f);
     return () => window.removeEventListener('keydown', f);
@@ -101,7 +101,7 @@ export function YearPager({ year }: { year: number }) {
   const cell = (y: number | undefined, label: string, side: 'prev' | 'next') => (y === undefined
     ? <span className={`pager-cell ${side}`} />
     : (
-      <Link to={`/year/${y}`} replace className={`pager-cell ${side}`} aria-keyshortcuts={side === 'prev' ? 'ArrowLeft' : 'ArrowRight'}>
+      <Link to={`/year/${y}`} className={`pager-cell ${side}`} aria-keyshortcuts={side === 'prev' ? 'ArrowLeft' : 'ArrowRight'}>
         <span className="t-label c-3">{label}</span>
         <span className="pager-num">{y}</span>
         <MiniRow works={d.years.get(y)!.works} h={SHELF.mini.pager} align={side === 'next' ? 'end' : 'start'} className="pager-row" />

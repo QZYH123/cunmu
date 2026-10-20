@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import { useStore } from '../data/store';
@@ -56,7 +55,6 @@ export default function Year() {
   const { h1, h1Gone } = useSectionSpy([y, m]);
   const bp = useBreakpoint();
   const desk = isDesk(bp);
-  const [closed, setClosed] = useState<Set<number>>(new Set());
   const year = Number(y);
   const month = m ? Number(m) : undefined;
   const yi = d.years.get(year);
@@ -194,7 +192,6 @@ export default function Year() {
                 const list = byMonth.get(mo)!;
                 const gap = i > 0 && months[i - 1] - mo > 1;
                 const entry = list.length >= settings.monthEntry;
-                const isClosed = closed.has(mo);
                 const head = (
                   <>
                     <span className="t-h3">{cnMonth(mo)}</span>
@@ -205,9 +202,8 @@ export default function Year() {
                   <section key={mo} className={`tl-month ${gap ? 'after-gap' : ''}`}>
                     {entry
                       ? <Link to={`/year/${year}/${mo}`} className="tl-month-head">{head}</Link>
-                      : <button className="tl-month-head" onClick={() => setClosed((s) => { const n = new Set(s); n.has(mo) ? n.delete(mo) : n.add(mo); return n; })}>{head}</button>}
-
-                    {!isClosed && <div className="tl-items">{list.map((w) => <TimelineItem key={w.id} w={w} />)}</div>}
+                      : <div className="tl-month-head">{head}</div>}
+                    <div className="tl-items">{list.map((w) => <TimelineItem key={w.id} w={w} />)}</div>
                   </section>
                 );
               }).concat(loose.length ? [

@@ -6,7 +6,8 @@ import { Search } from 'lucide-react';
 import { useStore } from '../data/store';
 import type { Kind, Work } from '../data/types';
 import { KIND_LABEL, KIND_ORDER } from '../data/types';
-import { creatorLine, whenOf } from '../data/derive';
+import { creatorLine } from '../data/derive';
+import { ADD_BLANK, SEARCH_EMPTY, searchMeta, worksMatching } from '../lib/searchText';
 import { Avatar, Cover, thumbSize } from './Cover';
 import { HERO } from './CoverWall';
 import { afterAnimations, markFlight, reduced, withViewTransition } from '../lib/motion';
@@ -33,11 +34,10 @@ export function searchStateOf(loc: { search: string; state: unknown }): SearchSt
 /** Per-group cap before 「展开其余 N 条」 (UX r1: results used to stop at 40 with counts that looked complete). */
 export const GROUP_CAP = 6;
 
-/** Search over titles (and original titles), core creators, people, interests and years. */
+/** Search over titles (and original titles), every credit, people, interests and years. */
 export function searchLibrary(term: string, library: Work[], d: ReturnType<typeof useStore>['d']) {
   const t = term.trim().toLowerCase();
-  const works = library.filter((w) => w.title.toLowerCase().includes(t) || w.originalTitle?.toLowerCase().includes(t)
-    || w.credits.some((c) => c.core && c.name.toLowerCase().includes(t)));
+  const works = worksMatching(t, library);
   const people = [...d.persons.values()].filter((p) => p.name.toLowerCase().includes(t)).sort((a, b) => b.works.length - a.works.length);
   const interests = [...d.interests.entries()].filter(([g]) => g.toLowerCase().includes(t)).sort((a, b) => b[1].length - a[1].length);
   const years = [...d.years.keys()].filter((y) => String(y).includes(t));
@@ -67,7 +67,7 @@ export function useSearchHits(term: string, expanded: Set<string> = new Set()): 
       ...capped('人物', r.people, (p) => ({ key: p.id, group: '人物', to: `/person/${p.id}`, label: p.name, meta: `${p.roles[0]} · ${p.works.length} 部`, person: p.name })),
       ...KIND_ORDER.flatMap((k: Kind) => capped(KIND_LABEL[k], r.works.filter((w) => w.kind === k), (w) => ({
         key: w.id, group: KIND_LABEL[k], to: k === 'essay' ? `/essay/${w.id}` : `/entry/${w.id}`, label: w.title,
-        meta: [creatorLine(w), w.finished && whenOf(w, 'year')].filter(Boolean).join(' · '), work: w,
+        meta: searchMeta(w, t), work: w,
       }))),
       ...capped('兴趣', r.interests, ([g, ws]) => ({ key: `g-${g}`, group: '兴趣', to: `/index/interests?g=${encodeURIComponent(g)}`, label: g, meta: `${ws.length} 条`, interest: true })),
       ...r.years.map((y) => ({ key: `y${y}`, group: '年份', to: `/year/${y}`, label: String(y), meta: `${d.years.get(y)!.works.length} 条` })),
@@ -91,7 +91,7 @@ function Hl({ text, q }: { text: string; q: string }) {
  * ⌘/Ctrl-Enter opens in a new tab, Esc closes. Focus stays in the input (aria-activedescendant).
  */
 export function PalettePanel({ inline, onClose, onAdd, onHelp, start, onState }: {
-  inline?: boolean; onClose?: (now?: boolean) => void; onAdd?: (t: string) => void; onHelp?: () => void;
+  inline?: boolean; onClose?: (now?: boolean) => void; onAdd?: () => void; onHelp?: () => void;
   /** where a search left off (搜索 on desktop, coming back from what it opened) */
   start?: SearchState; onState?: (s: SearchState) => void;
 }) {
@@ -180,8 +180,8 @@ export function PalettePanel({ inline, onClose, onAdd, onHelp, start, onState }:
         })}
         {empty && (
           <div className="palette-none">
-            <p className="t-ui c-2">这里没有「{term}」</p>
-            {onAdd && <button className="btn-text" onClick={() => onAdd(term)}>收录《{term}》</button>}
+            <p className="t-ui c-2">{SEARCH_EMPTY}</p>
+            {onAdd && <button className="btn-text" onClick={() => onAdd()}>{ADD_BLANK}</button>}
           </div>
         )}
       </div>
@@ -205,7 +205,7 @@ export const usePalette = () => useContext(Ctx);
 
 const isTyping = (t: EventTarget | null) => t instanceof HTMLElement && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
 
-export function PaletteProvider({ children, onAdd }: { children: ReactNode; onAdd: (q?: string) => void }) {
+export function PaletteProvider({ children, onAdd }: { children: ReactNode; onAdd?: () => void }) {
   const [open, setOpen] = useState(false);
   const [closing, setClosing] = useState(false);
   const back = useRef<HTMLElement | null>(null);
@@ -226,6 +226,9 @@ export function PaletteProvider({ children, onAdd }: { children: ReactNode; onAd
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
       const cmdK = (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k';
+      // a sheet, a preview or a menu already has the keyboard. The palette itself is not one of these,
+      // so `/` still closes it. Shortcut help is a sheet, and `/` must not open search over it.
+      if (e.key === '/' && typeof document !== 'undefined' && document.querySelector('.sheet, .preview-layer, .menu')) return;
       if (cmdK || (e.key === '/' && !isTyping(e.target) && !e.metaKey && !e.ctrlKey && !e.altKey)) {
         e.preventDefault();
         if (open) close(); else show();
@@ -241,7 +244,7 @@ export function PaletteProvider({ children, onAdd }: { children: ReactNode; onAd
         <div className={`palette-scrim ${closing ? 'closing' : ''}`} onPointerDown={(e) => { if (e.target === e.currentTarget) close(); }}>
           <PalettePanel
             onClose={close}
-            onAdd={(t) => { close(true); onAdd(t); }}
+            onAdd={onAdd && (() => { close(true); onAdd(); })}
             // close at once (no delayed focus return to steal focus from the help); hand the opener back
             // first so the help returns focus there when it closes
             onHelp={() => { close(true); back.current?.focus?.({ preventScroll: true }); openShortcutHelp(); }}

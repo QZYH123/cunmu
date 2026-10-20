@@ -53,13 +53,19 @@ export function goBack(nav: ReturnType<typeof useNavigate>) {
 /** 首页 is 「我」 once there is something of yours; before that (and in the sample) the start with its imports */
 export const homeIsWall = (s: { library: unknown[]; sample: { on: boolean } }) => !s.library.length || s.sample.on;
 
-/** which place a path belongs to: 首页 (「我」 and its interests and periods), 随笔 (the list and the editor), 全部 (everything else you browse) */
-export function placeOf(p: string): 'home' | 'all' | 'index' | 'writing' | 'search' | 'settings' | 'other' {
+/** which place a path belongs to: 首页 (「我」 and its interests and periods), 随笔 (the list, an essay, and its editor), 全部 (everything else you browse).
+ *  `/write?for=` is a note on a work, so it stays with 全部. */
+export function placeOf(p: string, search = ''): 'home' | 'all' | 'index' | 'writing' | 'search' | 'settings' | 'other' {
   if (p === '/' || p.startsWith('/interest') || p.startsWith('/period')) return 'home';
   if (p.startsWith('/index')) return 'index';
   if (p.startsWith('/search')) return 'search';
   if (p.startsWith('/settings') || p.startsWith('/me')) return 'settings';
-  if (p.startsWith('/write') || p.startsWith('/writing')) return 'writing';
+  if (p.startsWith('/essay') || p.startsWith('/writing')) return 'writing';
+  if (p === '/write' || p.startsWith('/write/')) {
+    const q = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search);
+    if (q.has('for')) return 'all';
+    return 'writing';
+  }
   return 'all';
 }
 
@@ -76,7 +82,7 @@ export function DesktopBar({ onPlus, onShow }: { onPlus: () => void; onShow?: ()
   const store = useStore();
   const palette = usePalette();
   const p = loc.pathname;
-  const place = placeOf(p);
+  const place = placeOf(p, loc.search);
   const onHome = place === 'home', onAll = place === 'all', onIndex = place === 'index', onWriting = place === 'writing';
   const wall = p === '/all' || (p === '/' && homeIsWall(store));
   const [menu, setMenu] = useState<DOMRect | null>(null);
@@ -145,7 +151,7 @@ function SectionTicker({ text }: { text: string }) {
 /** 首页 · 全部 · ＋ · 随笔 · 搜索 (CONCEPT v1, 随笔 r27); 设置 is under 首页's ··· */
 export function TabBar({ onPlus }: { onPlus: () => void }) {
   const loc = useLocation();
-  const place = placeOf(loc.pathname);
+  const place = placeOf(loc.pathname, loc.search);
   const home = place === 'home', all = place === 'all' || place === 'index', writing = place === 'writing', search = loc.pathname === '/search';
   return (
     // r5 #9: words, not glyphs — a running footer in the serif; the ink ＋ stays the one primary action

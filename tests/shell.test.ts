@@ -54,5 +54,9 @@ test('places: 随笔 and its editor are their own place in the navigation', asyn
   const { placeOf } = await import('../src/components/Shell');
   assert.equal(placeOf('/writing'), 'writing');
   assert.equal(placeOf('/write'), 'writing');
+  assert.equal(placeOf('/write', '?id=e1'), 'writing');
+  assert.equal(placeOf('/essay'), 'writing');
+  assert.equal(placeOf('/essay/e1'), 'writing');
+  assert.equal(placeOf('/write', '?for=w1'), 'all');
   assert.equal(placeOf('/all'), 'all');
 });

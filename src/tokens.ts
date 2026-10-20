@@ -53,10 +53,10 @@ export const RAIL = { labelGap: 18, thumbMin: 12, gutter: 64 } as const;
 /** 索引 · 年份 (r6 spines / r7 covers). Spines — `h`: the tallest per breakpoint; each kind stands at a share of
  *  it (`stand`, [low, high] picked by id hash, so books vary most and boxed media barely). `w`: a base width per
  *  kind (desktop px) + up to `thick` for substance (pages, episodes, reading hours) + up to `jitter` by hash;
- *  the phone multiplies by `phone`, never below `minW`; `gap` between spines. Covers — `coverH` per breakpoint,
+ *  the phone multiplies by `phone`, never below `minW` (18, so a 12px title still fits beside `padX`); `gap` between spines. Covers — `coverH` per breakpoint,
  *  `coverGap` between them. Both rows run in the year's own order and scroll sideways: `ahead` widths are
  *  rendered past what has been seen, a 「‹ ›」 step moves `step` of the width. `endBare` is the
- *  air kept after the last spine (r18: no bookend stroke there; it read as a stray line). `fs` mirrors the spine title size in tokens.css (--t-spine-row); `pad` the paper above and below it.
+ *  air kept after the last spine (r18: no bookend stroke there; it read as a stray line). `fs` mirrors --t-spine-row (12); `pad` the paper above and below it.
  *  r8 `flip`: a pointed spine turns in place to show its cover (`faceAspect` clamps the cover's width at the
  *  spine's height) and the spines after it slide over: `ms` for the turn, a pointer rests `dwell` (a keyboard
  *  `keyDwell`) before it starts — moving faster than `slow` px/ms starts the wait over — so a sweep along a
@@ -68,19 +68,23 @@ export const RAIL = { labelGap: 18, thumbMin: 12, gutter: 64 } as const;
  *  `bandPad` more paper above and below a banded title. `wait` is how long a row holds back for its colours
  *  on a first visit. `mini`: the small rows (home 年份, a year's foot, 我) —
  *  a spine at `k` of its width (≥ `minW`), heights per place. */
+/** Auxiliary type floor in px. CSS mirrors it on --t-micro, --t-spine-row, --t-spine-sans and --t-spine-mark. */
+export const TYPE_FLOOR = 12;
+
 export const SHELF = {
   h: { phone: 116, tablet: 128, desktop: 136, wide: 144 },
   stand: { book: [0.9, 1], anime: [0.93, 0.95], film: [0.89, 0.91], game: [0.85, 0.87], music: [0.76, 0.78], essay: [0.81, 0.84] },
   w: { book: 21, anime: 20, film: 17, music: 17, game: 21, essay: 17 },
-  thick: 6, jitter: 3, phone: 0.9, minW: 16, gap: 2, endBare: 12,
+  thick: 6, jitter: 3, phone: 0.9, minW: 18, gap: 2, endBare: 12,
   /** r19 封面 as a grid: each cover's width per breakpoint (its height follows its own shape) */
   grid: { phone: 92, tablet: 108, desktop: 116, wide: 124 },
   coverH: { phone: 56, tablet: 60, desktop: 56, wide: 60 }, coverGap: 4,
   ahead: 1.5, step: 0.8,
-  fs: { phone: 11, desk: 12 }, pad: { top: 10, bottom: 8 },
+  fs: { phone: TYPE_FLOOR, desk: TYPE_FLOOR }, pad: { top: 10, bottom: 8 },
   /** r17 titles: the size gives between these before a title takes two columns; a spine grows to `maxW` for
-   *  a second column (a subtitle beside the name, or a long title balanced in two); `padX` each side */
-  title: { fsMax: { phone: 12, desk: 13 }, fsMin: 11, maxW: { phone: 30, desk: 32 }, padX: 3, colGap: 2, step: 0.5 },
+   *  a second column (a subtitle beside the name, or a long title balanced in two); `padX` each side.
+   *  `fsMin` is the auxiliary floor — a title that cannot fit fades, it does not go under 12px. */
+  title: { fsMax: { phone: TYPE_FLOOR, desk: 13 }, fsMin: TYPE_FLOOR, maxW: { phone: 30, desk: 32 }, padX: 3, colGap: 2, step: 0.5 },
   faceAspect: [0.62, 1.05], wait: 450,
   flip: { ms: 420, dwell: 140, keyDwell: 60, slow: 0.15, margin: 12, fade: 56, fadeStart: 40, selfScroll: 900 },
   look: { book: { bands: 22, plate: 18 }, case: { bands: 0, plate: 0 }, music: { bands: 10, plate: 0 }, plateMinW: 19, plateMinWPhone: 17, plateMax: 7, bandPad: 7 },

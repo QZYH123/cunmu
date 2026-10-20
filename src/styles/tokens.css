@@ -15,7 +15,10 @@
   /* color – light */
   --bg:#F8F7F5; --surface-1:#FFFFFF; --surface-2:#F0EFEC; --surface-3:#E7E5E1;
   --ink:#141413; --text-reading:#1E1D1B; --text-secondary:#5F5D59;
-  --text-tertiary:#6E6C68;   /* r9: 4.5:1 on bg and every surface (was #8C8A86, 3.2:1) */ --text-quaternary:#B5B3AF; --on-ink:#F8F7F5;
+  /* tertiary sits one step under secondary; quaternary is the quietest text that still holds 4.5:1
+     on bg, white and surface-2 (surface-3 is the switch track, not a text ground). Disabled stays
+     quieter — WCAG exempts it — so a day you cannot pick still looks unavailable. */
+  --text-tertiary:#676562; --text-quaternary:#6E6C68; --text-disabled:#B5B3AF; --on-ink:#F8F7F5;
   --line-1:rgba(20,19,18,.07); --line-2:rgba(20,19,18,.11);
   --line-3:rgba(20,19,18,.16); --line-inner:rgba(20,19,18,.05);
   --link:#2F5F86; --accent:#C4432B; --danger:#B3261E;
@@ -53,9 +56,9 @@
   --t-plate-quote:400 0.9375rem/1.625rem var(--font-serif);   /* 15/26: the line under 首页's picture */            /* 16/30 */
   --t-ui:400 0.9375rem/1.375rem var(--font-sans);           /* 15/22 */
   --t-small:400 0.875rem/1.375rem var(--font-sans);         /* 14/22 */
-  --t-caption:400 0.78125rem/1.125rem var(--font-sans);     /* 12.5/18 */
-  --t-label:500 0.75rem/1rem var(--font-sans);              /* 12/16 */
-  --t-micro:500 0.6875rem/0.875rem var(--font-sans);        /* 11/14 */
+  --t-caption:400 0.78125rem/1.25rem var(--font-sans);      /* 12.5/20 */
+  --t-label:500 0.75rem/1.125rem var(--font-sans);          /* 12/18 */
+  --t-micro:500 0.75rem/1rem var(--font-sans);              /* 12/16 */
   --t-numeral-pager:500 2.25rem/2.5rem var(--font-serif);  /* r5 year pager 36/40 */
   --t-tab:500 0.9375rem/1.25rem var(--font-serif);          /* r5 #9 tab bar words 15/20 */
   --track-numeral:-0.02em; --track-display:-0.005em;
@@ -69,9 +72,9 @@
   --t-year-pick:500 1.25rem/1 var(--font-serif);            /* 日期点选的年份 20/500 (v0.4 §3.14.2) */
   --t-approx:400 0.875rem/1 var(--font-sans);               /* 信息条里的「约」 14/400 (v0.4 §3.14.1) */
   --t-spine:600 0.8125rem/1rem var(--font-serif);           /* 书脊书名 13 */
-  --t-spine-row:600 0.6875rem/1 var(--font-serif);          /* 索引 · 年份 spine titles: phone 11, desktop 12 (SHELF.fs) */
+  --t-spine-row:600 0.75rem/1 var(--font-serif);            /* 索引 · 年份 spine titles: 12 (SHELF.title.fsMin) */
   --t-preview-title:600 1.0625rem/1.5rem var(--font-serif); /* 预览卡条目名 17/600 */
-  --t-serif-caption:500 0.78125rem/1.125rem var(--font-serif);
+  --t-serif-caption:500 0.78125rem/1.25rem var(--font-serif); /* 12.5/20 */
   --t-mono:400 0.9375rem/1.375rem var(--font-mono);         /* key input 15 */
   --t-mono-caption:400 0.78125rem/1.125rem var(--font-mono);
   --t-mention:600 1rem/1.5rem var(--font-serif);            /* 被提到 title 16/600 */
@@ -87,7 +90,7 @@
   --space-h2:40px;                       /* space above section h2: 40 / 48 / 56 / 64 */
   --tabbar-w:100%;                       /* tablet: ≤ 480, centred */
   --overlay-w:100%;                      /* sheets, toasts, dev pill on phone */
-  --desk-bar:56px; --desk-search-w:420px; --desk-search-h:36px; --desk-pill-h:36px; --desk-pill-x:14px;
+  --desk-bar:56px; --desk-search-w:420px; --desk-search-h:40px; --desk-pill-h:40px; --desk-pill-x:14px;
   --desk-avatar:28px; --kbd-h:20px; --kbd-key-h:18px;   /* single-key cap (the ? in the search panel's foot) */
   --wall-cap:56vh;                       /* home wall height cap: 56 / 60 / 64 / 64 vh (§7.2-1) */
   --masthead-gap:20px;                   /* wall edge → masthead: 20 phone · 32 desktop (the wall ends crisp, see --wall-fade) */
@@ -116,7 +119,7 @@
   --slider-track:2px; --slider-thumb:24px; --slider-thumb-hover:26px; --slider-thumb-active:28px;
   --sheet-handle-w:36px; --sheet-handle-h:4px;
   --seal:16px; --rule-quote:2px; --rule-tab:1.5px; --hairline:1px;
-  --rail-gutter:64px; --rail-hit:32px; --rail-strip:64px; --rail-tick:6px; --rail-thumb:3px;   /* r5 year rail */
+  --rail-gutter:64px; --rail-strip:64px; --rail-tick:6px; --rail-thumb:3px;   /* r5 year rail; the scroll rail sets --rail-hit */
   --press-dim:.8; --pager-gap:24px;   /* r5 year pager */
   /* r6 索引 · 年份 rows of spines: the two inks a spine title takes (on its own colour, in either theme),
      the row rhythm, the label columns (desktop), how far a pointed spine comes out of the row */
@@ -150,22 +153,22 @@
   --spine-foil:oklch(.87 .07 85);
   --sh-spine-frame:inset 0 0 0 1px color-mix(in srgb,currentColor 62%,transparent);
   --r-case:3px;
-  --t-spine-sans:600 0.6875rem/1 var(--font-sans);
-  --t-spine-mark:600 0.6875rem/1 var(--font-sans);
+  --t-spine-sans:600 0.75rem/1 var(--font-sans);             /* 12: platform / year marks on a spine */
+  --t-spine-mark:600 0.75rem/1 var(--font-sans);
   /* r7: rows that scroll sideways — room for a ring at the edges, the fade where a row runs on, the 「‹ ›」 */
   /* r17 scrolling: a row's rail (a hairline and a short thumb, shown while the row is in use) and the page's
      own bar on a mouse-driven screen — thin, no track, a thumb in the ink at a low strength */
-  --rail-hit:14px; --rail-hit-line:6px; --prail-hit:20px; --shelf-view-h:28px; --steam-icon:32px; --steam-bar-w:220px; --steam-bar-h:3px; --steam-locked:.55; --rail-thumb:2px; --rail-thumb-active:3px; --rail-thumb-ink:var(--text-tertiary); --rail-thumb-ink-active:var(--text-secondary);
+  --rail-hit:24px; --rail-hit-line:6px; --prail-hit:24px; --shelf-view-h:36px; --steam-icon:32px; --steam-bar-w:220px; --steam-bar-h:3px; --steam-locked:.55; --rail-thumb:2px; --rail-thumb-active:3px; --rail-thumb-ink:var(--text-tertiary); --rail-thumb-ink-active:var(--text-secondary);
   --scrollbar-w:8px; --scrollbar-thumb:color-mix(in srgb,var(--ink) 22%,transparent); --scrollbar-thumb-active:color-mix(in srgb,var(--ink) 40%,transparent);
   --spine-col-gap:2px; --fade-col:linear-gradient(to bottom,#000 calc(100% - 1.75em),transparent);   /* r17: two title columns; a title's end fading out */
-  --yshelf-bleed:3px; --yscroll-size:28px; --yscroll-off:.3; --cover-lift:-2px; --yrow-cover-pad:var(--s-5);
+  --yshelf-bleed:3px; --yscroll-size:36px; --yscroll-off:.3; --cover-lift:-2px; --yrow-cover-pad:var(--s-5);
   --fade-row-end:linear-gradient(to right, #000 calc(100% - var(--s-10)), transparent);
   --fade-row-start:linear-gradient(to right, transparent, #000 var(--s-9));
   --fade-row-both:linear-gradient(to right, transparent, #000 var(--s-9), #000 calc(100% - var(--s-10)), transparent);
   --side-year-name:52px; --side-year-n:28px;
   --sh-spine-paper:inset 0 0 0 var(--hairline) var(--line-2),var(--sh-spine-foot);   /* a paper spine keeps its edge on paper (and at night) */
   --note-w:480px; --note-rule:24px; --underline-offset:3px; --removed-o:.4;   /* r5: 页脚注, underlined text actions, 移出 in place */
-  --preview-max:340px; --keys-w:760px;   /* ? 快捷键说明, two columns */ --rail-w:20px;
+  --preview-max:340px; --keys-w:760px;   /* ? 快捷键说明, two columns */ --rail-w:32px;
 
   /* radius */
   --r-object:3px; --r-xs:6px; --r-sm:10px; --r-md:12px; --r-lg:16px; --r-full:999px;
@@ -274,7 +277,7 @@
   /* S7 墨夜 (§7.8): a desk at night with one lamp — deeper paper, brighter covers, lit surface edges */
   --bg:#0F0F0E; --surface-1:#181816; --surface-2:#1F1F1D; --surface-3:#2A2927;
   --ink:#ECEBE6; --text-reading:#DAD8D4;   /* §7.8 asks #EDEBE6 / #DAD7D1; nudged to keep rule 1 (spread ≤ 6) */ --text-secondary:#A6A4A0;
-  --text-tertiary:#8A8884;   /* r9: 4.5:1 on the sheets too (was #7F7D79) */ --text-quaternary:#575652; --on-ink:#121211;
+  --text-tertiary:#94928E; --text-quaternary:#8A8884; --text-disabled:#575652; --on-ink:#121211;
   --line-1:rgba(243,242,239,.08); --line-2:rgba(243,242,239,.12);
   --line-3:rgba(243,242,239,.17); --line-inner:rgba(243,242,239,.06);
   --link:#93B7D6; --accent:#E2735A; --danger:#F2726A;
@@ -364,7 +367,7 @@
     --t-display:600 2.125rem/2.75rem var(--font-serif);     /* 34/44 */
     --t-h2:600 1.375rem/2rem var(--font-serif);             /* 22/32 */
     --t-body:400 1.0625rem/1.9375rem var(--font-sans);      /* 17/31 */
-    --t-caption:400 0.8125rem/1.125rem var(--font-sans);    /* 13/18 */
+    --t-caption:400 0.8125rem/1.25rem var(--font-sans);     /* 13/20 */
     --page-x:48px; --bar-top:56px; --space-h2:56px;
     --yrow-gap:var(--s-11);
     /* 612 instead of 600: 36 characters of 17px body per line (§6.4 #52) */

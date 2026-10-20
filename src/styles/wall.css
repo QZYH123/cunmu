@@ -280,7 +280,7 @@ html[data-vt="page"]::view-transition-new(root) { animation-duration: var(--m-qu
 .fullwall.with-rail { margin-right: var(--rail-gutter); }
 .core-rail {
   --rail-line-x: var(--s-3);
-  position: fixed; z-index: 22; right: 0; width: var(--rail-hit);
+  position: fixed; z-index: 22; right: 0; width: var(--hit);
   top: calc(env(safe-area-inset-top) + var(--hit) + var(--s-5));
   bottom: calc(var(--bar-tab) + env(safe-area-inset-bottom) + var(--s-5));
   touch-action: none; cursor: pointer; outline: none;

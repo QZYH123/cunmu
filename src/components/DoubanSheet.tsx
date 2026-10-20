@@ -19,7 +19,7 @@ const ERR = {
   'not-backup': '这个文件看起来不是豆伴、douban-backup 导出的表格，也不是豆备的 marks.ndjson。',
   'need-subjects': '豆备的 marks.ndjson 要和 subjects.ndjson 一起选（或者把两个文件打成一个 zip），才知道作品名。',
   unreadable: '这个文件打不开，可能没有下载完整。',
-  'no-done': '这个文件里没有看过、读过、听过的标记。',
+  'no-done': '这个文件里没有看过、读过、听过、玩过的标记。',
 } as const;
 const ORDER: Kind[] = ['book', 'film', 'anime', 'music', 'game'];
 const MONTH_DAY = (d = new Date()) => `${d.getMonth() + 1} 月 ${d.getDate()} 日`;

@@ -383,7 +383,7 @@ await withPage('Bangumi dates (reader, 1019 看过): the mark day, months in a y
   if (foot !== '来自 Bangumi') throw new Error(`footer: 「${foot}」`);
   // the date picker says where the date came from
   await page.locator('.entry-page').getByRole('button', { name: /2012/ }).first().click();
-  await page.getByText('Bangumi 上标记于 2012-08-28').waitFor({ timeout: 3000 }).catch(() => { throw new Error('no provenance line in the date picker'); });
+  await page.getByText('Bangumi 上更新于 2012 年 8 月 28 日').waitFor({ timeout: 3000 }).catch(() => { throw new Error('no provenance line in the date picker'); });
   await page.keyboard.press('Escape');
   // a year by months: 2011 has 168, none left as 「这一年里」
   await page.evaluate(() => { location.hash = '#/year/2011'; });

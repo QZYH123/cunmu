@@ -208,7 +208,7 @@ function EssayEditor({ editId }: { editId: string | null }) {
             const f = e.target.files?.[0];
             e.target.value = '';
             const im = f && await storePicture(f);
-            if (im) setPhoto({ src: im.src, aspect: im.aspect }); else if (f) store.toast('这张图片读不出来');
+            if (im) setPhoto({ src: im.src, aspect: im.aspect }); else if (f) store.toast('这张图片读不出来，换一张再试');
           }}
         />
         <MentionLine text={`${title}\n${body}`} selfId={id} />
@@ -266,7 +266,7 @@ function WorkNoteEditor({ work }: { work: Work }) {
     if (room <= 0) return;
     const got = (await Promise.all(fs.slice(0, room).map(storePicture))).filter((x): x is UserImage => !!x);
     if (got.length) store.setNote(work.id, { images: [...images, ...got] });
-    if (got.length < Math.min(fs.length, room)) store.toast('这张图放不进来，换一张试试');
+    if (got.length < Math.min(fs.length, room)) store.toast('这张图放不进来，换一张再试');
   };
   const removePicture = (im: UserImage) => {
     store.setNote(work.id, { images: images.filter((x) => x.id !== im.id) });

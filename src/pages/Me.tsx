@@ -157,7 +157,7 @@ export default function Me() {
     else if (bgm.problem === 'absent') caps.splice(0, 1, BANGUMI_FILE_NO_TOKEN);
     else if (bgm.problem === 'gone') caps.push('这次没读到这个用户名的公开收藏（改了名，或者设成了私密）。搬进来的都还在。');
     else if (bgm.problem === 'net') caps.push('上次没连上 Bangumi，下次打开时再试。');
-    else if (bgm.lastOkSyncAt) caps.push(syncing ? '正在同步…' : `上次同步 ${md(bgm.lastOkSyncAt)}`);
+    else if (bgm.lastOkSyncAt) caps.push(syncing ? '正在同步' : `上次同步 ${md(bgm.lastOkSyncAt)}`);
     const acts: { label: string; run: () => void }[] = [];
     if (bgm.problem === 'token') acts.push({ label: '换一个令牌', run: () => sheets.bangumi('token') });
     else if (bgm.problem === 'absent') acts.push({ label: '填一个令牌', run: () => sheets.bangumi('token') });
@@ -209,7 +209,7 @@ export default function Me() {
       if (!(await store.importBackup(p.json))) throw new Error('format');
       store.toast(p.count ? `恢复了 ${fmtNum(p.count)} 条` : '恢复好了');
     } catch {
-      store.toast('这个文件读不出来，换一个导出的文件试试');
+      store.toast('这个文件读不出来，换一个存目导出的文件再试');
     }
   };
   const restore = async (f: File) => {
@@ -231,7 +231,7 @@ export default function Me() {
       const p = { json, images, count: j.works.length };
       if (own.length && !sample) setPending(p); else await applyRestore(p);
     } catch {
-      store.toast('这个文件读不出来，换一个导出的文件试试');
+      store.toast('这个文件读不出来，换一个存目导出的文件再试');
     }
   };
 
@@ -308,7 +308,7 @@ export default function Me() {
           {weread.connected ? (
             <Row
               name="微信读书" right={<span className="key-mono-caption c-3">wrk-••••{weread.keyTail}</span>}
-              actions={[{ label: '断开并删除 Key', run: () => { setAlsoBooks(false); setConfirm(true); } }]}
+              actions={[{ label: '断开并删除授权码', run: () => { setAlsoBooks(false); setConfirm(true); } }]}
             />
           ) : (
             <Row
@@ -432,7 +432,7 @@ export default function Me() {
           <h2 className="t-title">诊断信息</h2>
           <p className="t-small c-2" style={{ marginTop: 'var(--s-3)' }}>没能自动复制。长按下面的文字，全选后复制。</p>
           <textarea className="diag-text" readOnly value={diagShown ?? ''} rows={10} onFocus={(e) => e.currentTarget.select()} aria-label="诊断信息" />
-          <div className="sheet-actions"><button className="btn btn-secondary" onClick={() => setDiagShown(null)}>关上</button></div>
+          <div className="sheet-actions"><button className="btn btn-secondary" onClick={() => setDiagShown(null)}>关闭</button></div>
         </div>
       </Sheet>
 
@@ -450,13 +450,13 @@ export default function Me() {
       <Sheet open={confirm} onClose={() => setConfirm(false)} label="断开微信读书">
         <div className="sheet-body">
           <h2 className="t-title">断开微信读书</h2>
-          <p className="t-small c-2" style={{ marginTop: 'var(--s-3)' }}>Key 会从这台手机上删除，之后不再同步。已经搬进来的 {wereadCount} 本书默认留着。</p>
+          <p className="t-small c-2" style={{ marginTop: 'var(--s-3)' }}>授权码会从这台手机上删除，之后不再读取。已经搬进来的 {wereadCount} 本书默认留着。</p>
           <button className="me-row" onClick={() => setAlsoBooks(!alsoBooks)} role="switch" aria-checked={alsoBooks} style={{ marginTop: 'var(--s-5)' }}>
             <span className="t-ui">同时删除已搬进来的书</span>
             <i className={`switch ${alsoBooks ? 'on' : ''}`} />
           </button>
           <div className="sheet-actions pair">
-            <button className="btn btn-secondary" onClick={() => { store.disconnectWeread(alsoBooks); setConfirm(false); }}><span className="btn-danger-text">断开并删除 Key</span></button>
+            <button className="btn btn-secondary" onClick={() => { store.disconnectWeread(alsoBooks); setConfirm(false); }}><span className="btn-danger-text">断开并删除授权码</span></button>
             <button className="btn btn-secondary" onClick={() => setConfirm(false)}>先不断开</button>
           </div>
         </div>

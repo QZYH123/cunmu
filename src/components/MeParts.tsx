@@ -389,7 +389,7 @@ export function CoverPickSheet({ open, onClose }: { open: boolean; onClose: () =
         <p className="t-small c-2 sheet-say">首页名字下面那一张。默认是第一部最爱。</p>
         <PickGrid works={works} on={new Set(cur ? [cur] : [])} toggle={(id) => { store.setProfile({ frontispiece: id }); onClose(); }} label="首页封面" />
         <div className="sheet-actions pair">
-          <button className="btn btn-secondary" onClick={() => { store.setProfile({ frontispiece: '' }); onClose(); }}>用第一部最爱</button>
+          <button className="btn btn-secondary" onClick={() => { store.setProfile({ frontispiece: '' }); onClose(); }}>改回第一部最爱</button>
           <button className="btn btn-secondary" onClick={onClose}>不换了</button>
         </div>
       </div>

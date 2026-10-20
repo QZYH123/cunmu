@@ -78,7 +78,7 @@ export function EditWorkSheet({ work, open, onClose }: { work: Work; open: boole
               <button className="btn-text" onClick={() => file.current?.click()}>{pic || hasCover ? '换一张' : '选一张图'}</button>
               {(pic || hasCover) && <button className="btn-text quiet" onClick={() => { setPic(null); setDrop(!!baseCover); }}>不用图</button>}
             </div>
-            <p className="t-caption c-3">{err ? '这张图读不出来，换一张试试。' : '用你自己拍的或存下的图，只放在这台设备和你的导出里。'}</p>
+            <p className="t-caption c-3">{err ? '这张图读不出来，换一张再试。' : '用你自己拍的或存下的图，只放在这台设备和你的导出里。'}</p>
             {coverChanged && (
               <p className="t-caption c-3 edit-source">
                 {src!.cover ? `${from} 上有封面` : `${from} 上没有封面`}<span aria-hidden> · </span>

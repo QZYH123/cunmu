@@ -160,7 +160,7 @@ export function AddSheet({ open, onClose, initial = '' }: { open: boolean; onClo
       <Cover work={w} w={thumbSize(w, 32)[0]} h={thumbSize(w, 32)[1]} paperPlaceholder />
       <div className="list-main">
         <span className="list-title ellipsis">{w.title}</span>
-        <span className="list-meta ellipsis">{[KIND_LABEL[w.kind], w.finished ? `${Number(w.finished.slice(0, 4))} 年${DONE[w.kind].replace('了', '')}` : ''].join(' · ')}</span>
+        <span className="list-meta ellipsis">{[KIND_LABEL[w.kind], w.finished ? `${Number(w.finished.slice(0, 4))} 年 · ${DONE[w.kind].replace('了', '')}` : ''].join(' · ')}</span>
       </div>
     </Link>
   );
@@ -172,7 +172,7 @@ export function AddSheet({ open, onClose, initial = '' }: { open: boolean; onClo
     const w = got && got !== 'loading' ? got : undefined;
     const mine = store.library.find((x) => x.id === `bgm-${pasted.id}`);
     known = got === 'loading' && !mine ? (
-      <p className="t-small c-3 known-say">正在读取这一部…</p>
+      <p className="t-small c-3 known-say">正在读取这一部</p>
     ) : !w && !mine ? (
       <p className="t-small c-2 known-say">这一部还读不到。写上名字，也能放进来。</p>
     ) : mine ? (
@@ -193,7 +193,7 @@ export function AddSheet({ open, onClose, initial = '' }: { open: boolean; onClo
   } else if (pasted?.kind === 'bgm-user') {
     known = (
       <div className="known">
-        <div className="t-label c-3 known-head">Bangumi 用户</div>
+        <div className="t-label c-3 known-head">Bangumi 账号</div>
         <div className="known-line">
           <span className="t-ui">{pasted.user}</span>
           <button className="btn-text known-act" onClick={() => handOff(() => sheets.bangumi({ user: pasted.user }))}>读取收藏 ›</button>
@@ -260,7 +260,7 @@ export function AddSheet({ open, onClose, initial = '' }: { open: boolean; onClo
                 <Cover work={nameOnly()} w={32} h={48} paperPlaceholder />
                 <div className="list-main">
                   <span className="list-title ellipsis">只用名字放进来《{q.trim()}》</span>
-                  <span className="list-meta">封面、作者以后能补上，不补也行</span>
+                  <span className="list-meta">封面、作者可以以后再补</span>
                 </div>
               </button>
             )}

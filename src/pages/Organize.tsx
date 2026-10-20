@@ -32,8 +32,8 @@ const DEFS: Def[] = [
     preview: () => ['按这个设置，你现在会有 ', ' 个月条目'],
   },
   {
-    key: 'personThreshold', title: '某人出现在几部作品里收进档案', desc: '常出现的人会自动收进索引', unit: '部',
-    values: [Infinity, ...range(2, 10)], special: { Infinity: '只收核心创作者' }, ends: ['只收核心', '10 部'],
+    key: 'personThreshold', title: '某人出现在几部作品里收进索引', desc: '常出现的人会自动收进索引', unit: '部',
+    values: [Infinity, ...range(2, 10)], special: { Infinity: '只收主创' }, ends: ['只收主创', '10 部'],
     preview: () => ['按这个设置，你现在会有 ', ' 位人物'],
   },
 ];
@@ -64,7 +64,7 @@ export default function Organize() {
       <TopBar />
       <div className={`page-x ${enter}`}>
         <h1 className="t-title page-title">整理方式</h1>
-        <p className="t-small c-2">默认就够用。改了马上生效，收起的东西不会删除。</p>
+        <p className="t-small c-2">默认就够用。改了就生效，收起的东西不会删除。</p>
         <div className="organize">
           {DEFS.map((def) => {
             const v = settings[def.key];

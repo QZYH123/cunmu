@@ -123,7 +123,7 @@ export function ManualAdd({ start, onBack, onAdd }: { start: string; onBack: () 
             {!isDesktop() && addr === null && <button className="btn-text" onClick={() => { setAddr(''); setPic(null); }}>贴图片地址</button>}
             {(pic || addr !== null) && <button className="btn-text quiet" onClick={() => { setPic(null); setAddr(null); }}>不用图</button>}
           </div>
-          <p className="t-caption c-3">{picErr ? '这张图读不出来，换一张试试。' : pic || urlCover ? '' : '不放图，就用名字排一张纸封面。'}</p>
+          <p className="t-caption c-3">{picErr ? '这张图读不出来，换一张再试。' : pic || urlCover ? '' : '不放图，就用名字排一张纸封面。'}</p>
         </div>
         <input ref={file} type="file" accept="image/*" hidden onChange={(e) => { void choose(e.target.files?.[0]); e.target.value = ''; }} />
       </div>

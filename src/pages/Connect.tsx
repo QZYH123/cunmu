@@ -59,7 +59,7 @@ export function WereadSheet({ open, onClose, onManual }: { open: boolean; onClos
   // new one (时间未知: a paste carries no date). One batch, undoable from 「我」
   const importPaste = () => {
     const books = parseWeread(paste, todayISO()).filter((b) => b.quotes.length);
-    if (!books.length) { setHint('认不出是哪本书。第一行写上《书名》就行。'); return; }
+    if (!books.length) { setHint('认不出是哪本书。在第一行写上《书名》，再粘贴一次。'); return; }
     const { first, quotes: n } = store.importPaste(books);
     onClose();
     if (books.length === 1) nav(`/entry/${first}`);
@@ -68,37 +68,37 @@ export function WereadSheet({ open, onClose, onManual }: { open: boolean; onClos
 
   const verify = () => {
     const k = key.trim();
-    if (!/^wrk-[A-Za-z0-9_-]{6,}$/.test(k)) { setHint('Key 一般是 wrk- 开头的一串字母和数字'); return; }
+    if (!/^wrk-[A-Za-z0-9_-]{6,}$/.test(k)) { setHint('授权码是 wrk- 开头的一串字母和数字'); return; }
     setHint('');
     setChecking(true);
     setTimeout(() => { setChecking(false); setStep('found'); }, DUR.verifyKey);
   };
 
   return (
-    <Sheet open={open} onClose={onClose} label={step === 'manual' ? '粘贴微信读书笔记' : step === 'explain' ? '连接微信读书之前' : '连接微信读书'}>
+    <Sheet open={open} onClose={onClose} label={step === 'manual' ? '粘贴微信读书笔记' : step === 'explain' ? '读取微信读书之前' : '读取微信读书'}>
       {step === 'explain' && (
         <div className="sheet-body weread" key="explain">
-          <h2 className="t-title"><span className="phrase">连接微信读书之前，</span><span className="phrase">先说清三件事</span></h2>
+          <h2 className="t-title"><span className="phrase">读取微信读书之前，</span><span className="phrase">先说清三件事</span></h2>
           <ol className="weread-list">
             <li>
               <span className="ordinal">1</span>
               <div>
-                <p className="t-ui w-600">Key 要你自己去拿</p>
-                <p className="t-small c-2">在微信读书官方页面获取个人 API Key（wrk- 开头）。<a className="infolink" href="https://weread.qq.com/" target="_blank" rel="noreferrer">去官方页面 ↗</a></p>
+                <p className="t-ui w-600">授权码要你自己去拿</p>
+                <p className="t-small c-2">在微信读书官方页面申请个人授权码（wrk- 开头）。<a className="infolink" href="https://weread.qq.com/" target="_blank" rel="noreferrer">去官方页面 ↗</a></p>
               </div>
             </li>
             <li>
               <span className="ordinal">2</span>
               <div>
-                <p className="t-ui w-600">Key 只存在这台手机上</p>
-                <p className="t-small c-2">不会上传到我们的服务器。换手机要重新填。</p>
+                <p className="t-ui w-600">授权码只存在这台手机上</p>
+                <p className="t-small c-2">换手机要重新填写。</p>
               </div>
             </li>
             <li>
               <span className="ordinal">3</span>
               <div>
                 <p className="t-ui w-600 c-ink">有一定风险</p>
-                <p className="t-small c-reading risk">这个 Key 是微信读书给个人使用的授权，官方没有写明是否允许第三方 App 使用。社区里有过同步后账号被封的报告，原因不明。如果担心，可以改用手动导入。</p>
+                <p className="t-small c-reading risk">授权码是微信读书发给个人用的，官方没有写明是否允许第三方 App 使用。社区里有过同步后账号被封的报告，原因不明。如果担心，可以改用手动导入。</p>
               </div>
             </li>
           </ol>
@@ -111,7 +111,7 @@ export function WereadSheet({ open, onClose, onManual }: { open: boolean; onClos
 
       {step === 'key' && (
         <div className="sheet-body weread" key="key">
-          <h2 className="t-title">粘贴你的 Key</h2>
+          <h2 className="t-title">粘贴你的授权码</h2>
           <label className="key-field">
             <input
               className="key-mono"
@@ -121,7 +121,7 @@ export function WereadSheet({ open, onClose, onManual }: { open: boolean; onClos
               spellCheck={false}
               autoCapitalize="off"
               autoComplete="off"
-              aria-label="微信读书 API Key"
+              aria-label="微信读书授权码"
             />
             {checking && <Dots label="正在验证" words />}
           </label>
@@ -129,7 +129,7 @@ export function WereadSheet({ open, onClose, onManual }: { open: boolean; onClos
           {hint && <p className="t-small c-2">{hint}</p>}
           <div className="sheet-actions">
             <button className="btn btn-secondary" onClick={verify} disabled={checking}>验证</button>
-            {DEMO && <button className="btn-text" onClick={() => setKey('wrk-demo7c21e03f9a')}>原型里用示例 Key</button>}
+            {DEMO && <button className="btn-text" onClick={() => setKey('wrk-demo7c21e03f9a')}>原型里用示例授权码</button>}
           </div>
         </div>
       )}
@@ -246,7 +246,7 @@ export function BangumiSheet({ open, onClose, start = 'name', user = '' }: { ope
       const items = await bgmClient(tok).collections(u.username, (got, total) => { if (run.current === mine) setProgress([got, total]); });
       if (run.current !== mine) return;
       if (!countable(items).length) {
-        setErr(how === 'token' ? '这个账号下还没有「看过」和「在看」。' : '这个用户名下没有公开的『看过』。如果收藏设成了私密，可以用个人令牌。');
+        setErr(how === 'token' ? '这个账号下还没有「看过」和「在看」。' : '这个用户名下没有公开的「看过」。如果收藏设成了私密，可以用个人令牌。');
         return;
       }
       const b = store.connections.bangumi;
@@ -274,7 +274,7 @@ export function BangumiSheet({ open, onClose, start = 'name', user = '' }: { ope
     setTimeout(() => {
       setBusy(false);
       if (u === 'offline') setErr('现在连不上 Bangumi，过一会儿再试。');
-      else if (u === 'private') setErr('这个用户名下没有公开的『看过』。如果收藏设成了私密，可以用个人令牌。');
+      else if (u === 'private') setErr('这个用户名下没有公开的「看过」。如果收藏设成了私密，可以用个人令牌。');
       else if (!/^[A-Za-z0-9_]{2,}$/.test(u)) setErr('没找到这个用户名。它在你 Bangumi 个人主页地址的最后一段。');
       else { setVia('public'); setStep('found'); }
     }, DUR.readFile);
@@ -357,8 +357,8 @@ export function BangumiSheet({ open, onClose, start = 'name', user = '' }: { ope
             { t: '令牌要你自己去拿', d: <>在 Bangumi 网页上登录、生成一个个人令牌，有效期自己选，复制回来。网页有人机验证，国内网络偶尔打不开，多试一次就好。<a className="infolink" href="https://next.bgm.tv/demo/access-token" target="_blank" rel="noreferrer">去 Bangumi 生成 ↗</a></> },
             { t: '令牌只存在这台设备上', d: '不会放进导出的文件。换一台设备要重新填写。' },
             DEMO
-              ? { t: '到期前会安静地提醒', d: '令牌快到期时，「··· › 设置 › 来源」里 Bangumi 那一行会写出到期日，不推送、不弹窗。到期后同步先停着，已经搬进来的都还在。' }
-              : { t: '到期以后，换一个就好', d: '有效期最短 7 天。令牌到期或在 Bangumi 上删掉以后，「··· › 设置 › 来源」里 Bangumi 那一行会写明，不推送、不弹窗；换一个令牌就接着同步，已经搬进来的都还在。' },
+              ? { t: '到期前在设置里写明', d: '令牌快到期时，「··· › 设置 › 来源」里 Bangumi 那一行会写出到期日，不推送、不弹窗。到期后同步先停着，已经搬进来的都还在。' }
+              : { t: '到期以后，换一个令牌', d: '有效期最短 7 天。令牌到期或在 Bangumi 上删掉以后，「··· › 设置 › 来源」里 Bangumi 那一行会写明，不推送、不弹窗；换一个令牌就接着同步，已经搬进来的都还在。' },
           ]} />
           <div className="sheet-actions pair">
             <button className="btn btn-secondary" onClick={() => setStep('token')}>我了解，继续</button>

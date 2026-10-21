@@ -159,7 +159,7 @@ export default function Home({ onWeread, onBangumi, onAdd }: { onWeread: () => v
               // uncontrolled, and nothing happens mid-composition: a pinyin IME finishes its word here first
               onInput={(e) => { if (!(e.nativeEvent as InputEvent).isComposing) handOver(e.currentTarget); }}
               onCompositionEnd={(e) => handOver(e.currentTarget)}
-              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); onAdd(); } }}
+              onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent.isComposing && e.keyCode !== 229) { e.preventDefault(); onAdd(); } }}
               spellCheck={false} autoCapitalize="off"
             />
           </label>

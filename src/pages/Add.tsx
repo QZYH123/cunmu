@@ -15,11 +15,13 @@ import { creatorLine, fmtNum } from '../data/derive';
 import { todayISO } from '../lib/today';
 import { DUR } from '../tokens';
 import { QUOTES_THERE } from '../data/quotes';
+import { fold } from '../lib/searchText';
 import { parseWeread } from './Connect';
 
 const KINDS: Kind[] = ['book', 'anime', 'film', 'music', 'game'];
 const DONE: Record<Kind, string> = { book: '看过了', anime: '看过了', film: '看过了', music: '听过了', game: '玩过了', essay: '' };
-const norm = (s: string) => s.toLowerCase().replace(/\s+/g, '');
+/** full-width and half-width forms as one, case and spaces ignored (as 搜索 does) */
+const norm = (s: string) => fold(s).replace(/\s+/g, '');
 const FIELD_MAX_ROWS = 6;
 
 /** What a paste is, before it is a search (r5 #3): one field for everything. */

@@ -113,7 +113,7 @@ export function SteamSheet({ open, onClose }: { open: boolean; onClose: () => vo
               <label className="key-field plain bgm-field steam-user">
                 <input
                   value={user} onChange={(e) => editUser(e.target.value)} onBlur={() => void lookUp()}
-                  onKeyDown={(e) => { if (e.key === 'Enter') void lookUp(); }}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) void lookUp(); }}
                   placeholder="个人资料链接、自定义名字或 17 位数字" aria-label="Steam 个人资料"
                   autoCapitalize="off" autoCorrect="off" autoComplete="off" spellCheck={false}
                 />
@@ -141,7 +141,7 @@ export function SteamSheet({ open, onClose }: { open: boolean; onClose: () => vo
               <label className="key-field steam-key">
                 <input
                   className="key-mono" value={key} onChange={(e) => { setKey(e.target.value); setErr(''); }}
-                  onKeyDown={(e) => { if (e.key === 'Enter') void read(); }}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) void read(); }}
                   placeholder="粘贴 Web API Key" spellCheck={false} autoCapitalize="off" autoComplete="off" aria-label="Steam Web API Key"
                 />
                 {busy && <Dots label="正在读取" words />}

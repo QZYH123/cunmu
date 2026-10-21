@@ -1,3 +1,4 @@
+import { fold } from '../lib/searchText';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { Sheet } from './Bits';
@@ -194,8 +195,8 @@ function SameYear({ exclude, onPick }: { exclude: Set<string>; onPick: (w: Work)
   const { library } = useStore();
   const [q, setQ] = useState('');
   const list = useMemo(() => {
-    const t = q.trim().toLowerCase();
-    return library.filter((w) => w.finished && !exclude.has(w.id) && !w.isSample && (!t || w.title.toLowerCase().includes(t))).slice(0, 40);
+    const t = fold(q.trim());
+    return library.filter((w) => w.finished && !exclude.has(w.id) && !w.isSample && (!t || fold(w.title).includes(t))).slice(0, 40);
   }, [library, q, exclude]);
   return (
     <div className="ds-same">

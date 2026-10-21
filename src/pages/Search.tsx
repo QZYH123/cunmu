@@ -6,7 +6,7 @@ import { useStore } from '../data/store';
 import type { Work } from '../data/types';
 import { KIND_LABEL, KIND_ORDER } from '../data/types';
 import { fmtNum } from '../data/derive';
-import { ADD_BLANK, SEARCH_EMPTY, searchMeta } from '../lib/searchText';
+import { ADD_BLANK, SEARCH_EMPTY, hitRange, searchMeta } from '../lib/searchText';
 import { useSheets } from '../App';
 import { Avatar, Cover } from '../components/Cover';
 import { ListRow, RollingNumber } from '../components/Bits';
@@ -17,9 +17,9 @@ import { SEARCH_PLACEHOLDER } from '../lib/naming';
 
 /** Matched characters in ink 600, the rest secondary 400 — weight, never colour highlight. */
 function Hl({ text, q }: { text: string; q: string }) {
-  const i = text.toLowerCase().indexOf(q.toLowerCase());
-  if (i < 0) return <span className="c-2">{text}</span>;
-  return <><span className="c-2">{text.slice(0, i)}</span><b className="hit">{text.slice(i, i + q.length)}</b><span className="c-2">{text.slice(i + q.length)}</span></>;
+  const r = hitRange(text, q);
+  if (!r) return <span className="c-2">{text}</span>;
+  return <><span className="c-2">{text.slice(0, r[0])}</span><b className="hit">{text.slice(r[0], r[1])}</b><span className="c-2">{text.slice(r[1])}</span></>;
 }
 
 /**

@@ -280,6 +280,34 @@ await withPage('搜索 → 条目 → 返回: back on 搜索 with its words, res
   await page.waitForFunction(() => location.hash === '#/all', null, { timeout: 5000 });
 });
 
+await withPage('an IME still choosing keeps its Enter and Esc: ⌘K opens nothing, a sheet stays open', async (page) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await open(page, '/');
+  await seedBooks(page, ['乙女']);
+  await page.reload();
+  await page.waitForTimeout(500);
+  const press = (key) => page.evaluate((key) => {
+    const el = document.activeElement ?? document.body;
+    el.dispatchEvent(new KeyboardEvent('keydown', { key, keyCode: 229, isComposing: true, bubbles: true, cancelable: true }));
+  }, key);
+  await page.keyboard.press('Control+k');
+  await page.locator('.palette-field input').fill('乙女');
+  await page.waitForTimeout(200);
+  await press('Enter');
+  await press('Escape');
+  await page.waitForTimeout(400);
+  if (!(await page.evaluate(() => location.hash === '#/'))) throw new Error(`a composing Enter opened ${page.url()}`);
+  if (!(await page.locator('.palette-field input').count())) throw new Error('a composing Esc closed ⌘K');
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(400);
+  await page.keyboard.press('n');
+  await sheet(page).waitFor({ timeout: 3000 });
+  await page.waitForTimeout(300);
+  await press('Escape');
+  await page.waitForTimeout(500);
+  if (!(await sheet(page).count())) throw new Error('a composing Esc closed the sheet');
+});
+
 await withPage('a save the browser refuses (storage full) is said, and the notice goes once a save works', async (page) => {
   await page.goto(`${BASE}#/`, { waitUntil: 'domcontentloaded' });
   await seedBooks(page, ['甲', '乙']);

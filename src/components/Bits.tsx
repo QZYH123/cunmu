@@ -40,7 +40,7 @@ export function Sheet({ open, onClose, children, label, className = '', locked =
       .filter((el) => el.getClientRects().length > 0);
     const t = window.setTimeout(() => stops()[0]?.focus({ preventScroll: true }), 0);
     const k = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { e.preventDefault(); if (!lockRef.current) onClose(); return; }
+      if (e.key === 'Escape') { if (e.isComposing) return; e.preventDefault(); if (!lockRef.current) onClose(); return; }   // an IME's Esc only drops its word
       if (e.key !== 'Tab' || !box.current) return;
       const f = stops();
       if (!f.length) return;

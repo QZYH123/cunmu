@@ -2,13 +2,25 @@ import type { Work } from '../data/types';
 import { KIND_LABEL } from '../data/types';
 import { creatorLine, whenOf } from '../data/derive';
 
+/** what search compares: full-width and half-width forms as one (NFKC), case folded */
+export const fold = (s: string) => s.normalize('NFKC').toLowerCase();
+
+/** where the query sits in the text, for the highlight; null when not found, or when folding changed the length
+ *  (then the indexes would not line up with what is shown) */
+export function hitRange(text: string, q: string): [number, number] | null {
+  const ft = fold(text), fq = fold(q.trim());
+  if (!fq || ft.length !== text.length) return null;
+  const i = ft.indexOf(fq);
+  return i < 0 ? null : [i, i + fq.length];
+}
+
 /** titles, original titles, and every credit — not only the core ones */
 export function worksMatching(term: string, library: readonly Work[]): Work[] {
-  const t = term.trim().toLowerCase();
+  const t = fold(term.trim());
   if (!t) return [];
-  return library.filter((w) => w.title.toLowerCase().includes(t)
-    || (w.originalTitle ?? '').toLowerCase().includes(t)
-    || w.credits.some((c) => c.name.toLowerCase().includes(t)));
+  return library.filter((w) => fold(w.title).includes(t)
+    || fold(w.originalTitle ?? '').includes(t)
+    || w.credits.some((c) => fold(c.name).includes(t)));
 }
 
 /**
@@ -16,16 +28,16 @@ export function worksMatching(term: string, library: readonly Work[]): Work[] {
  * the original title, else the credit name (when that name is not already in the title or the original title).
  */
 export function hitAside(w: Work, term: string): string | undefined {
-  const q = term.trim().toLowerCase();
-  if (!q || w.title.toLowerCase().includes(q)) return undefined;
+  const q = fold(term.trim());
+  if (!q || fold(w.title).includes(q)) return undefined;
   const orig = w.originalTitle?.trim() ?? '';
-  if (orig && orig.toLowerCase().includes(q)) return orig;
-  const credit = w.credits.find((c) => c.name.toLowerCase().includes(q));
+  if (orig && fold(orig).includes(q)) return orig;
+  const credit = w.credits.find((c) => fold(c.name).includes(q));
   if (!credit) return undefined;
   const name = credit.name.trim();
   if (!name) return undefined;
-  if (w.title.toLowerCase().includes(name.toLowerCase())) return undefined;
-  if (orig.toLowerCase().includes(name.toLowerCase())) return undefined;
+  if (fold(w.title).includes(fold(name))) return undefined;
+  if (fold(orig).includes(fold(name))) return undefined;
   return name;
 }
 

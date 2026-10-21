@@ -340,7 +340,7 @@ export function BangumiSheet({ open, onClose, start = 'name', user = '' }: { ope
           <label className="key-field plain bgm-field">
             <input
               value={name} onChange={(e) => { setName(e.target.value); setErr(''); }}
-              onKeyDown={(e) => { if (e.key === 'Enter') read(); }}
+              onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) read(); }}
               placeholder="Bangumi 用户名" aria-label="Bangumi 用户名"
               autoCapitalize="off" autoCorrect="off" autoComplete="off" spellCheck={false}
             />
@@ -377,7 +377,7 @@ export function BangumiSheet({ open, onClose, start = 'name', user = '' }: { ope
           <label className="key-field">
             <input
               className="key-mono" value={token} onChange={(e) => { setToken(e.target.value); setErr(''); }}
-              onKeyDown={(e) => { if (e.key === 'Enter') verify(); }}
+              onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) verify(); }}
               placeholder="粘贴令牌" spellCheck={false} autoCapitalize="off" autoComplete="off" aria-label="Bangumi 个人令牌"
             />
             {busy && <Dots label="正在验证" words />}

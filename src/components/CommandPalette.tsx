@@ -7,7 +7,7 @@ import { useStore } from '../data/store';
 import type { Kind, Work } from '../data/types';
 import { KIND_LABEL, KIND_ORDER } from '../data/types';
 import { creatorLine } from '../data/derive';
-import { ADD_BLANK, SEARCH_EMPTY, searchMeta, worksMatching } from '../lib/searchText';
+import { ADD_BLANK, SEARCH_EMPTY, fold, hitRange, searchMeta, worksMatching } from '../lib/searchText';
 import { Avatar, Cover, thumbSize } from './Cover';
 import { HERO } from './CoverWall';
 import { afterAnimations, markFlight, reduced, withViewTransition } from '../lib/motion';
@@ -36,10 +36,10 @@ export const GROUP_CAP = 6;
 
 /** Search over titles (and original titles), every credit, people, interests and years. */
 export function searchLibrary(term: string, library: Work[], d: ReturnType<typeof useStore>['d']) {
-  const t = term.trim().toLowerCase();
+  const t = fold(term.trim());
   const works = worksMatching(t, library);
-  const people = [...d.persons.values()].filter((p) => p.name.toLowerCase().includes(t)).sort((a, b) => b.works.length - a.works.length);
-  const interests = [...d.interests.entries()].filter(([g]) => g.toLowerCase().includes(t)).sort((a, b) => b[1].length - a[1].length);
+  const people = [...d.persons.values()].filter((p) => fold(p.name).includes(t)).sort((a, b) => b.works.length - a.works.length);
+  const interests = [...d.interests.entries()].filter(([g]) => fold(g).includes(t)).sort((a, b) => b[1].length - a[1].length);
   const years = [...d.years.keys()].filter((y) => String(y).includes(t));
   return { works, people, interests, years };
 }
@@ -47,7 +47,7 @@ export function searchLibrary(term: string, library: Work[], d: ReturnType<typeo
 export function useSearchHits(term: string, expanded: Set<string> = new Set()): { hits: Hit[]; empty: boolean } {
   const { d, library } = useStore();
   return useMemo(() => {
-    const t = term.trim().toLowerCase();
+    const t = fold(term.trim());
     if (!t) {
       return {
         empty: false,
@@ -78,9 +78,9 @@ export function useSearchHits(term: string, expanded: Set<string> = new Set()): 
 
 /** Matched characters in ink 600, the rest secondary — weight, never a colour highlight. */
 function Hl({ text, q }: { text: string; q: string }) {
-  const i = q ? text.toLowerCase().indexOf(q.toLowerCase()) : -1;
-  if (i < 0) return <span>{text}</span>;
-  return <>{text.slice(0, i)}<b className="hit">{text.slice(i, i + q.length)}</b>{text.slice(i + q.length)}</>;
+  const r = hitRange(text, q);
+  if (!r) return <span>{text}</span>;
+  return <>{text.slice(0, r[0])}<b className="hit">{text.slice(r[0], r[1])}</b>{text.slice(r[1])}</>;
 }
 
 /* ---------- the panel ---------- */
@@ -135,6 +135,8 @@ export function PalettePanel({ inline, onClose, onAdd, onHelp, start, onState }:
     } else { onClose?.(); go(); }
   };
   const key = (e: React.KeyboardEvent) => {
+    // a pinyin or kana IME is still choosing: Enter, Esc and the arrows are its own
+    if (e.nativeEvent.isComposing || e.keyCode === 229) return;
     if (e.key === 'ArrowDown') { e.preventDefault(); setCur((i) => Math.min(hits.length - 1, i + 1)); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); setCur((i) => Math.max(0, i - 1)); }
     else if (e.key === 'Home' && e.ctrlKey) { e.preventDefault(); setCur(0); }

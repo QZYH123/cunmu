@@ -83,7 +83,7 @@ function useEscLeaves(leave: () => void) {
   ref.current = leave;
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape' || e.defaultPrevented || document.querySelector(OVERLAY)) return;
+      if (e.key !== 'Escape' || e.isComposing || e.defaultPrevented || document.querySelector(OVERLAY)) return;
       e.preventDefault();
       ref.current();
     };

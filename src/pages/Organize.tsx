@@ -84,6 +84,7 @@ export default function Organize() {
                 <p className="t-small c-2">{def.desc}</p>
                 <Slider
                   label={def.title}
+                  valueText={sp ?? `${v} ${def.unit}`.trim()}
                   values={def.values}
                   value={v}
                   defaultValue={DEFAULT_SETTINGS[def.key]}

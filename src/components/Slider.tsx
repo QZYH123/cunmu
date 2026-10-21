@@ -10,10 +10,12 @@ interface SliderProps {
   rightLabel: string;
   resetting?: boolean;
   label: string;
+  /** what a screen reader says for the value (「从不按月」, 「12 条」); the bare number otherwise */
+  valueText?: string;
 }
 
 /** Discrete slider (§3.11): 2px track, 24px thumb (28 while held), default dot + 「默认」, 44px hit area. */
-export function Slider({ values, value, defaultValue, onChange, leftLabel, rightLabel, resetting, label }: SliderProps) {
+export function Slider({ values, value, defaultValue, onChange, leftLabel, rightLabel, resetting, label, valueText }: SliderProps) {
   const track = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(false);
   const idx = Math.max(0, values.indexOf(value));
@@ -44,7 +46,7 @@ export function Slider({ values, value, defaultValue, onChange, leftLabel, right
         aria-valuemin={0}
         aria-valuemax={values.length - 1}
         aria-valuenow={idx}
-        aria-valuetext={String(values[idx])}
+        aria-valuetext={valueText ?? String(values[idx])}
         tabIndex={0}
         onPointerDown={(e) => { (e.target as HTMLElement).setPointerCapture?.(e.pointerId); setActive(true); set(fromX(e.clientX)); }}
         onPointerMove={(e) => { if (active) set(fromX(e.clientX)); }}

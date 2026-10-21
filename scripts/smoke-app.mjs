@@ -349,6 +349,18 @@ await withPage('the app going to the background keeps a half-written essay, and 
   if (after.length !== 1 || !after[0].body?.join('').includes('写完了')) throw new Error(`after leaving: ${JSON.stringify(after.map((w) => w.body))}`);
 });
 
+await withPage('a slider at a named end says the name to a screen reader, not 「Infinity」', async (page) => {
+  await open(page, '/me/organize');
+  const sl = page.getByRole('slider').first();
+  await sl.focus();
+  await page.keyboard.press('End');
+  const vt = await sl.getAttribute('aria-valuetext');
+  if (vt !== '从不按月') throw new Error(`slider at the end says 「${vt}」`);
+  await page.keyboard.press('Home');
+  await page.keyboard.press('ArrowRight');
+  if (!/^\d+ 条$/.test(await sl.getAttribute('aria-valuetext') ?? '')) throw new Error(`slider value: ${await sl.getAttribute('aria-valuetext')}`);
+});
+
 await withPage('a save the browser refuses (storage full) is said, and the notice goes once a save works', async (page) => {
   await page.goto(`${BASE}#/`, { waitUntil: 'domcontentloaded' });
   await seedBooks(page, ['甲', '乙']);

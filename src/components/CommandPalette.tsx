@@ -154,7 +154,7 @@ export function PalettePanel({ inline, onClose, onAdd, onHelp, start, onState }:
         <Search strokeWidth={1.5} />
         <input
           ref={input} value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={key}
-          placeholder={SEARCH_PLACEHOLDER} enterKeyHint="search" role="combobox" aria-expanded aria-controls={`${uid}-l`}
+          placeholder={SEARCH_PLACEHOLDER} enterKeyHint="search" role="combobox" aria-label="搜索" aria-expanded aria-controls={`${uid}-l`}
           aria-activedescendant={hits[cur] ? `${uid}-${cur}` : undefined} autoComplete="off" spellCheck={false}
         />
       </label>
@@ -164,7 +164,7 @@ export function PalettePanel({ inline, onClose, onAdd, onHelp, start, onState }:
           last = h.group;
           const [tw, th] = h.work ? thumbSize(h.work, 28) : [28, 28];
           return (
-            <div key={h.key}>
+            <div key={h.key} role="presentation">
               {head && <div className="palette-group t-label c-3">{head}</div>}
               <div
                 id={`${uid}-${i}`} data-i={i} data-key={h.key} role="option" aria-selected={i === cur}

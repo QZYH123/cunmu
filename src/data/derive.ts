@@ -65,7 +65,8 @@ export function derive(works: Work[], settings: Settings, promoted: Set<string>,
       const id = personId(c.name);
       let p = allPeople.get(id);
       if (!p) { p = { name: c.name, works: [], roles: new Set(), core: false }; allPeople.set(id, p); }
-      if (!p.works.includes(w)) p.works.push(w);
+      // works come one at a time, so a person named twice on this one has it last (no scan of a long list)
+      if (p.works[p.works.length - 1] !== w) p.works.push(w);
       p.roles.add(c.role);
       if (c.core) p.core = true;
     }
@@ -125,21 +126,36 @@ export function derive(works: Work[], settings: Settings, promoted: Set<string>,
 
 export type Segment = { text: string; target?: string; kind?: 'work' | 'person' };
 
+const NO_LINKS: Linkable[] = [];
+const linkIndexes = new WeakMap<Linkable[], Map<string, Linkable[]>>();
+/** the linkable names by their first character, kept in their order; built once per library */
+function linkIndex(all: Linkable[]): Map<string, Linkable[]> {
+  let m = linkIndexes.get(all);
+  if (!m) {
+    m = new Map();
+    for (const l of all) { if (!l.name) continue; const k = l.name[0]; const xs = m.get(k); if (xs) xs.push(l); else m.set(k, [l]); }
+    linkIndexes.set(all, m);
+  }
+  return m;
+}
+
 /**
  * Split paragraphs into text / link segments. A target is linked only at its first occurrence in the
  * whole document (§3.4), never to the document itself, and never if the user unlinked it.
  */
 export function linkify(paragraphs: string[], d: Derived, selfId: string, unlinked: Set<string>): Segment[][] {
   const done = new Set<string>();
-  const cands = d.linkables.filter((l) => l.target !== selfId && !unlinked.has(`${selfId}>${l.target}`));
+  const ok = (l: Linkable) => l.target !== selfId && !unlinked.has(`${selfId}>${l.target}`);
+  const byFirst = linkIndex(d.linkables);
   return paragraphs.map((p) => {
     const segs: Segment[] = [];
     let i = 0;
     let buf = '';
     while (i < p.length) {
       let hit: Linkable | undefined;
-      for (const c of cands) {
-        if (p.startsWith(c.name, i)) { hit = c; break; }
+      // only the names that start with this character can match here (same order: longest first)
+      for (const c of byFirst.get(p[i]) ?? NO_LINKS) {
+        if (p.startsWith(c.name, i) && ok(c)) { hit = c; break; }
       }
       if (hit) {
         if (!done.has(hit.target)) {

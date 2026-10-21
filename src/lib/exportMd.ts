@@ -31,7 +31,20 @@ export function workMarkdown(w: Work, essayPhoto?: string): string {
   return out.join('\n');
 }
 
-const safeName = (s: string) => s.replace(/[\\/:*?"<>|\n\r\t]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80);
+const safeName = (s: string) => s.replace(/[\\/:*?"<>|\n\r\t]/g, ' ').replace(/\s+/g, ' ').trim()
+  // by characters, so an emoji is never cut in half
+  .replace(/^([\s\S]{0,80})[\s\S]*$/u, '$1')
+  // Windows: no name may end in a dot or be a device name (CON, NUL, COM1…)
+  .replace(/[. ]+$/, '').replace(/^(con|prn|aux|nul|com\d|lpt\d)$/i, '$1_');
+
+/** a Markdown file's name, unique among `used` the way Windows and macOS compare names (case does not count) */
+export function markdownBase(w: Pick<Work, 'kind' | 'title' | 'id' | 'collected'>, used: Set<string>): string {
+  let base = w.kind === 'essay' && !w.title ? `无题-${(w.collected || todayISO()).slice(0, 10)}` : safeName(w.title) || w.id;
+  const key = (b: string) => b.toLowerCase();
+  if (used.has(key(base))) { let i = 2; while (used.has(key(`${base} (${i})`))) i++; base = `${base} (${i})`; }
+  used.add(key(base));
+  return base;
+}
 
 /**
  * 导出全部内容 (方案 v0.6 §6.8, STYLE v0.4 §3.18.1; decided: your own pictures go in, covers never):
@@ -42,9 +55,7 @@ export async function buildExportZip(works: Work[], backup: CunmuExport, essayPh
   const used = new Set<string>();
   const pics = new Set<string>();
   for (const w of works) {
-    let base = w.kind === 'essay' && !w.title ? `无题-${(w.collected || todayISO()).slice(0, 10)}` : safeName(w.title) || w.id;
-    if (used.has(base)) { let i = 2; while (used.has(`${base} (${i})`)) i++; base = `${base} (${i})`; }
-    used.add(base);
+    const base = markdownBase(w, used);
     const photo = essayPhotos[w.id];
     files.push({ name: `Markdown/${base}.md`, data: workMarkdown(w, photo) });
     if (photo) pics.add(photo);

@@ -19,7 +19,7 @@ import { steamPriorOf, undoSteamPrior } from './steamUndo';
 import { withViewTransition } from '../lib/motion';
 import { clearCoverCache } from '../lib/coverCache';
 import type { CoverImage, Credit, Dataset, DateClaim, Quote, Work } from './types';
-import { makerOf, sourceKeyOf, withMaker } from './types';
+import { KIND_ORDER, makerOf, sourceKeyOf, withMaker } from './types';
 import { todayISO } from '../lib/today';
 import { EMPTY_ME, FAV_MAX, fixMe, type Favorite, type Interest, type MeData, type Period, type Profile } from './me';
 import { clearImages, imageURL } from '../lib/images';
@@ -238,6 +238,18 @@ export function repointMe(me: PersistedV2['me'], from: string, into: string): Pe
   // 只给自己 on either side: the merged one stays hidden
   if (me.onlyMe.includes(from)) out = { ...out, onlyMe: [...new Set([...me.onlyMe.filter((i) => i !== from), into])] };
   return out;
+}
+const asList = <T,>(v: T[] | undefined | null): T[] => (Array.isArray(v) ? v : []);
+const asRecord = <T,>(v: Record<string, T> | undefined | null): Record<string, T> => (v && typeof v === 'object' && !Array.isArray(v) ? v : {});
+/** a backup's works, from a file that may have been edited by hand: a row that is not a work is skipped,
+ *  and the lists every page reads (credits, genres, info, sources) are lists */
+export function backupWorks<W extends { id?: unknown; kind?: unknown; title?: unknown; credits?: unknown; genres?: unknown; info?: unknown; sources?: unknown }>(list: readonly W[]) {
+  return list.filter((w) => !!w && typeof w === 'object' && typeof w.id === 'string' && !!w.id && KIND_ORDER.includes(w.kind as Work['kind']))
+    .map((w) => ({
+      ...w, title: typeof w.title === 'string' ? w.title : '',
+      credits: Array.isArray(w.credits) ? w.credits : [], genres: Array.isArray(w.genres) ? w.genres : [], info: Array.isArray(w.info) ? w.info : [],
+      sources: Array.isArray(w.sources) ? w.sources : undefined,
+    }));
 }
 const nowISO = () => new Date().toISOString();
 let qn = 0;
@@ -794,13 +806,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         getBangumiToken().then((t) => !!t),
         getSecret('steam-key').then((k) => !!k),
       ]);
+      const works = backupWorks(j.works);
       const catalogue = new Set(masterFor(j.prototype?.dataset ?? dataset).map((w) => w.id));
       // app: Bangumi's works come back as its last pull (the next sync brings their covers back)
       const fromPull = (w: { id: string; sources?: Work['sources'] }) => !DEMO && /^bgm-\d+$/.test(w.id) && !!w.sources?.some((r) => r.provider === 'bangumi_account');
       const eb = j.connections?.bangumi;
-      const pullWorks = eb ? j.works.filter(fromPull).map(({ sourceKey: _k, ...w }) => fixCoverAspect({ ...w, cover: travels(w.cover), finished: '' } as Work)) : [];
+      const pullWorks = eb ? works.filter(fromPull).map(({ sourceKey: _k, ...w }) => fixCoverAspect({ ...w, cover: travels(w.cover), finished: '' } as Work)) : [];
       // works the demo catalogue provides come back with it; the rest are yours and come back as they were
-      const extras = j.works.filter((w) => !fromPull(w) && (!catalogue.has(w.id) || w.kind === 'essay'))
+      const extras = works.filter((w) => !fromPull(w) && (!catalogue.has(w.id) || w.kind === 'essay'))
         .map(({ sourceKey: _k, ...w }) => fixCoverAspect({ ...w, cover: travels(w.cover), finished: '' } as Work))
         .map((w) => (w.quotes === undefined ? w : { ...w, quotes: normalizeQuotes(w.quotes) }));
       const prev = ownIds();
@@ -808,11 +821,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         ...x, ...CLEAN,
         extras,
         notes: normalizeNoteQuotes<WorkNote>(j.notes),
-        removed: j.removed ?? {},
-        batches: j.batches ?? [],
-        workSources: j.prototype?.workSources ?? [],
-        linked: j.links?.linked ?? [], unlinked: j.links?.unlinked ?? [],
-        promoted: j.promoted ?? [], pulls: j.pulls ?? {},
+        // a hand-edited file: a part in the wrong shape comes back empty instead of breaking every page
+        removed: asRecord(j.removed),
+        batches: asList(j.batches),
+        workSources: asList(j.prototype?.workSources),
+        linked: asList(j.links?.linked), unlinked: asList(j.links?.unlinked),
+        promoted: asList(j.promoted), pulls: asRecord(j.pulls),
         settings: { ...x.settings, ...fixInf(j.settings as unknown as Record<string, unknown>) },
         title: typeof j.title === 'string' ? j.title : x.title,
         // a file from before the 「我」 page has none: it starts empty (and the suggestions offer it again)
@@ -823,7 +837,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           weread: { connected: false },
           steam: steamFromBackup(j.connections?.steam, { hasKey }),
         },
-        plays: j.plays ?? {},
+        plays: asRecord(j.plays),
         bangumi: pullWorks.length && (DEMO || eb?.userId) ? { done: pullWorks.filter((w) => w.status !== 'doing'), doing: pullWorks.filter((w) => w.status === 'doing') } : undefined,
         dev: { tier: j.prototype?.tier ?? 0, dataset: j.prototype?.dataset ?? dataset, wereadRemoved: false },
         leadPin: null,

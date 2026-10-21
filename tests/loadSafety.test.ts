@@ -23,6 +23,12 @@ test('load: a first open (no text) is not reported', () => {
   assert.equal(hit, 0);
 });
 
+test('settings: a value that is not a number falls back to the default; null is 不限', async () => {
+  const { fixInf } = await import('../src/data/persist');
+  assert.deepEqual(fixInf({ yearGroup: 'abc', monthEntry: '7', personThreshold: null, x: true, y: '' }), { monthEntry: 7, personThreshold: Infinity });
+  assert.deepEqual(fixInf('junk' as never), {});
+});
+
 test('load: JSON that is not a save (null, a list, a string) is reported, not taken as a first open', () => {
   for (const t of ['null', '[]', '"x"', '0']) {
     let hit = 0;

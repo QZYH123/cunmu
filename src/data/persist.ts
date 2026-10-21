@@ -258,9 +258,13 @@ export function migrateV1toV2(v1: any, now: string): PersistedV2 {
 }
 
 export function fixInf(o?: Record<string, unknown> | null): Partial<Settings> {
-  if (!o) return {};
+  if (!o || typeof o !== 'object') return {};
   const r: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(o)) r[k] = v === null ? Infinity : Array.isArray(v) ? v : Number(v);
+  for (const [k, v] of Object.entries(o)) {
+    // a value that is not a number (a hand-edited file) is left out, so the default stands
+    const n = v === null ? Infinity : Array.isArray(v) ? v : typeof v === 'number' || (typeof v === 'string' && v.trim()) ? Number(v) : NaN;
+    if (Array.isArray(n) || !Number.isNaN(n)) r[k] = n;
+  }
   return r as Partial<Settings>;
 }
 

@@ -42,3 +42,23 @@ test('export: a Steam cover travels like a Bangumi one; other hosts do not', asy
   assert.ok((await import('../src/data/store')).travels(c('https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/1/library_600x900.jpg')));
   assert.equal((await import('../src/data/store')).travels(c('https://evil.example/steamstatic.com/x.jpg')), null);
 });
+
+test('export Markdown names: unique ignoring case, no Windows device names or trailing dots, emoji kept whole', async () => {
+  const { markdownBase } = await import('../src/lib/exportMd');
+  const used = new Set<string>();
+  const w = (title: string, id = title) => ({ kind: 'book' as const, title, id, collected: '2024-01-01' });
+  assert.equal(markdownBase(w('Fate'), used), 'Fate');
+  assert.equal(markdownBase(w('FATE'), used), 'FATE (2)');
+  assert.equal(markdownBase(w('Con'), used), 'Con_');
+  assert.equal(markdownBase(w('Mr.'), used), 'Mr');
+  assert.equal(markdownBase(w('...', 'id-1'), used), 'id-1');
+  const long = `${'字'.repeat(79)}😀😀`;
+  assert.equal(markdownBase(w(long), used), `${'字'.repeat(79)}😀`);
+});
+
+test('restore: a hand-edited file — rows that are not works are skipped, missing lists become empty', async () => {
+  const { backupWorks } = await import('../src/data/store');
+  const got = backupWorks([null, 'x', { id: '', kind: 'book' }, { id: 'a', kind: 'poem' }, { id: 'b', kind: 'book', credits: 'x', sources: {} }] as never[]);
+  assert.equal(got.length, 1);
+  assert.deepEqual([got[0].id, got[0].title, got[0].credits, got[0].genres, got[0].info, got[0].sources], ['b', '', [], [], [], undefined]);
+});

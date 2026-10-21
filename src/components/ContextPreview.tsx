@@ -5,6 +5,7 @@ import { creatorLine, whenOf } from '../data/derive';
 import type { Work } from '../data/types';
 import { Preview, WorkPreviewBody } from './Bits';
 import { isDesktop } from '../lib/native';
+import { decodePart } from '../lib/decode';
 
 /** Desktop right-click on a cover or a work row opens the long-press card (P2-6, §8.5). */
 const FINE = '(hover: hover) and (pointer: fine)';
@@ -16,7 +17,7 @@ function targetOf(t: EventTarget | null): { id: string; el: HTMLElement } | null
   if (marked) return { id: marked.dataset.ctx!, el: marked };
   const a = node?.closest<HTMLAnchorElement>('a[href*="#/entry/"]');
   if (!a) return null;
-  const id = decodeURIComponent(a.getAttribute('href')!.split('#/entry/')[1]?.split(/[?#]/)[0] ?? '');
+  const id = decodePart(a.getAttribute('href')!.split('#/entry/')[1]?.split(/[?#]/)[0] ?? '');
   return id ? { id, el: a } : null;
 }
 

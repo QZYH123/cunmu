@@ -497,6 +497,20 @@ await withPage('Bangumi: 同步一次 brings the new ones; 断开 takes them awa
   if (after.connections?.bangumi && after.connections.bangumi.userId !== 1000001) throw new Error('lost the user id');
 }, later);
 
+await withPage('odd links: a broken escape and a year that is not a number do not break the app', async (page) => {
+  const errs = [];
+  page.on('pageerror', (e) => errs.push(e.message));
+  await open(page, '/person/%E0%A4');
+  await page.waitForTimeout(500);
+  if (errs.length) throw new Error(`page error: ${errs[0]}`);
+  await open(page, '/year/abc');
+  await page.waitForTimeout(500);
+  if (!page.url().includes('#/index/periods')) throw new Error(`/year/abc stayed at ${page.url()}`);
+  await open(page, '/essay/gone');
+  await page.getByText('找不到这一条。').waitFor({ timeout: 3000 });
+  if (errs.length) throw new Error(`page error: ${errs[0]}`);
+});
+
 await withPage('豆伴 export (.xlsx): read, bring in, paper covers, nothing fetched', async (page) => {
   const reqs = [];
   page.on('request', (r) => { if (!r.url().startsWith(BASE)) reqs.push(r.url()); });

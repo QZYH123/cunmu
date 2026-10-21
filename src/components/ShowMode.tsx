@@ -11,13 +11,14 @@ import { ChevronLeft } from 'lucide-react';
 import { useStore } from '../data/store';
 import { DUR } from '../tokens';
 import { tick } from '../lib/shell';
+import { decodePart } from '../lib/decode';
 
 /** the pages a guest can open; a work or essay only when it isn't 只给自己 */
 export function openInShow(path: string, onlyMe: string[]): boolean {
   if (path === '/' || path === '') return true;
   const m = path.match(/^\/(interest|period|entry|essay)\/([^/]+)$/);
   if (!m) return false;
-  if ((m[1] === 'entry' || m[1] === 'essay') && onlyMe.includes(decodeURIComponent(m[2]))) return false;
+  if ((m[1] === 'entry' || m[1] === 'essay') && onlyMe.includes(decodePart(m[2]))) return false;
   return true;
 }
 

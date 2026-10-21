@@ -65,7 +65,8 @@ export default function Essay() {
   // re-measure when their slices land; hold the column back until they are in (≤ FONT_WAIT_MS)
   const capChar = chars >= EDITORIAL.dropcap ? Array.from(essay?.body?.[0] ?? '')[0] ?? '' : '';
   const fontsOk = useFontsFor(essay?.title || (essay?.body?.[0] ?? '').slice(0, 16), [['700 64px', capChar]]);
-  if (!essay) return null;
+  // an old link to an essay that is gone: the same way out as a work that is gone
+  if (!essay) return <div className="page under-bar page-x"><TopBar /><p className="t-ui c-2 empty-line">找不到这一条。</p><Link to="/" className="btn-text quiet empty-back">回到首页 ›</Link></div>;
   const removed = !!store.removed[essay.id];
   const pull = pullOk ? (pulls[essay.id] ?? essay.pull) || undefined : undefined;
   const titled = !!essay.title;

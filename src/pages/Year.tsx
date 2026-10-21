@@ -1,4 +1,4 @@
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import { useStore } from '../data/store';
 import type { Work } from '../data/types';
@@ -82,6 +82,8 @@ export default function Year() {
   }
   const months = [...byMonth.keys()].sort((a, b) => b - a);
 
+  // a link that names no year or month (「abc」, month 13) goes to the list of years, as an unknown index tab does
+  if (!/^\d{1,4}$/.test(y) || (m !== undefined && !(/^\d{1,2}$/.test(m) && month! >= 1 && month! <= 12))) return <Navigate to="/index/periods" replace />;
   // a year with nothing in it (an old link, or every work moved away): say what it will be, and the way out
   if (!works.length) {
     return (

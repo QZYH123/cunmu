@@ -17,3 +17,8 @@ test('long image: the browser\'s unicode-range and the stylesheet\'s are the sam
   assert.notEqual(normRange('U+4E00-4E3F'), normRange('U+4E40-4E7F'));
   assert.equal(normRange(''), normRange('U+0-10FFFF'));
 });
+
+test('a link with a broken escape (%E0) is read as typed, not thrown on', () => {
+  assert.equal(openInShow('/entry/%E0%A4', []), true);
+  assert.equal(openInShow('/entry/%E0%A4', ['%E0%A4']), false);
+});

@@ -37,6 +37,7 @@ const Licenses = lazy(() => import('./pages/About').then((m) => ({ default: m.Li
 import Editor from './pages/Editor';
 import Writing from './pages/Writing';
 import { Doing, Removed, Unknown } from './pages/Lists';
+import { decodePart } from './lib/decode';
 
 /** bangumi: 'token' opens on the token card, { user } reads that account at once; douban: a dropped backup file */
 interface Sheets { weread: () => void; bangumi: (start?: unknown) => void; douban: (file?: unknown) => void; add: (query?: unknown) => void; steam: () => void }
@@ -48,7 +49,7 @@ function useDocTitle() {
   const { pathname } = useLocation();
   const store = useStore();
   useEffect(() => {
-    const [, a, b, c] = pathname.split('/').map(decodeURIComponent);
+    const [, a, b, c] = pathname.split('/').map(decodePart);
     const work = (id: string) => store.d.byId.get(id) ?? store.removedWorks.find((w) => w.id === id);
     let name = store.title?.trim() ?? '';
     if (a === 'entry' || a === 'essay') { const w = work(b); if (w) name = w.kind === 'essay' ? (w.title || '随笔') : `《${w.title}》`; }

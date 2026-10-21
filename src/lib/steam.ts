@@ -17,6 +17,7 @@
  */
 import type { CoverImage, Work } from '../data/types';
 import { normTitle } from './douban';
+import { decodePart } from './decode';
 
 export const STEAM_API = 'https://api.steampowered.com';
 export const STEAM_CDN = 'https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps';
@@ -74,7 +75,7 @@ export function parseSteamUser(input: string): { id: string } | { vanity: string
   let m = /^(\d{17})$/.exec(t) ?? /steamcommunity\.com\/profiles\/(\d{17})/i.exec(t);
   if (m) return { id: m[1] };
   m = /steamcommunity\.com\/id\/([^/?#\s]+)/i.exec(t);
-  if (m) return { vanity: decodeURIComponent(m[1]) };
+  if (m) return { vanity: decodePart(m[1]) };
   if (/^[A-Za-z0-9_-]{2,32}$/.test(t)) return { vanity: t };
   return null;
 }

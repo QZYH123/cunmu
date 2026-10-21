@@ -29,6 +29,7 @@ import { steamReachable } from '../lib/steamNet';
 import { runSteamDetails, runSteamSync, STEAM_ACH, STEAM_WEB } from './SteamConnect';
 import { TopBar } from '../components/Shell';
 import { AboutYou } from '../components/AboutYou';
+import { lastBatchOf } from '../data/batches';
 
 const ymdLong = (iso: string) => { const d = new Date(iso); return `${d.getFullYear()} 年 ${d.getMonth() + 1} 月 ${d.getDate()} 日`; };
 const md = (iso: string) => { const d = new Date(iso); return `${d.getMonth() + 1} 月 ${d.getDate()} 日`; };
@@ -100,7 +101,7 @@ export default function Me() {
   const bangumiCount = own.filter((w) => w.source === 'bangumi').length;
   const wereadCount = own.filter((w) => w.source === 'weread').length;
   const bgm = store.connections.bangumi;
-  const lastOf = (p: ImportBatch['provider']) => store.batches.find((b) => b.provider === p && !b.undoneAt) ?? null;
+  const lastOf = (p: ImportBatch['provider']) => lastBatchOf(store.batches, p);
   const douban = lastOf('douban_xlsx');
   const paste = lastOf('weread_paste');
   const batchCount = (b: ImportBatch) => new Set([...b.created, ...b.merged]).size;

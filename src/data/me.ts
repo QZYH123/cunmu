@@ -170,6 +170,9 @@ export function periodMembers(p: Pick<Period, 'from' | 'to' | 'include' | 'exclu
 export const periodEssays = (p: Pick<Period, 'from' | 'to'>, works: Work[], today: string) =>
   works.filter((w) => w.kind === 'essay' && inPeriod(p, w.finished, today)).sort(newestFirst);
 
+/** 给人看: only the periods a guest would find something in — one with no works they can see (只给自己 kept out) is not shown */
+export const shownPeriods = (ps: Period[], visibleWorks: Work[], today: string) => ps.filter((p) => periodMembers(p, visibleWorks, today).length > 0);
+
 /** periods in the order of a book's chapters: by when they began */
 export const chapterOrder = (ps: Period[]) => [...ps].sort((a, b) => (a.from === b.from ? a.createdAt.localeCompare(b.createdAt) : a.from < b.from ? -1 : 1));
 

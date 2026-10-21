@@ -10,7 +10,7 @@ import { useStore } from '../data/store';
 import type { Work } from '../data/types';
 import { KIND_ASPECT } from '../data/types';
 import { personId } from '../data/derive';
-import { chapterOrder, FAV_MAX, INTEREST_LINE_MAX, INTEREST_NAME_MAX, interestMembers, ownInterest, shownTo, withMembers, type Interest } from '../data/me';
+import { chapterOrder, shownPeriods, FAV_MAX, INTEREST_LINE_MAX, INTEREST_NAME_MAX, interestMembers, ownInterest, shownTo, withMembers, type Interest } from '../data/me';
 import { asFavorites, asInterest, asPeriod, favCandidates, nameFromCard, sheetMembers, suggestions, whyFor, type FavPick, type Suggestion } from '../data/suggest';
 import { keptLead, plain, spaced, type LeadCtx, type Seg } from '../data/lead';
 import { todayISO } from '../lib/today';
@@ -39,7 +39,7 @@ export function useMeView() {
   return useMemo(() => {
     const visible = show ? library.filter(shownTo(me.onlyMe)) : library;
     const works = visible.filter((w) => w.kind !== 'essay');
-    const periods = chapterOrder(me.periods);
+    const periods = show ? shownPeriods(chapterOrder(me.periods), works, today) : chapterOrder(me.periods);
     const ctx: LeadCtx = { name: store.title?.trim() ?? '', works: visible, interests: me.interests, periods, today, known: (n) => d.persons.has(personId(n)) };
     const favs = me.favorites.map((f) => ({ f, w: d.byId.get(f.id) })).filter((x): x is { f: typeof x.f; w: Work } => !!x.w && (!show || !me.onlyMe.includes(x.w.id)));
     const next: Suggestion | null = show ? null : suggestions(library, { title: store.title, me, today })[0] ?? null;

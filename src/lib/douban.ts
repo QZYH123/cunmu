@@ -108,15 +108,19 @@ export function planDouban(rows: DoubanRow[], library: Work[], known: Set<string
     const k = normTitle(w.title);
     byTitle.set(k, [...(byTitle.get(k) ?? []), w]);
   }
+  const taken = new Set<string>();
   for (const r of rows) {
     if (known.has(r.sid) || removed[`db-${r.sid}`]) { plan.skipped.push(r); continue; }
     const cands = (byTitle.get(normTitle(r.title)) ?? []).filter((w) => sameShelf(r.kind, w.kind));
     const sure = cands.find((w) => r.year && w.year && Math.abs(r.year - w.year) <= 1
       && w.credits.some((c) => c.core && c.name.length >= 2 && (r.subtitle.includes(c.name) || !!r.credits?.some((x) => x.name === c.name))));
-    if (sure) { plan.merge.push({ row: r, into: sure }); continue; }
+    // one row per work you had: a second edition that also matches comes in on its own and is asked about,
+    // so its mark and words are not written over by the first one's
+    if (sure && !taken.has(sure.id)) { taken.add(sure.id); plan.merge.push({ row: r, into: sure }); continue; }
     plan.fresh.push(r);
     plan.byKind.set(r.kind, (plan.byKind.get(r.kind) ?? 0) + 1);
-    if (cands.length) plan.maybe.push({ row: r, like: cands[0] });
+    if (sure) plan.maybe.push({ row: r, like: sure });
+    else if (cands.length) plan.maybe.push({ row: r, like: cands[0] });
   }
   return plan;
 }

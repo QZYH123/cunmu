@@ -145,3 +145,23 @@ test('doubak: marks alone ask for subjects; something else is not a backup', () 
   assert.deepEqual(parseDoubak(MARKS, null), { error: 'need-subjects' });
   assert.deepEqual(parseDoubak('{"hello":1}\n', SUBJECTS), { error: 'not-backup' });
 });
+
+test('douban plan: two rows that both surely match one work you had — the first merges, the second comes in and is asked about', async () => {
+  const { planDouban } = await import('../src/lib/douban');
+  const had = { id: 'm-1', kind: 'book', title: '活着', year: 1993, credits: [{ name: '余华', role: '作者', core: true }], genres: [], info: [], finished: '', collected: '', source: 'manual', cover: null } as unknown as import('../src/data/types').Work;
+  const row = (sid: string, year: number, comment: string) => ({ sid, kind: 'book' as const, title: '活着', subtitle: `余华 / 作家出版社 / ${year}`, year, marked: '2020-01-01', comment });
+  const plan = planDouban([row('1', 1993, '甲'), row('2', 1994, '乙')], [had], new Set(), {});
+  assert.deepEqual(plan.merge.map((m) => m.row.sid), ['1']);
+  assert.deepEqual(plan.fresh.map((r) => r.sid), ['2']);
+  assert.deepEqual(plan.maybe.map((m) => [m.row.sid, m.like.id]), [['2', 'm-1']]);
+});
+
+test('doubak: a subject whose labels are a plain string (or not text) reads, not crashes', () => {
+  const mark = JSON.stringify({ medium: 'book', subject: { id: '1' }, revisions: [{ fields: { status: 'done', marked_at: { iso: '2020-02-02T00:00:00+08:00', precision: 'day' } } }] });
+  const subj = JSON.stringify({ id: '1', revisions: [{ fields: { title: '书', info: { 作者: '某人', 出版年: '2001', 译者: 7 } } }] });
+  const r = parseDoubak(mark, subj);
+  assert.ok('rows' in r);
+  const row = (r as { rows: DoubanRow[] }).rows[0];
+  assert.equal(row.year, 2001);
+  assert.deepEqual(creditsOf(row).map((c) => c.name), ['某人']);
+});

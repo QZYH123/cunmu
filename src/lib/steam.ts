@@ -188,7 +188,8 @@ export function planSteam(pull: SteamPull, others: Work[], tz?: number): { works
   for (const g of pull.games) {
     if (!pull.includeUnplayed && g.playtime_forever <= 0) { skipped++; continue; }
     const same = byTitle.get(normTitle(g.name));
-    if (same) { plays[same.id] = playOf(g, tz); continue; }
+    // one Steam game per work you had: a second game of the same name comes in as its own, so neither time is lost
+    if (same && !plays[same.id]) { plays[same.id] = playOf(g, tz); continue; }
     works.push(steamWork(g, pull.at, tz));
   }
   return { works, plays, skipped };

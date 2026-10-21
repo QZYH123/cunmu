@@ -45,7 +45,10 @@ export function parseDoubak(marksText: string, subjectsText: string | null): { r
     const s = subjects.get(sid);
     const sf = s ? latest(s) : {};
     const gone = !!(m.subject!.upstream_deleted || s?.upstream_deleted);
-    const info = (sf.info && typeof sf.info === 'object' ? sf.info : {}) as Record<string, string[]>;
+    const infoRaw = (sf.info && typeof sf.info === 'object' ? sf.info : {}) as Record<string, unknown>;
+    // a label's values are a list; a file edited by hand may give one string, or something else — never a crash
+    const info: Record<string, string[]> = Object.fromEntries(Object.entries(infoRaw).map(([k, v]) =>
+      [k, Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : typeof v === 'string' ? [v] : []]));
     const raw = str(f.raw_meta) || str(sf.raw_meta);
     const dated = DATE_KEYS.map((key) => info[key]?.[0]).find(Boolean) ?? raw;
     const y = dated.match(/(1[89]\d\d|20\d\d)/)?.[1];

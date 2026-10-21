@@ -142,3 +142,10 @@ test('steam: an empty public library (only game_count: 0) is an empty list; a ga
   assert.ok(Array.isArray(two));
   assert.deepEqual((two as { appid: number }[]).map((g) => g.appid), [10]);
 });
+
+test('steam: two games of one name and one work you had — the first lays its time on it, the second comes in as its own', () => {
+  const had = { id: 'm-1', kind: 'game', title: 'DOOM', credits: [], genres: [], info: [], finished: '', collected: '', source: 'manual', cover: null } as unknown as Work;
+  const r = planSteam({ games: [{ appid: 1, name: 'DOOM', playtime_forever: 60 }, { appid: 2, name: 'DOOM', playtime_forever: 90 }], at: '2026-10-21T00:00:00Z' }, [had]);
+  assert.equal(r.plays['m-1'].appid, 1);
+  assert.deepEqual(r.works.map((w) => w.id), ['steam-2']);
+});

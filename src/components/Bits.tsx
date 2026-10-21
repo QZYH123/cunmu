@@ -35,11 +35,14 @@ export function Sheet({ open, onClose, children, label, className = '', locked =
     if (!open) return;
     opener.current = document.activeElement as HTMLElement | null;
     openedAt.current = location.hash;
-    const t = window.setTimeout(() => box.current?.querySelector<HTMLElement>('button:not([disabled]), input, textarea, a[href], [tabindex="0"]')?.focus({ preventScroll: true }), 0);
+    // what Tab can reach: a hidden file input or a disabled field is not a stop, so it is neither first nor last
+    const stops = () => [...(box.current?.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), a[href], textarea:not([disabled]), [tabindex="0"]') ?? [])]
+      .filter((el) => el.getClientRects().length > 0);
+    const t = window.setTimeout(() => stops()[0]?.focus({ preventScroll: true }), 0);
     const k = (e: KeyboardEvent) => {
       if (e.key === 'Escape') { e.preventDefault(); if (!lockRef.current) onClose(); return; }
       if (e.key !== 'Tab' || !box.current) return;
-      const f = [...box.current.querySelectorAll<HTMLElement>('button:not([disabled]), input, a[href], textarea, [tabindex="0"]')];
+      const f = stops();
       if (!f.length) return;
       const i = f.indexOf(document.activeElement as HTMLElement);
       if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); }
@@ -446,7 +449,9 @@ export function RollingNumber({ value, className = '' }: { value: string; classN
   const first = useRef(true);
   useEffect(() => { first.current = false; }, []);
   return (
-    <span className={`roll ${className}`} aria-label={value}>
+    <span className={`roll ${className}`}>
+      {/* a plain span's aria-label is not read: the number is said by hidden text, the rolling digits are not */}
+      <span className="sr-only">{value}</span>
       {Array.from(value).map((ch, i) => {
         const d = Number(ch);
         if (Number.isNaN(d) || ch === ' ') return <span key={i} aria-hidden>{ch}</span>;

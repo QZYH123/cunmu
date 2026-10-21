@@ -212,17 +212,22 @@ export function Toasts() {
     const b = setTimeout(() => dismissToast(t.id), DUR.toast + DUR.fade);
     return () => { clearTimeout(a); clearTimeout(b); };
   }, [t, dismissToast]);
-  if (!t && !blocked && !failing) return null;
+  // the words are read out from a region that is always there: a status box that arrives with its text already in is
+  // not announced by most screen readers
+  const said = <div className="sr-only" role="status" aria-live="polite">{t?.text ?? ''}</div>;
   return (
-    <div className="toast-wrap">
+    <>
+    {(t || blocked || failing) && <div className="toast-wrap">
       {t && (
-        <div className={`toast ${leaving ? 'leaving' : ''}`} key={t.id} role="status">
+        <div className={`toast ${leaving ? 'leaving' : ''}`} key={t.id}>
           <span>{t.text}</span>
           {t.action && <button className="btn-text" onClick={() => { t.action!.run(); dismissToast(t.id); }}>{t.action.label}</button>}
         </div>
       )}
       {blocked && <div className="toast save-blocked" role="alert"><span>{SAVE_BLOCKED}</span></div>}
       {failing && !blocked && <div className="toast save-blocked" role="alert"><span>{SAVE_FAILED}</span></div>}
-    </div>
+    </div>}
+    {said}
+    </>
   );
 }

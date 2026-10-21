@@ -129,6 +129,8 @@ function HoldToDelete({ onDone, busy }: { onDone: () => void; busy: boolean }) {
         onPointerLeave={stop}
         onKeyDown={(e) => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); start(); } }}
         onKeyUp={(e) => { if (e.key === ' ' || e.key === 'Enter') stop(); }}
+        // focus that leaves mid-hold (another window, Tab) never sends the key up: the hold ends there, nothing is deleted
+        onBlur={stop}
         onContextMenu={(e) => e.preventDefault()}
       >
         <span className="btn-danger-text hold-label">{busy ? <><Spin />正在删除</> : '按住删除'}</span>

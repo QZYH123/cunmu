@@ -152,8 +152,11 @@ await withPage('关于: privacy names the only two hosts, licences list what shi
   for (const name of ['react', '@capacitor/core', '@aparajita/capacitor-secure-storage', 'OFL-1.1']) if (!lic.includes(name)) throw new Error(`licences: no ${name}`);
   await page.goBack();
   await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+  // a screen reader hears a toast from a live region that was there before it
+  await page.evaluate(() => { window.__live = document.querySelector('[role="status"][aria-live="polite"]'); });
   await page.getByRole('button', { name: /复制诊断信息/ }).click();
   await page.locator('.toast, [role="status"]').filter({ hasText: '诊断信息复制好了' }).first().waitFor({ timeout: 5000 });
+  if (!(await page.evaluate(() => !!window.__live?.isConnected && window.__live.textContent.includes('诊断信息复制好了')))) throw new Error('the toast was not put in a live region that was already there');
   const copied = await page.evaluate(() => navigator.clipboard.readText());
   if (!/^Cunmu \d/.test(copied) || !copied.includes('条目：0')) throw new Error(`diagnostics: ${copied.slice(0, 80)}`);
 });
@@ -499,6 +502,12 @@ await withPage('豆伴 export (.xlsx): read, bring in, paper covers, nothing fet
   page.on('request', (r) => { if (!r.url().startsWith(BASE)) reqs.push(r.url()); });
   await open(page, '/me');
   await page.getByRole('button', { name: /豆瓣备份/ }).click();
+  // focus goes into the sheet past its hidden file input, and Shift+Tab does not leave it
+  await page.waitForTimeout(300);
+  const inSheet = () => page.evaluate(() => !!document.activeElement?.closest('[role="dialog"]'));
+  if (!(await inSheet())) throw new Error('focus did not go into the sheet');
+  await page.keyboard.press('Shift+Tab');
+  if (!(await inSheet())) throw new Error('Shift+Tab left the sheet');
   await page.getByTestId('douban-file').setInputFiles(join(ROOT, 'tests/fixtures/douban/doufen-synthetic.xlsx'));
   await sheet(page).getByText('条，可以搬进来').waitFor({ timeout: 8000 });
   const n = (await sheet(page).locator('.t-numeral').innerText()).trim();

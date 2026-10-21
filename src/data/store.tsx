@@ -133,12 +133,12 @@ interface Store extends PersistedV2 {
   /** demo build: a simulated light sync — marks made since (在看 → 看过) come in; works you took out stay out */
   syncBangumi: () => number;
   /** app build: a Bangumi pull (lib/bangumi.ts planSync) and the connection it came with; `added` arrive on the wall */
-  applyBangumi: (r: { pull: BangumiPull; conn: BangumiConnection; added: string[]; first?: boolean }) => void;
+  applyBangumi: (r: { pull: BangumiPull; conn: BangumiConnection; added: string[]; first?: boolean; /** from the background sync: dropped when Bangumi was disconnected meanwhile */ sync?: boolean }) => void;
   /** what the background learned about Bangumi works: core creators, real cover shapes */
   learnBangumi: (patch: { people?: Record<string, Credit[]>; aspects?: Record<string, number> }) => void;
   /** r19 a Steam read (lib/steam.ts): new games join as one batch, times move on for the ones already here;
    *  returns how many arrived and how many matched a game you had */
-  applySteam: (r: { games: SteamGame[]; conn: SteamConnection; includeUnplayed: boolean }) => { added: number; matched: number; skipped: number };
+  applySteam: (r: { games: SteamGame[]; conn: SteamConnection; includeUnplayed: boolean; /** 再读一次: dropped when Steam was disconnected meanwhile */ sync?: boolean }) => { added: number; matched: number; skipped: number };
   /** r20 what was read for one game on demand: its achievements, the store's facts */
   learnSteam: (workId: string, patch: { ach?: AchSummary; store?: StoreFacts }) => void;
   /** Steam's games stay (they are yours now); the connection, its key and the playtime laid on other works go */
@@ -260,6 +260,9 @@ const MONTH_DAY = (d = new Date()) => `${d.getMonth() + 1} 月 ${d.getDate()} �
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [s, setS] = useState<PersistedV2>(() => load(storage.initialText(), storage.keepBak, storage.block));
   const [arrival, setArrival] = useState<Arrival | null>(null);
+  /** the newest state, for work that finishes later than the render that started it (a background sync) */
+  const latest = useRef(s);
+  latest.current = s;
   const arrivalRef = useRef<Arrival | null>(null);
   const [toasts, setToasts] = useState<ToastMsg[]>([]);
   const [justAdded, setJustAdded] = useState<string | null>(null);
@@ -612,7 +615,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       announce({ kind: 'batch', ids: [], prevIds: prev });
       if (!DEMO) { void setBangumiToken(null); void clearCoverCache(); }
     },
-    applySteam: ({ games, conn, includeUnplayed }) => {
+    applySteam: ({ games, conn, includeUnplayed, sync }) => {
+      // a read that comes back after you disconnected Steam does not connect it again
+      if (sync && !latest.current.connections.steam) return { added: 0, matched: 0, skipped: 0 };
       const at = nowISO();
       const own = library.filter((w) => !w.isSample);
       const plan = planSteam({ games, at, includeUnplayed }, own.filter((w) => w.source !== 'steam'));
@@ -621,7 +626,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const id = batchId();
       const prev = ownIds();
       setS((x0) => {
-        const x = fresh.length ? leaveSample(x0) : x0;
+        if (sync && !x0.connections.steam) return x0;
+        // a game another read brought in meanwhile (this call's view of the library can be a step behind) is
+        // updated below, never added a second time
+        const here = new Set(x0.extras.map((w) => w.id));
+        const add = fresh.filter((w) => !here.has(w.id));
+        const x = add.length ? leaveSample(x0) : x0;
         const next = new Map(plan.works.map((w) => [w.id, w]));
         // a game already here keeps your edits and its first date; its time and last-played claim move on
         const extras = x.extras.map((w) => {
@@ -633,10 +643,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const steamPrior = steamPriorOf(x.plays, x.extras, next, Object.keys(plan.plays));
         return {
           ...x,
-          extras: [...extras, ...fresh.map((w) => ({ ...w, sources: w.sources?.map((r) => ({ ...r, batchId: id, firstSeenAt: at })) }))],
+          extras: [...extras, ...add.map((w) => ({ ...w, sources: w.sources?.map((r) => ({ ...r, batchId: id, firstSeenAt: at })) }))],
           plays,
           connections: { ...x.connections, steam: conn },
-          batches: fresh.length ? [...x.batches, { id, provider: 'steam' as const, label: `${at.slice(5, 7).replace(/^0/, '')} 月 ${at.slice(8, 10).replace(/^0/, '')} 日 · Steam · ${fresh.length} 部`, createdAt: at, created: fresh.map((w) => w.id), merged: Object.keys(plan.plays), skipped: [], quoteIds: [], steamPrior }] : x.batches,
+          batches: add.length ? [...x.batches, { id, provider: 'steam' as const, label: `${at.slice(5, 7).replace(/^0/, '')} 月 ${at.slice(8, 10).replace(/^0/, '')} 日 · Steam · ${add.length} 部`, createdAt: at, created: add.map((w) => w.id), merged: Object.keys(plan.plays), skipped: [], quoteIds: [], steamPrior }] : x.batches,
         };
       });
       if (fresh.length) announce({ kind: fresh.length > 8 ? 'batch' : 'single', ids: fresh.map((w) => w.id), prevIds: prev });
@@ -664,11 +674,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (p) next.problem = p; else delete next.problem;
       return { ...x, connections: { ...x.connections, steam: next } };
     }),
-    applyBangumi: ({ pull, conn, added, first }) => {
+    applyBangumi: ({ pull, conn, added, first, sync }) => {
+      // a background sync that finishes after 断开 (or a new connection) must not bring the old one back
+      const cur = latest.current.connections.bangumi;
+      const gone = (b: BangumiConnection | null | undefined) => !b || b.status !== 'connected' || b.epoch !== conn.epoch;
+      if (sync && gone(cur)) return;
       const prev = ownIds();
       setS((x0) => {
+        if (sync && gone(x0.connections.bangumi)) return x0;
         const x = first ? leaveSample(x0) : x0;
-        return { ...x, bangumi: pull, connections: { ...x.connections, bangumi: conn } };
+        // people and cover shapes the background learned while this read was out stay (the pull carries the older set)
+        const had = x.bangumi;
+        const kept = had && !first ? {
+          ...((had.people || pull.people) ? { people: { ...(pull.people ?? {}), ...(had.people ?? {}) } } : null),
+          ...((had.aspects || pull.aspects) ? { aspects: { ...(pull.aspects ?? {}), ...(had.aspects ?? {}) } } : null),
+        } : null;
+        return { ...x, bangumi: { ...pull, ...kept }, connections: { ...x.connections, bangumi: conn } };
       });
       if (first || added.length) announce({ kind: first || added.length > 8 ? 'batch' : 'single', ids: first ? [] : added, prevIds: prev });
     },

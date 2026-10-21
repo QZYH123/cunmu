@@ -1,6 +1,9 @@
 const pad = (n: number) => String(n).padStart(2, '0');
 /** Today as a local ISO date (YYYY-MM-DD) — what 「看过了」 and a new essay are dated with. */
 export const todayISO = (d = new Date()) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+/** the reader's own day of a moment stored as a UTC ISO time (a sync or an import at 07:00 in UTC+8 is that day, not the one before) */
+export const localDay = (iso: string) => { if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso;   // a day already
+  const d = new Date(iso); return Number.isNaN(d.getTime()) ? iso.slice(0, 10) : todayISO(d); };
 
 /** Paragraphs from a textarea: blank lines or single line breaks both start a new paragraph. */
 export const toParagraphs = (s: string) => s.split(/\n+/).map((p) => p.trim()).filter(Boolean);

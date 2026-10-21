@@ -4,6 +4,7 @@ import { markClaim, planSync, type BgmCollection } from '../src/lib/bangumi';
 import { claimsOf, firstSeenClaim, resolveDates, sortWorks, CLUMP_MIN } from '../src/data/resolve';
 import { DEFAULT_SETTINGS, derive } from '../src/data/derive';
 import type { DateClaim, Work } from '../src/data/types';
+import { localDay } from '../src/lib/today';
 import reader from './fixtures/bangumi/reader-done-dates.json';
 
 // FEEDBACK 2026-10-10 §2 / DECISIONS-r2 #20: Bangumi's updated_at is the 看过 mark time
@@ -85,4 +86,18 @@ test('dates: reader (1019 看过) — every one a day, no pile-up, years split i
   assert.equal(y2011.loose.length, 0, 'nothing left as a bare year');
   // newest first on the wall
   assert.ok(ws[0].finished >= ws[ws.length - 1].finished);
+});
+
+test('a sync seen at 07:30 in UTC+8 dates by the reader\'s day, not UTC\'s', () => {
+  const prevTZ = process.env.TZ;
+  process.env.TZ = 'Asia/Singapore';
+  try {
+    const now = '2026-03-01T23:30:00.000Z';   // 2026-03-02 07:30 in UTC+8
+    assert.equal(firstSeenClaim(now, '2026-02-20T23:30:00.000Z').value, '2026-03-02');
+    process.env.TZ = 'America/New_York';
+    assert.equal(localDay('2026-02-20'), '2026-02-20');   // a plain day (an old save's sync day) stays that day
+    process.env.TZ = 'Asia/Singapore';
+    const r = planSync(null, [{ ...collection([7, 2, '2026-01-01T10:00:00+08:00', '甲', '甲', '2020-01-01']), type: 3 }], { epoch: 1, now });
+    assert.equal(r.pull.doing[0].collected, '2026-03-02');
+  } finally { if (prevTZ === undefined) delete process.env.TZ; else process.env.TZ = prevTZ; }
 });

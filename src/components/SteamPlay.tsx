@@ -6,6 +6,7 @@ import { fmtYMD } from '../data/derive';
 import { getSecret } from '../lib/secrets';
 import { readAchievements, readAppDetails, steamReachable, SteamError } from '../lib/steamNet';
 import { Section, Dots } from './Bits';
+import { localDay } from '../lib/today';
 
 const SAY: Record<SteamError['kind'], string> = {
   key: 'Steam 不认这个 Key，到「设置 › 来源」换一个',
@@ -93,7 +94,7 @@ export function SteamPlay({ work }: { work: Work }) {
               {f.genres.length > 0 && <div className="info-row"><dt>商店分类</dt><dd>{f.genres.join(' · ')}</dd></div>}
             </dl>
           )}
-          <p className="t-caption c-3 steam-at">{a ? `成就读于 ${fmtYMD(a.at.slice(0, 10))}` : ''}{a && f ? ' · ' : ''}{f ? '商店信息来自 Steam 中国区' : ''}</p>
+          <p className="t-caption c-3 steam-at">{a ? `成就读于 ${fmtYMD(localDay(a.at))}` : ''}{a && f ? ' · ' : ''}{f ? '商店信息来自 Steam 中国区' : ''}</p>
         </details>
       )}
       {canRead && (

@@ -44,7 +44,7 @@ export function runBangumiSync(store: Store): Promise<SyncOutcome> {
       const now = new Date().toISOString();
       const r = planSync(prev, items, { epoch: b.epoch, now, prevSyncAt: b.lastOkSyncAt });
       const { problem: _p, ...rest } = b;
-      store.applyBangumi({ pull: r.pull, conn: { ...rest, username, lastOkSyncAt: now }, added: r.added.filter((id) => r.pull.done.some((w) => w.id === id)) });
+      store.applyBangumi({ pull: r.pull, conn: { ...rest, username, lastOkSyncAt: now }, added: r.added.filter((id) => r.pull.done.some((w) => w.id === id)), sync: true });
       return { ok: true, added: r.added.length, removed: r.removed.length };
     } catch (e) {
       const code = e instanceof BgmError ? e.code : 'net';

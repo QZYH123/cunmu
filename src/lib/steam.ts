@@ -18,6 +18,7 @@
 import type { CoverImage, Work } from '../data/types';
 import { normTitle } from './douban';
 import { decodePart } from './decode';
+import { localDay } from './today';
 
 export const STEAM_API = 'https://api.steampowered.com';
 export const STEAM_CDN = 'https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps';
@@ -165,7 +166,7 @@ export function steamWork(g: SteamGame, at: string, tz?: number): Work {
   const play = playOf(g, tz);
   return {
     id: steamId(g.appid), kind: 'game', title: g.name, credits: [], genres: [], info: [],
-    finished: play.lastPlayed ?? '', collected: at.slice(0, 10), source: 'steam',
+    finished: play.lastPlayed ?? '', collected: localDay(at), source: 'steam',
     sources: [{ provider: 'steam', externalId: String(g.appid) }],
     claims: play.lastPlayed ? [{ source: 'steam_last_played', value: play.lastPlayed, precision: 'day', baseLevel: 2, observedAt: at }] : [],
     cover: g.appid ? steamCover(g.appid) : null,

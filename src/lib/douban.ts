@@ -9,6 +9,7 @@
 import type { Credit, Kind, Work } from '../data/types';
 import type { ImportBatch, WorkNote, WorkSourceRow } from '../data/persist';
 import type { Sheet } from './xlsx';
+import { localDay } from './today';
 
 export interface DoubanRow {
   sid: string; kind: Kind; title: string; subtitle: string; year?: number; stage?: boolean;
@@ -128,7 +129,7 @@ export function buildDoubanImport(plan: DoubanPlan, notesNow: Record<string, Wor
     : []);
   const created: Work[] = plan.fresh.map((r) => ({
     id: `db-${r.sid}`, kind: r.kind, title: r.title || '豆瓣上没有了的条目', credits: creditsOf(r), year: r.year,
-    finished: '', collected: at.slice(0, 10), source: 'douban', cover: null, genres: [], info: [],
+    finished: '', collected: localDay(at), source: 'douban', cover: null, genres: [], info: [],
     srcSubtitle: r.subtitle || undefined,
     sources: [{ provider: 'douban_xlsx', externalId: r.sid, batchId, firstSeenAt: at }], claims: claim(r),
   }));

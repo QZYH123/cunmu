@@ -197,7 +197,7 @@ export async function runSteamSync(store: ReturnType<typeof useStore>): Promise<
   if (!c || !key || !steamReachable() || c.steamId === 'file') return 'sheet';
   try {
     const games = await readOwnedGames(key, c.steamId);
-    const r = store.applySteam({ games, includeUnplayed: !!c.includeUnplayed, conn: { ...c, status: 'connected', lastOkSyncAt: new Date().toISOString(), problem: undefined } });
+    const r = store.applySteam({ games, includeUnplayed: !!c.includeUnplayed, conn: { ...c, status: 'connected', lastOkSyncAt: new Date().toISOString(), problem: undefined }, sync: true });
     return { ok: true, added: r.added };
   } catch (e) {
     const k = e instanceof SteamError ? e.kind : 'net';

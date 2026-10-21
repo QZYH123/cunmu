@@ -14,6 +14,7 @@
  * a batch marked in one go, so it says nothing about when: 时间未知. Never applies to level 1.
  */
 import type { DateClaim, DateSource, EffDate, Work } from './types';
+import { localDay } from '../lib/today';
 
 export const CLUMP_MIN = 15;
 export const CLUMP_RATIO = 0.05;
@@ -132,11 +133,11 @@ const DAY_MS = 86400000;
  * longer → only the year, 「约」.
  */
 export function firstSeenClaim(seenAt: string, prevSyncAt: string | undefined): DateClaim {
-  const day = seenAt.slice(0, 10);
-  const gap = prevSyncAt ? (Date.parse(day) - Date.parse(prevSyncAt.slice(0, 10))) / DAY_MS : 0;
+  const day = localDay(seenAt);
+  const gap = prevSyncAt ? (Date.parse(day) - Date.parse(localDay(prevSyncAt))) / DAY_MS : 0;
   if (gap <= 31) return { source: 'bgm_first_seen', value: day, precision: 'day', baseLevel: 2, observedAt: seenAt };
   if (gap <= 365) {
-    const mid = new Date((Date.parse(day) + Date.parse(prevSyncAt!.slice(0, 10))) / 2).toISOString().slice(0, 7);
+    const mid = new Date((Date.parse(day) + Date.parse(localDay(prevSyncAt!))) / 2).toISOString().slice(0, 7);
     return { source: 'bgm_first_seen', value: mid, precision: 'month', baseLevel: 2, observedAt: seenAt };
   }
   return { source: 'bgm_updated_at', value: day.slice(0, 4), precision: 'year', baseLevel: 3, approx: true, observedAt: seenAt };

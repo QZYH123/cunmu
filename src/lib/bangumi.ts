@@ -12,6 +12,7 @@
 import { firstSeenClaim } from '../data/resolve';
 import type { Credit, DateClaim, Kind, Work } from '../data/types';
 import { KIND_ASPECT } from '../data/types';
+import { localDay } from './today';
 
 const DAY_MS = 86400000;
 
@@ -189,7 +190,7 @@ export function planSync(prev: BangumiPull | null, items: BgmCollection[], opts:
     const firstSeenAt = old?.sources?.find((s) => s.provider === 'bangumi_account')?.firstSeenAt ?? opts.now;
     const source = { provider: 'bangumi_account' as const, externalId: String(c.subject_id), epoch: opts.epoch, firstSeenAt, ...(c.type === DOING ? { status: 'doing' as const } : null) };
     if (c.type === DOING) {
-      doing.push({ ...w, sources: [source], claims: [], collected: dayOf(firstSeenAt) });
+      doing.push({ ...w, sources: [source], claims: [], collected: localDay(firstSeenAt) });
       if (!old) added.push(w.id);
       continue;
     }
@@ -199,7 +200,7 @@ export function planSync(prev: BangumiPull | null, items: BgmCollection[], opts:
     else claims = [markClaim(c.updated_at, baseline, opts)];
     if (!old) added.push(w.id);
     else if (wasDoing.has(w.id)) nowDone.push(w.id);
-    done.push({ ...w, sources: [source], claims, collected: dayOf(firstSeenAt) });
+    done.push({ ...w, sources: [source], claims, collected: localDay(firstSeenAt) });
   }
   const removed = [...before.keys()].filter((id) => !seen.has(id));
   return { pull: { done, doing, people: prev?.people, aspects: prev?.aspects }, added, removed, nowDone };

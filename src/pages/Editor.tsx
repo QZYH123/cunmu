@@ -15,6 +15,8 @@ import { Link } from 'react-router-dom';
 import { OVERLAY } from '../lib/shell';
 import { noteLanding, takeOpenFrom } from '../lib/motion';
 import { EASE, M } from '../tokens';
+import { flushSync } from 'react-dom';
+import { storage } from '../lib/storage';
 
 const imgId = () => `img-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
 /** a picked picture, shrunk and put in IndexedDB; null if it can't be read */
@@ -67,13 +69,21 @@ function MentionLine({ text, selfId }: { text: string; selfId: string }) {
  * Saves when the editor goes away, however it goes (‹, Esc, Android back, a tab, 「完成」). `onLeft` runs after
  * that last save, once the page is gone; closing the tab or reloading saves too, quietly.
  */
-function useSaveOnLeave(save: () => void, onLeft?: () => void) {
-  const ref = useRef({ save, onLeft });
-  ref.current = { save, onLeft };
+function useSaveOnLeave(save: () => void, onLeft?: () => void, keep?: () => void) {
+  const ref = useRef({ save, onLeft, keep });
+  ref.current = { save, onLeft, keep };
   useEffect(() => {
     const f = () => ref.current.save();
+    // the app going to the background (a phone may close it there, with no pagehide): what is typed is kept,
+    // without dropping or finishing anything — you may well come back to it
+    const v = () => {
+      if (document.visibilityState !== 'hidden' || !ref.current.keep) return;
+      flushSync(() => ref.current.keep!());   // committed now, so the save below has it
+      void storage.flush();
+    };
     window.addEventListener('pagehide', f);
-    return () => { window.removeEventListener('pagehide', f); ref.current.save(); ref.current.onLeft?.(); };
+    document.addEventListener('visibilitychange', v);
+    return () => { window.removeEventListener('pagehide', f); document.removeEventListener('visibilitychange', v); ref.current.save(); ref.current.onLeft?.(); };
   }, []);
 }
 
@@ -146,11 +156,11 @@ function EssayEditor({ editId }: { editId: string | null }) {
   // an existing essay saved with nothing left: once the page is gone, a way to put it back
   const dropped = useRef(false);
 
-  const save = () => {
+  const save = (keepOnly = false) => {
     if (saved.current === sig) return;
     const paras = toParagraphs(body);
     const plan = essayPlan({ existing: !!existing, title, paragraphs: paras, photo: !!photo });
-    if (plan === 'skip') return;
+    if (plan === 'skip' || (keepOnly && plan === 'drop')) return;
     saved.current = sig;
     if (plan === 'drop') {
       dropped.current = true;
@@ -170,7 +180,7 @@ function EssayEditor({ editId }: { editId: string | null }) {
   useSaveOnLeave(save, () => {
     if (keptNew.current) store.toast('随笔收好了', { label: '不要了', run: () => store.removeWork(id) });
     else if (dropped.current) store.toast('这篇随笔删掉了', { label: '撤销', run: () => store.restoreWork(id) });
-  });
+  }, () => save(true));
   // the unmount saves too (and, for a new essay, leaves the footnote); saving before going back lets
   // 随笔 know which row to land as it renders (P1-5)
   const leave = () => { save(); history.state?.idx > 0 ? nav(-1) : nav('/'); };
@@ -244,6 +254,9 @@ function WorkNoteEditor({ work }: { work: Work }) {
   const [big, setBig] = useState<string | null>(null);
   const file = useRef<HTMLInputElement>(null);
   const images = note?.images ?? [];
+  // the pictures as they are now: a pick still shrinking must not bring back one removed meanwhile, or drop one added
+  const imagesNow = useRef(images);
+  imagesNow.current = images;
   const sig = JSON.stringify([body, quote]);
   const saved = useRef(sig);
   const verb = work.kind === 'music' ? '听过' : work.kind === 'game' ? '玩过' : '看完';
@@ -259,17 +272,26 @@ function WorkNoteEditor({ work }: { work: Work }) {
     if (quote.trim()) patch.quotes = [{ id: `q-${Date.now().toString(36)}`, text: quote.trim(), date: todayISO() }, ...(note?.quotes ?? [])];
     if (Object.keys(patch).length) store.setNote(work.id, patch);
   };
-  useSaveOnLeave(save);
+  // in the background only the 短评 is kept (a half-typed 摘抄 is added once, on leaving)
+  const keepReview = () => {
+    const review = toParagraphs(body);
+    if (review.length && review.join('\n') !== (work.review ?? []).join('\n')) store.setNote(work.id, { review });
+  };
+  useSaveOnLeave(save, undefined, keepReview);
   // pictures are kept the moment they're picked (they're in IndexedDB already); no mood, no rating (DECISIONS-r2 #14)
   const addPictures = async (fs: File[]) => {
     const room = IMAGES_PER_WORK - images.length;
     if (room <= 0) return;
     const got = (await Promise.all(fs.slice(0, room).map(storePicture))).filter((x): x is UserImage => !!x);
-    if (got.length) store.setNote(work.id, { images: [...images, ...got] });
+    const now = imagesNow.current;
+    const keep = got.slice(0, Math.max(0, IMAGES_PER_WORK - now.length));
+    for (const im of got.slice(keep.length)) void deleteImage(im.id);
+    if (keep.length) { imagesNow.current = [...now, ...keep]; store.setNote(work.id, { images: imagesNow.current }); }
     if (got.length < Math.min(fs.length, room)) store.toast('这张图放不进来，换一张再试');
   };
   const removePicture = (im: UserImage) => {
-    store.setNote(work.id, { images: images.filter((x) => x.id !== im.id) });
+    imagesNow.current = imagesNow.current.filter((x) => x.id !== im.id);
+    store.setNote(work.id, { images: imagesNow.current });
     void deleteImage(im.id);
   };
   // back to the entry it was opened from; from anywhere else (the 「写」 toast on home) the entry opens

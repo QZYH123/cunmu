@@ -330,6 +330,25 @@ await withPage('给人看: a work page does not list what is 只给自己 among 
   if (/秘密/.test(t)) throw new Error(`a hidden title shows: ${t.match(/.{0,20}秘密.{0,10}/)[0]}`);
 });
 
+await withPage('the app going to the background keeps a half-written essay, and leaving still keeps it once', async (page) => {
+  await open(page, '/write');
+  await page.locator('.editor-body').waitFor({ timeout: 5000 });
+  await page.locator('.editor-body').fill('写到一半的随笔');
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'hidden' });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await page.waitForTimeout(300);
+  const essays = (await LS(page)).extras?.filter((w) => w.kind === 'essay') ?? [];
+  if (essays.length !== 1 || !essays[0].body?.join('').includes('写到一半的随笔')) throw new Error(`in the background: ${JSON.stringify(essays.map((w) => w.body))}`);
+  await page.evaluate(() => { Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'visible' }); });
+  await page.locator('.editor-body').fill('写到一半的随笔，写完了');
+  await page.getByRole('button', { name: '完成' }).click();
+  await page.waitForTimeout(500);
+  const after = (await LS(page)).extras?.filter((w) => w.kind === 'essay') ?? [];
+  if (after.length !== 1 || !after[0].body?.join('').includes('写完了')) throw new Error(`after leaving: ${JSON.stringify(after.map((w) => w.body))}`);
+});
+
 await withPage('a save the browser refuses (storage full) is said, and the notice goes once a save works', async (page) => {
   await page.goto(`${BASE}#/`, { waitUntil: 'domcontentloaded' });
   await seedBooks(page, ['甲', '乙']);

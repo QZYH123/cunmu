@@ -74,6 +74,8 @@ export interface ImportBatch {
   undoneAt?: string;
   /** a Steam import: what it changed on games already here, for its undo (older batches have none) */
   steamPrior?: import('./steamUndo').SteamPrior;
+  /** a Steam auto-sync that only moved playtime: the games it changed (runs in a row share one record) */
+  syncUpdated?: string[];
 }
 
 /** device-level, never synced or exported */

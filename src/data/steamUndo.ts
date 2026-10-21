@@ -4,6 +4,7 @@
  */
 import type { Play } from '../lib/steam';
 import type { DateClaim, Work } from './types';
+import type { ImportBatch } from './persist';
 
 export interface SteamPrior {
   /** work id → its play before the import on a game another source brought; null = it had none */
@@ -44,4 +45,30 @@ export function undoSteamPrior<S extends { plays?: Record<string, Play>; extras:
     return n;
   });
   return { ...x, plays, extras };
+}
+
+/**
+ * Auto-syncs in a row that only move playtime share one record: the newest record (by time) must be such a run,
+ * not undone, with no undo of another record since. A manual import, a run that adds games, or an undo starts anew.
+ */
+export function syncUpdateTarget(batches: ImportBatch[]): ImportBatch | undefined {
+  if (!batches.length) return undefined;
+  const last = batches.reduce((a, b) => (b.createdAt >= a.createdAt ? b : a));
+  if (last.provider !== 'steam' || !last.syncUpdated || last.created.length || last.undoneAt) return undefined;
+  if (batches.some((b) => b.undoneAt && b.undoneAt >= last.createdAt)) return undefined;
+  return last;
+}
+
+/** two priors as one: what was there before the earlier run wins; the later run adds only what the earlier did not touch */
+export function mergeSteamPrior(earlier: SteamPrior | undefined, later: SteamPrior): SteamPrior {
+  return { plays: { ...later.plays, ...earlier?.plays }, extras: { ...later.extras, ...earlier?.extras } };
+}
+
+/** lays a playtime-only auto-sync's record on the list: into the last such record when it can, else as a new one */
+export function recordSyncUpdate(batches: ImportBatch[], run: { id: string; at: string; prior: SteamPrior; changed: string[]; merged: string[]; label: (n: number) => string }): ImportBatch[] {
+  const t = syncUpdateTarget(batches);
+  if (!t) return [...batches, { id: run.id, provider: 'steam', label: run.label(run.changed.length), createdAt: run.at, created: [], merged: run.merged, skipped: [], quoteIds: [], steamPrior: run.prior, syncUpdated: run.changed }];
+  const changed = [...new Set([...t.syncUpdated!, ...run.changed])];
+  const merged = [...new Set([...t.merged, ...run.merged])];
+  return batches.map((b) => (b === t ? { ...b, label: run.label(changed.length), createdAt: run.at, merged, steamPrior: mergeSteamPrior(b.steamPrior, run.prior), syncUpdated: changed } : b));
 }

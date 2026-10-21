@@ -15,7 +15,7 @@ import { planSteam, withStoreFacts, type AchSummary, type Play, type SteamConnec
 import { getBangumiToken, getSecret, setBangumiToken, setSecret } from '../lib/secrets';
 import { bangumiFromBackup, steamFromBackup } from './restore';
 import { clearSteamDraft } from '../lib/steamDraft';
-import { steamPriorOf, undoSteamPrior } from './steamUndo';
+import { recordSyncUpdate, steamPriorOf, undoSteamPrior } from './steamUndo';
 import { withViewTransition } from '../lib/motion';
 import { clearCoverCache } from '../lib/coverCache';
 import type { CoverImage, Credit, Dataset, DateClaim, Quote, Work } from './types';
@@ -642,15 +642,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const plays = Object.fromEntries(Object.entries(plan.plays).map(([wid, p]) => [wid, { ...x.plays?.[wid], ...p }]));
         const steamPrior = steamPriorOf(x.plays, x.extras, next, Object.keys(plan.plays));
         const same = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
-        const changed = Object.keys(steamPrior.plays).filter((wid) => !same(steamPrior.plays[wid], plays[wid])).length
-          + extras.filter((w) => steamPrior.extras[w.id] && !same(steamPrior.extras[w.id].play, w.play)).length;
+        const changedIds = [
+          ...Object.keys(steamPrior.plays).filter((wid) => !same(steamPrior.plays[wid], plays[wid])),
+          ...extras.filter((w) => steamPrior.extras[w.id] && !same(steamPrior.extras[w.id].play, w.play)).map((w) => w.id),
+        ];
+        const changed = changedIds.length;
+        const day = `${at.slice(5, 7).replace(/^0/, '')} 月 ${at.slice(8, 10).replace(/^0/, '')} 日 · Steam · `;
         return {
           ...x,
           extras: [...extras, ...add.map((w) => ({ ...w, sources: w.sources?.map((r) => ({ ...r, batchId: id, firstSeenAt: at })) }))],
           plays,
           connections: { ...x.connections, steam: conn },
           // an import that only moves playtime on games already here still leaves a record, so undo can put it back
-          batches: add.length || changed ? [...x.batches, { id, provider: 'steam' as const, label: `${at.slice(5, 7).replace(/^0/, '')} 月 ${at.slice(8, 10).replace(/^0/, '')} 日 · Steam · ${add.length ? `${add.length} 部` : `更新 ${changed} 部`}`, createdAt: at, created: add.map((w) => w.id), merged: Object.keys(plan.plays), skipped: [], quoteIds: [], steamPrior }] : x.batches,
+          // auto-syncs in a row that only move playtime share one record (steamUndo: recordSyncUpdate)
+          batches: sync && !add.length && changed
+            ? recordSyncUpdate(x.batches, { id, at, prior: steamPrior, changed: changedIds, merged: Object.keys(plan.plays), label: (n) => `${day}更新 ${n} 部` })
+            : add.length || changed ? [...x.batches, { id, provider: 'steam' as const, label: `${day}${add.length ? `${add.length} 部` : `更新 ${changed} 部`}`, createdAt: at, created: add.map((w) => w.id), merged: Object.keys(plan.plays), skipped: [], quoteIds: [], steamPrior }] : x.batches,
         };
       });
       if (fresh.length) announce({ kind: fresh.length > 8 ? 'batch' : 'single', ids: fresh.map((w) => w.id), prevIds: prev });

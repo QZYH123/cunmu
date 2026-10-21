@@ -641,12 +641,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         });
         const plays = Object.fromEntries(Object.entries(plan.plays).map(([wid, p]) => [wid, { ...x.plays?.[wid], ...p }]));
         const steamPrior = steamPriorOf(x.plays, x.extras, next, Object.keys(plan.plays));
+        const same = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+        const changed = Object.keys(steamPrior.plays).filter((wid) => !same(steamPrior.plays[wid], plays[wid])).length
+          + extras.filter((w) => steamPrior.extras[w.id] && !same(steamPrior.extras[w.id].play, w.play)).length;
         return {
           ...x,
           extras: [...extras, ...add.map((w) => ({ ...w, sources: w.sources?.map((r) => ({ ...r, batchId: id, firstSeenAt: at })) }))],
           plays,
           connections: { ...x.connections, steam: conn },
-          batches: add.length ? [...x.batches, { id, provider: 'steam' as const, label: `${at.slice(5, 7).replace(/^0/, '')} 月 ${at.slice(8, 10).replace(/^0/, '')} 日 · Steam · ${add.length} 部`, createdAt: at, created: add.map((w) => w.id), merged: Object.keys(plan.plays), skipped: [], quoteIds: [], steamPrior }] : x.batches,
+          // an import that only moves playtime on games already here still leaves a record, so undo can put it back
+          batches: add.length || changed ? [...x.batches, { id, provider: 'steam' as const, label: `${at.slice(5, 7).replace(/^0/, '')} 月 ${at.slice(8, 10).replace(/^0/, '')} 日 · Steam · ${add.length ? `${add.length} 部` : `更新 ${changed} 部`}`, createdAt: at, created: add.map((w) => w.id), merged: Object.keys(plan.plays), skipped: [], quoteIds: [], steamPrior }] : x.batches,
         };
       });
       if (fresh.length) announce({ kind: fresh.length > 8 ? 'batch' : 'single', ids: fresh.map((w) => w.id), prevIds: prev });

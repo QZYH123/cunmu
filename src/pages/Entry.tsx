@@ -230,7 +230,7 @@ function WorkEntry({ work }: { work: Work }) {
   // a link you made by hand (linked) stays, one you took apart (unlinked) stays apart
   const unlinked = new Set(store.unlinked);
   const linkedIds = [...(work.related ?? []), ...[...linked].filter((k) => k.startsWith(`${work.id}>`)).map((k) => k.split('>')[1])];
-  const linkedList = [...new Set(linkedIds)].map((x) => d.byId.get(x)).filter((x): x is Work => !!x && !unlinked.has(`${work.id}>${x.id}`));
+  const linkedList = [...new Set(linkedIds)].map((x) => d.byId.get(x)).filter((x): x is Work => !!x && !unlinked.has(`${work.id}>${x.id}`) && !(store.show && store.me.onlyMe.includes(x.id)));
   const imgs = work.images ?? [];
   // the pictures belong to 短评 (v0.4 §3.19.4): pictures alone still make the section
   const hasReview = !!work.review?.length || imgs.length > 0;
@@ -342,7 +342,7 @@ function WorkEntry({ work }: { work: Work }) {
   const colophon = sample ? <Colophon date={work.collected} reason="示例内容，不是你收的" />
     : doing ? <Colophon date={work.collected} reason="来自 Bangumi · 在看" />
       : <Colophon seal date={work.collected} source={sourceLabelOf(work) === SOURCE_LABEL.manual ? undefined : sourceLabelOf(work)} pinned={store.me.profile.frontispiece === work.id} />;
-  const maybe = !sample && !doing ? <MaybeSame work={work} /> : null;
+  const maybe = !sample && !doing && !store.show ? <MaybeSame work={work} /> : null;
   const side = <SideMentions targetId={work.id} allOpen={mentionsOpen} onAll={openMentions} />;
   const fullMentions = (bp === 'phone' || mentionsOpen) && <Mentions targetId={work.id} open={bp !== 'phone'} />;
 

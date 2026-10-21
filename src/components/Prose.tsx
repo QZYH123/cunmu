@@ -38,7 +38,9 @@ function AutoLink({ seg, onLong, hover, lit }: { seg: Segment; onLong: (seg: Seg
 export function Prose({ paragraphs, selfId, className = 't-body prose', dropcap, pull, lit }: {
   paragraphs: string[]; selfId: string; className?: string; dropcap?: boolean; pull?: string; lit?: string;
 }) {
-  const { d, unlinked, unlink } = useStore();
+  const { d, unlinked, unlink, show, me } = useStore();
+  // 给人看: a work that is 只给自己 is plain text in the essay, with no preview
+  const hid = useMemo(() => new Set(show ? me.onlyMe : []), [show, me.onlyMe]);
   const nav = useNavigate();
   const unl = useMemo(() => new Set(unlinked), [unlinked]);
   const segs = useMemo(() => linkify(paragraphs, d, selfId, unl), [paragraphs, d, selfId, unl]);
@@ -71,7 +73,7 @@ export function Prose({ paragraphs, selfId, className = 't-body prose', dropcap,
       {segs.map((p, i) => (
         <Fragment key={i}>
           <p>
-            {p.map((s, j) => (s.target ? <AutoLink key={j} seg={s} hover={hover} lit={lit === s.target} onLong={(seg, el) => { stop(); setPv({ seg, rect: el.getBoundingClientRect() }); }} /> : <span key={j}>{s.text}</span>))}
+            {p.map((s, j) => (s.target && !(s.kind === 'work' && hid.has(s.target)) ? <AutoLink key={j} seg={s} hover={hover} lit={lit === s.target} onLong={(seg, el) => { stop(); setPv({ seg, rect: el.getBoundingClientRect() }); }} /> : <span key={j}>{s.text}</span>))}
           </p>
           {pull && i === pullAt && <blockquote className="pull-quote">{pull}</blockquote>}
         </Fragment>
@@ -85,7 +87,7 @@ export function Prose({ paragraphs, selfId, className = 't-body prose', dropcap,
           onClose={() => setPv(null)}
           actions={[
             { label: '打开', run: () => { setPv(null); nav(pv.seg.kind === 'person' ? `/person/${pv.seg.target}` : `/entry/${pv.seg.target}`); } },
-            { label: '不是这个，取消链接', run: () => { unlink(selfId, pv.seg.target!); setPv(null); } },
+            ...(show ? [] : [{ label: '不是这个，取消链接', run: () => { unlink(selfId, pv.seg.target!); setPv(null); } }]),
           ]}
         >
           {target && <WorkPreviewBody work={target} meta={[creatorLine(target), target.year, target.finished ? `${whenOf(target, 'ym')} · ${target.kind === 'music' ? '听过' : target.kind === 'game' ? '玩过' : '看完'}` : ''].filter(Boolean).join(' · ')} />}
@@ -106,9 +108,15 @@ export function Prose({ paragraphs, selfId, className = 't-body prose', dropcap,
 }
 
 export function useMentions(targetId: string) {
-  const { d, unlinked } = useStore();
+  const { d, unlinked, show, me } = useStore();
   const unl = useMemo(() => new Set(unlinked), [unlinked]);
-  return useMemo(() => mentionsOf(targetId, d, unl), [targetId, d, unl]);
+  // 给人看: a work or essay that is 只给自己 is not listed as mentioning this one
+  return useMemo(() => {
+    const all = mentionsOf(targetId, d, unl);
+    if (!show) return all;
+    const hid = new Set(me.onlyMe);
+    return all.filter((m) => !hid.has(m.from.id));
+  }, [targetId, d, unl, show, me.onlyMe]);
 }
 type MentionItem = ReturnType<typeof mentionsOf>[number];
 

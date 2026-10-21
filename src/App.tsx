@@ -118,7 +118,8 @@ function Layout() {
   const close = () => setOpen(null);
   // the app was closed while the person was getting a Steam key: open 从 Steam 搬进来 again where they were
   useEffect(() => { if (steamReachable() && readSteamDraft()?.away) setOpen('steam'); }, []);
-  const onBackup = useCallback((files: File[]) => { setBackup(files); setOpen('douban'); }, []);
+  // 给人看 changes nothing: a file dropped on the window is not taken in
+  const onBackup = useCallback((files: File[]) => { if (store.show) return; setBackup(files); setOpen('douban'); }, [store.show]);
   useBackupDrop(onBackup);
   return (
     <SheetCtx.Provider value={sheets}>

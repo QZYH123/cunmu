@@ -70,8 +70,10 @@ export default function Essay() {
   const removed = !!store.removed[essay.id];
   const pull = pullOk ? (pulls[essay.id] ?? essay.pull) || undefined : undefined;
   const titled = !!essay.title;
-  const works = mentioned.map((x) => d.byId.get(x)).filter(Boolean);
+  // 给人看: a work that is 只给自己 is not named among what this essay mentions
+  const works = mentioned.map((x) => d.byId.get(x)).filter((w) => !!w && !(store.show && store.me.onlyMe.includes(w.id)));
   const people = mentioned.map((x) => d.persons.get(x)).filter(Boolean);
+  const said = works.length + people.length;
   return (
     <div className={`page under-bar essay-page ${removed ? 'is-removed' : ''}`}>
       <TopBar
@@ -98,7 +100,7 @@ export default function Essay() {
         <div className="essay-col">
         <div className="t-label c-3 entry-tag">随笔</div>
         <h1 className={`hero-title essay-title ${titled ? '' : 'c-2'}`} ref={h1} style={{ viewTransitionName: TITLE_VT }}>{essay.title || (essay.body?.[0] ?? '').slice(0, 16)}</h1>
-        <p className="t-caption c-3 entry-by">{fmtYMD(essay.finished)}{mentioned.length ? ` · 提到 ${mentioned.length} 个条目` : ''}</p>
+        <p className="t-caption c-3 entry-by">{fmtYMD(essay.finished)}{said ? ` · 提到 ${said} 个条目` : ''}</p>
         {essay.cover && (
           <figure className="essay-figure">
             <img src={essay.cover.medium} alt="" />
@@ -111,7 +113,7 @@ export default function Essay() {
         >
           <Prose paragraphs={essay.body ?? []} selfId={essay.id} dropcap={chars >= EDITORIAL.dropcap} pull={pull} lit={lit} />
         </div>
-        {mentioned.length > 0 && (
+        {said > 0 && (
           <Section title="这篇提到了">
             <dl className="related">
               {KIND_ORDER.map((k) => {

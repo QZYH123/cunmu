@@ -308,6 +308,28 @@ await withPage('an IME still choosing keeps its Enter and Esc: ⌘K opens nothin
   if (!(await sheet(page).count())) throw new Error('a composing Esc closed the sheet');
 });
 
+await withPage('给人看: a work page does not list what is 只给自己 among its mentions or linked works', async (page) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await open(page, '/');
+  await page.evaluate(() => {
+    const day = '2020-01-01';
+    const mk = (id, o) => ({ id, kind: 'book', title: 'T', credits: [{ name: '同一人', role: '作者', core: true }], genres: [], info: [], finished: day, collected: day, source: 'manual', cover: null, sources: [{ provider: 'manual', externalId: id }], claims: [{ source: 'manual_add', value: day, precision: 'day', baseLevel: 1, observedAt: day }], ...o });
+    localStorage.clear();
+    localStorage.setItem('cunmu/library', JSON.stringify({ schemaVersion: 4,
+      extras: [mk('a', { title: '公开之书', related: ['b'] }), mk('b', { title: '秘密之书' }), mk('c', { kind: 'essay', title: '秘密随笔', credits: [], body: ['今天读了公开之书。'] })],
+      me: { onlyMe: ['b', 'c'] } }));
+  });
+  await page.reload();
+  await page.waitForTimeout(500);
+  await page.getByRole('button', { name: '给人看' }).first().click();
+  await page.waitForTimeout(600);
+  await page.evaluate(() => { location.hash = '/entry/a'; });
+  await page.locator('h1').filter({ hasText: '公开之书' }).first().waitFor({ timeout: 5000 });
+  await page.waitForTimeout(300);
+  const t = await page.locator('body').innerText();
+  if (/秘密/.test(t)) throw new Error(`a hidden title shows: ${t.match(/.{0,20}秘密.{0,10}/)[0]}`);
+});
+
 await withPage('a save the browser refuses (storage full) is said, and the notice goes once a save works', async (page) => {
   await page.goto(`${BASE}#/`, { waitUntil: 'domcontentloaded' });
   await seedBooks(page, ['甲', '乙']);

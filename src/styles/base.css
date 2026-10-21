@@ -118,6 +118,8 @@ body::before {
 .clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 
 .prose p + p { margin-top: var(--s-4); }
+/* a pasted link or a long word without spaces wraps instead of widening the page */
+.prose, .quote blockquote { overflow-wrap: anywhere; }
 
 /* ---------- section heading (h2 + 7% hairline) ---------- */
 .section { margin-top: var(--space-h2); scroll-margin-top: calc(var(--bar-top) + env(safe-area-inset-top) + var(--s-2)); }

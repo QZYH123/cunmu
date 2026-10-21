@@ -29,7 +29,8 @@ export function Collage({ works, width, desk = false }: { works: Work[]; width: 
     return <div className="collage collage-1">{item(w, cw, hOf(w, cw))}</div>;
   }
   if (n <= 4) {
-    const cw = Math.round(96 * k);
+    // a narrow phone: the row shrinks to fit rather than run off the screen (12 = the row's gap, --s-4)
+    const cw = Math.min(Math.round(96 * k), Math.floor((width - 12 * (n - 1)) / n));
     return <div className="collage collage-row">{works.map((w) => item(w, cw, hOf(w, cw)))}</div>;
   }
   if (n <= 12) {

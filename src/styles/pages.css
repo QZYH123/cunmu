@@ -73,7 +73,7 @@
 .hero-title.is-long { font: var(--t-hero-long); }
 .hero-title.is-xlong { font: var(--t-title); }
 .hero-title.is-latin { letter-spacing: var(--track-hero-latin); }
-.hero-by { margin-top: var(--s-3); color: var(--text-secondary); }
+.hero-by { margin-top: var(--s-3); color: var(--text-secondary); overflow-wrap: anywhere; }
 .hero-strip {
   display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); margin-top: var(--s-6); padding: var(--s-4) 0;
   border-top: var(--hairline) solid var(--line-1); border-bottom: var(--hairline) solid var(--line-1);
@@ -832,13 +832,13 @@ a.tl-month-head:active { background: var(--surface-2); }
 
 /* year review (v0.4 §3.7.1): ② ③ ④ under the infobox; a block that has nothing takes its margin with it */
 .year-review > :first-child { margin-top: var(--s-9); }
-.yr-span { font: var(--t-body); color: var(--text-secondary); }
+.yr-span { font: var(--t-body); color: var(--text-secondary); overflow-wrap: anywhere; }
 .yr-span .autolink { color: var(--ink); font-weight: var(--w-strong); }
 .yr-quote { display: flex; flex-direction: column; width: 100%; text-align: left; margin-top: var(--s-8); padding: var(--s-2) 0; border-radius: var(--r-sm); }
 .yr-span + .yr-quote { margin-top: var(--s-8); }
 .year-review > .yr-quote:first-child { margin-top: var(--s-9); }
 .yr-quote:active { background: var(--surface-2); }
-.yr-quote-text { font: var(--t-epigraph); color: var(--text-reading); }
+.yr-quote-text { font: var(--t-epigraph); color: var(--text-reading); overflow-wrap: anywhere; }
 .yr-quote-by { align-self: flex-end; margin-top: var(--s-2); }
 .yr-essays { margin-top: var(--s-9); }
 .yr-essays .t-h2 { padding-bottom: var(--s-3); border-bottom: var(--hairline) solid var(--line-1); }
@@ -1304,7 +1304,7 @@ p.confirm-first { height: auto; }
 }
 .writing-item.has-img { grid-template-columns: 1fr auto auto; grid-template-areas: 'text img edit'; }
 .writing-link { grid-area: text; display: flex; flex-direction: column; min-width: 0; border-radius: var(--r-sm); }
-.writing-t { font: var(--t-h3); color: var(--ink); display: flex; align-items: center; gap: var(--s-2); }
+.writing-t { font: var(--t-h3); color: var(--ink); display: flex; align-items: center; gap: var(--s-2); overflow-wrap: anywhere; min-width: 0; }
 .writing-d { font: var(--t-caption); color: var(--text-tertiary); margin-top: 2px; }
 .writing-x { font: var(--t-body); color: var(--text-secondary); margin-top: var(--s-3); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .writing-img { grid-area: img; width: 168px; aspect-ratio: 4 / 3; border-radius: var(--r-sm); overflow: hidden; background: var(--line-inner); }

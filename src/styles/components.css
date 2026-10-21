@@ -3,7 +3,7 @@
   position: fixed; z-index: 30; top: 0; left: 0; right: 0;
   height: calc(var(--bar-top) + env(safe-area-inset-top));
   padding: env(safe-area-inset-top) var(--s-2) 0;
-  display: grid; grid-template-columns: var(--hit) 1fr auto; align-items: center;
+  display: grid; grid-template-columns: var(--hit) minmax(0, 1fr) auto; align-items: center;
   background: var(--bar-bg);
   -webkit-backdrop-filter: var(--bar-filter); backdrop-filter: var(--bar-filter);
   box-shadow: none;
@@ -43,7 +43,8 @@
   padding-bottom: env(safe-area-inset-bottom);
   /* tablet: the five items sit in a centred ≤ 480 group; the bar itself stays full width */
   padding-left: max(0px, calc((100% - var(--tabbar-w)) / 2)); padding-right: max(0px, calc((100% - var(--tabbar-w)) / 2));
-  display: grid; grid-template-columns: repeat(5, 1fr);
+  /* minmax(0, …): on a 320 px screen the five never push the bar wider than the screen */
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
   background: var(--bar-bg);
   -webkit-backdrop-filter: var(--bar-filter); backdrop-filter: var(--bar-filter);
   box-shadow: var(--sh-bar-top);

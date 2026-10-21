@@ -80,7 +80,7 @@
 /* 写过的、拍过的 */
 .mh-essay { display: flex; flex-direction: column; padding: 0 0 var(--s-6); border-radius: var(--r-sm); }
 .mh-essay + .mh-essay { border-top: var(--hairline) solid var(--line-inner); padding-top: var(--s-5); }
-.mh-essay-t { font: var(--t-h3); color: var(--ink); }
+.mh-essay-t { font: var(--t-h3); color: var(--ink); overflow-wrap: anywhere; }
 .mh-essay-d { font: var(--t-caption); color: var(--text-tertiary); margin-top: 2px; }
 .mh-essay-x { font: var(--t-small); color: var(--text-secondary); margin-top: var(--s-3); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .mh-pill { font: var(--t-caption); color: var(--text-tertiary); box-shadow: var(--sh-ring); border-radius: var(--r-full); padding: 0 var(--s-2); margin-left: var(--s-2); vertical-align: 2px; white-space: nowrap; }

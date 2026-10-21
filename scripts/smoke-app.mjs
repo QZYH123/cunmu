@@ -216,6 +216,26 @@ const seedBooks = (page, titles) => page.evaluate((ts) => {
   }));
 }, titles);
 
+await withPage('a 320 px phone: long titles, names and pasted links wrap; no page is wider than the screen', async (page) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  await page.goto(`${BASE}#/`, { waitUntil: 'domcontentloaded' });
+  const long = 'Supercalifragilisticexpialidocious_without_any_spaces_1234567890';
+  await seedBooks(page, [long, '短', '中等长度的书名', 'B', 'C']);
+  await page.evaluate((l) => {
+    const s = JSON.parse(localStorage.getItem('cunmu/library'));
+    s.extras[0].credits = [{ name: `Name${l}`, role: '作者', core: true }];
+    s.extras.push({ id: 'essay-x', kind: 'essay', title: l, credits: [], finished: '2024-03-03', collected: '2024-03-03', source: 'manual', cover: null, genres: [], info: [], body: [`https://example.com/${l}${l}`], sources: [{ provider: 'manual', externalId: 'essay-x' }], claims: [] });
+    s.notes = { 'manual-1': { review: [`https://example.com/${l}${l}`] } };
+    localStorage.setItem('cunmu/library', JSON.stringify(s));
+  }, long);
+  for (const r of ['/', '/entry/manual-0', '/entry/manual-1', '/essay/essay-x', '/year/2024', '/year/2024/1', '/writing']) {
+    await open(page, r);
+    await page.waitForTimeout(400);
+    const w = await page.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth]);
+    if (w[0] > w[1]) throw new Error(`${r} is ${w[0]} px wide on a ${w[1]} px screen`);
+  }
+});
+
 await withPage('搜索 → 条目 → 返回: back on 搜索 with its words, results and scroll (in-app, system, ⌘K)', async (page) => {
   await page.goto(`${BASE}#/`, { waitUntil: 'domcontentloaded' });
   await seedBooks(page, Array.from({ length: 30 }, (_, i) => `系列作 第${i + 1}卷`));

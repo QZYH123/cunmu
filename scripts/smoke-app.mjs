@@ -262,6 +262,24 @@ await withPage('搜索 → 条目 → 返回: back on 搜索 with its words, res
     const now = await at();
     if (now.q !== '系列作' || now.rows !== before.rows || Math.abs(now.y - before.y) > 2) throw new Error(`${back} back: ${JSON.stringify(now)} vs ${JSON.stringify(before)}`);
   }
+  // 换封面 on the way (系列作 one by one): a cover chosen in 补封面、主创, then back — still 搜索, not 首页
+  for (const back of ['in-app', 'system']) {
+    await row.click();
+    await page.locator('h1').filter({ hasText: '系列作' }).first().waitFor({ timeout: 5000 });
+    await page.getByRole('button', { name: '更多' }).click();
+    await page.getByRole('menuitem', { name: /补封面|改封面/ }).click();
+    const png = Buffer.from(await page.evaluate(() => { const c = document.createElement('canvas'); c.width = 60; c.height = 90; const g = c.getContext('2d'); g.fillStyle = '#a33'; g.fillRect(0, 0, 60, 90); return c.toDataURL('image/png').split(',')[1]; }), 'base64');
+    await sheet(page).locator('input[type="file"]').setInputFiles({ name: 'c.png', mimeType: 'image/png', buffer: png });
+    await sheet(page).getByRole('button', { name: '不用图' }).waitFor({ timeout: 5000 });
+    await sheet(page).getByRole('button', { name: '好了' }).click();
+    await sheet(page).waitFor({ state: 'detached', timeout: 5000 });
+    if (back === 'in-app') await page.getByRole('button', { name: '返回' }).first().click();
+    else await page.evaluate(() => history.back());
+    await page.locator('.search-field input').waitFor({ timeout: 5000 }).catch(() => undefined);
+    await page.waitForTimeout(300);
+    const now = await at();
+    if (now.q !== '系列作' || now.rows !== before.rows || Math.abs(now.y - before.y) > 2) throw new Error(`${back} back after a new cover: ${JSON.stringify(now)} vs ${JSON.stringify(before)}`);
+  }
   // ⌘K over another page: back from what it opened is 搜索 with the words, the row it opened current
   await page.setViewportSize({ width: 1440, height: 900 });
   await open(page, '/all');

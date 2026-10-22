@@ -1,7 +1,7 @@
 {
   "name": "cunmu",
   "private": true,
-  "version": "0.1.1",
+  "version": "0.2.0",
   "type": "module",
   "description": "Cunmu — a personal encyclopedia of what you have read, watched, played and listened to (web + Capacitor app)",
   "scripts": {

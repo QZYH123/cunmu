@@ -4,7 +4,7 @@
  *
  *   library  moves on a restore or 删除全部内容, and both sources move with it
  *   bangumi  moves on 断开 or a new bring-in (an in-flight Steam read is not affected)
- *   steam    moves on 断开 or a new bring-in (an in-flight Bangumi read is not affected)
+ *   steam    moves on 断开, a new bring-in, or undoing a Steam import (an in-flight Bangumi read is not affected)
  */
 export interface SyncStamp {
   library: number;

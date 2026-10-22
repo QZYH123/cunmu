@@ -765,6 +765,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const s = latest.current;
       const batch = s.batches.find((b) => b.id === id);
       if (!batch || batch.undoneAt) return { removed: 0, kept: 0 };
+      // 再读一次 can still be out: it would put this import straight back. Drop that read.
+      if (batch.provider === 'steam') bumpSteamGeneration();
       const qids = new Set(batch.quoteIds);
       // edited after the import (decided: those stay): a date you set, your own quote or picture,
       // or a review / rating that isn't the import's

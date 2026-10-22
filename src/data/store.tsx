@@ -35,7 +35,7 @@ export type { Theme, CatView, YearView, CatSort, CatSortKey, CatGroup, WorkNote,
 /** what the source says under your overrides (for 「恢复原样」) */
 /** the covers a file carries: your own pictures (by reference) and Bangumi's (by address, https only) */
 /** Steam's image hosts (the ones the desktop policy lets through) */
-const STEAM_COVER = /^https:\/\/(shared\.cloudflare\.steamstatic\.com|cdn\.cloudflare\.steamstatic\.com|cdn\.akamai\.steamstatic\.com|steamcdn-a\.akamaihd\.net)\//;
+const STEAM_COVER = /^https:\/\/(shared\.steamstatic\.com|shared\.cloudflare\.steamstatic\.com|cdn\.cloudflare\.steamstatic\.com|cdn\.akamai\.steamstatic\.com|steamcdn-a\.akamaihd\.net)\//;
 export const travels = (c: Work['cover'] | undefined): Work['cover'] =>
   c && (c.medium.startsWith('idb:') || (!DEMO && (/^https:\/\/lain\.bgm\.tv\//.test(c.medium) || STEAM_COVER.test(c.medium)))) ? c : null;
 

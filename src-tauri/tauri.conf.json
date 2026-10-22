@@ -26,7 +26,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self' ipc: http://ipc.localhost; img-src 'self' data: blob: https://lain.bgm.tv https://shared.cloudflare.steamstatic.com https://cdn.cloudflare.steamstatic.com https://cdn.akamai.steamstatic.com https://steamcdn-a.akamaihd.net asset: http://asset.localhost; connect-src 'self' ipc: http://ipc.localhost https://api.bgm.tv https://lain.bgm.tv; style-src 'self' 'unsafe-inline'; font-src 'self' data:; script-src 'self'"
+      "csp": "default-src 'self' ipc: http://ipc.localhost; img-src 'self' data: blob: https://lain.bgm.tv https://shared.cloudflare.steamstatic.com https://shared.steamstatic.com https://cdn.cloudflare.steamstatic.com https://cdn.akamai.steamstatic.com https://steamcdn-a.akamaihd.net asset: http://asset.localhost; connect-src 'self' ipc: http://ipc.localhost https://api.bgm.tv https://lain.bgm.tv; style-src 'self' 'unsafe-inline'; font-src 'self' data:; script-src 'self'"
     }
   },
   "bundle": {

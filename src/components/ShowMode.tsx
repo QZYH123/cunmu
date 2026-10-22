@@ -5,9 +5,9 @@
  * says it let go); a tap does nothing, so a guest can't fall out of it. Android's back moves between the
  * pages that are open to them and, on 首页, stays.
  */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useMeView } from './MeParts';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import { useStore } from '../data/store';
 import { DUR } from '../tokens';
@@ -25,6 +25,21 @@ export function openInShow(path: string, onlyMe: string[], hiddenPeriods: string
   return true;
 }
 
+/** in 给人看, a closed page is not mounted (a redirect after paint would show it first) and the address goes back to 首页 */
+export function ShowOutlet() {
+  const { show, me } = useStore();
+  const view = useMeView();
+  const loc = useLocation();
+  const nav = useNavigate();
+  const hidden = useMemo(() => (show ? me.periods.filter((p) => !view.periods.some((q) => q.id === p.id)).map((p) => p.id) : []), [show, me.periods, view.periods]);
+  const open = !show || openInShow(loc.pathname, me.onlyMe, hidden);
+  useLayoutEffect(() => {
+    if (!open) nav('/', { replace: true });
+  }, [open, loc.pathname]); // eslint-disable-line react-hooks/exhaustive-deps
+  if (!open) return null;
+  return <Outlet />;
+}
+
 /** in 给人看, a page that isn't open to a guest goes back to 首页; a link to one does nothing */
 export function useShowGuard() {
   const { show, me } = useStore();
@@ -32,7 +47,7 @@ export function useShowGuard() {
   const hidden = useMemo(() => (show ? me.periods.filter((p) => !view.periods.some((q) => q.id === p.id)).map((p) => p.id) : []), [show, me.periods, view.periods]);
   const loc = useLocation();
   const nav = useNavigate();
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (show && !openInShow(loc.pathname, me.onlyMe, hidden)) nav('/', { replace: true });
   }, [show, loc.pathname, hidden]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {

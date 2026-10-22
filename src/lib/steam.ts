@@ -161,6 +161,18 @@ export const playOf = (g: SteamGame, tz?: number): Play => ({
   appid: g.appid,
 });
 
+/**
+ * A later read laid over a play already here. Minutes move on. 最近两周 and 最后玩于 stay only while this
+ * read still reports them: Steam omits both once they no longer apply, and spreading the old play over the
+ * new one would leave them on the page. Achievements and store facts stay until they are read again.
+ */
+export function laidPlay(prev: Play | null | undefined, next: Play): Play {
+  const out: Play = { ...(prev ?? {}), ...next };
+  if (next.recentMinutes == null) delete out.recentMinutes;
+  if (next.lastPlayed == null) delete out.lastPlayed;
+  return out;
+}
+
 /** one game → a work of its own */
 export function steamWork(g: SteamGame, at: string, tz?: number): Work {
   const play = playOf(g, tz);

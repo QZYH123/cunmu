@@ -11,7 +11,7 @@ import {
   fixCoverAspect,
 } from './persist';
 import { withKnown, type BangumiPull } from '../lib/bangumi';
-import { planSteam, withStoreFacts, type AchSummary, type Play, type SteamConnection, type SteamGame, type StoreFacts } from '../lib/steam';
+import { laidPlay, planSteam, withStoreFacts, type AchSummary, type Play, type SteamConnection, type SteamGame, type StoreFacts } from '../lib/steam';
 import { getBangumiToken, getSecret, secretOrNone, setBangumiToken, setSecret } from '../lib/secrets';
 import { bangumiFromBackup, steamFromBackup } from './restore';
 import { clearSteamDraft } from '../lib/steamDraft';
@@ -639,9 +639,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const extras = x.extras.map((w) => {
           const n = w.source === 'steam' ? next.get(w.id) : undefined;
           // what was read on demand (achievements, store facts) stays until read again
-          return n ? { ...w, play: { ...w.play, ...n.play! }, claims: n.claims } : w;
+          return n ? { ...w, play: laidPlay(w.play, n.play!), claims: n.claims } : w;
         });
-        const plays = Object.fromEntries(Object.entries(plan.plays).map(([wid, p]) => [wid, { ...x.plays?.[wid], ...p }]));
+        const plays = Object.fromEntries(Object.entries(plan.plays).map(([wid, p]) => [wid, laidPlay(x.plays?.[wid], p)]));
         const steamPrior = steamPriorOf(x.plays, x.extras, next, Object.keys(plan.plays));
         const same = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
         const changedIds = [

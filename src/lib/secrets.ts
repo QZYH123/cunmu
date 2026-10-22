@@ -121,3 +121,12 @@ export async function setSecret(name: SecretName, value: string | null) {
   if (value) await Filesystem.writeFile({ path: secretFile(name), data: value, directory: Directory.Data, encoding: Encoding.UTF8, recursive: true });
   else await dropIt();
 }
+
+/** a read restore waits on: a secure store that never answers counts as nothing kept, after `ms` (restore goes on) */
+export const SECRET_WAIT_MS = 3000;
+export function secretOrNone<T>(p: Promise<T | null>, ms = SECRET_WAIT_MS): Promise<T | null> {
+  return new Promise((resolve, reject) => {
+    const t = setTimeout(() => resolve(null), ms);
+    p.then((v) => { clearTimeout(t); resolve(v); }, (e) => { clearTimeout(t); reject(e); });
+  });
+}

@@ -12,7 +12,7 @@ import {
 } from './persist';
 import { withKnown, type BangumiPull } from '../lib/bangumi';
 import { planSteam, withStoreFacts, type AchSummary, type Play, type SteamConnection, type SteamGame, type StoreFacts } from '../lib/steam';
-import { getBangumiToken, getSecret, setBangumiToken, setSecret } from '../lib/secrets';
+import { getBangumiToken, getSecret, secretOrNone, setBangumiToken, setSecret } from '../lib/secrets';
 import { bangumiFromBackup, steamFromBackup } from './restore';
 import { clearSteamDraft } from '../lib/steamDraft';
 import { recordSyncUpdate, steamPriorOf, syncUpdateTarget, undoSteamPrior } from './steamUndo';
@@ -844,8 +844,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (!j || !isBackupFormat(j.format) || !Array.isArray(j.works)) return false;
       // the file never has the token or the key; keep using the ones still on this device
       const [hasToken, hasKey] = await Promise.all([
-        getBangumiToken().then((t) => !!t),
-        getSecret('steam-key').then((k) => !!k),
+        secretOrNone(getBangumiToken()).then((t) => !!t),
+        secretOrNone(getSecret('steam-key')).then((k) => !!k),
       ]);
       const works = backupWorks(j.works);
       const catalogue = new Set(masterFor(j.prototype?.dataset ?? dataset).map((w) => w.id));

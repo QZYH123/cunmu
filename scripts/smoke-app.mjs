@@ -648,6 +648,25 @@ await withPage('导出全部内容: a ZIP download on the web, Bangumi covers by
   if (!text.includes('https://lain.bgm.tv/pic/cover/l/aa/bb/9585_x.jpg')) throw new Error('the export dropped the Bangumi cover address');
 });
 
+await withPage('从文件恢复: the app’s own export comes back after 换掉', async (page) => {
+  await open(page);
+  await page.evaluate(() => {
+    localStorage.setItem('cunmu/library', JSON.stringify({ schemaVersion: 2, extras: [{ id: 'manual-x', kind: 'book', title: '自己加的书', credits: [], finished: '2024-05-01', collected: '2024-05-01', source: 'manual', cover: null, genres: [], info: [], sources: [{ provider: 'manual', externalId: 'manual-x' }], claims: [] }], notes: {}, removed: {}, batches: [], workSources: [], linked: [], unlinked: [], promoted: [], pulls: {}, connections: {}, settings: {}, sample: { on: false } }));
+  });
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await open(page, '/me');
+  await page.getByRole('button', { name: '导出全部内容' }).click();
+  const [dl] = await Promise.all([page.waitForEvent('download', { timeout: 8000 }), sheet(page).getByRole('button', { name: '导出', exact: true }).click()]);
+  const file = await dl.path();
+  await toast(page, '导出了 1 条').waitFor({ timeout: 5000 });
+  await page.waitForTimeout(500);
+  const chooser = page.waitForEvent('filechooser');
+  await page.getByRole('button', { name: '从文件恢复' }).click();
+  await (await chooser).setFiles({ name: dl.suggestedFilename(), mimeType: 'application/zip', buffer: readFileSync(file) });
+  await sheet(page).getByRole('button', { name: '换掉' }).click({ timeout: 5000 });
+  await toast(page, '恢复了 1 条').waitFor({ timeout: 5000 });
+});
+
 await withPage('desktop (Windows app): runs under its content security policy', async (page, ctx) => {
   // the policy from src-tauri/tauri.conf.json, served with every page, as the Tauri window does
   const csp = JSON.parse(readFileSync(join(ROOT, 'src-tauri/tauri.conf.json'), 'utf8')).app.security.csp;

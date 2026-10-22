@@ -18,13 +18,16 @@ const SECURE_KEY = 'bangumi-token';
 let cached: string | null | undefined;
 
 type Secure = typeof import('@aparajita/capacitor-secure-storage')['SecureStorage'];
-let securePromise: Promise<Secure | null> | null = null;
-/** the secure store, ready (prefix set, no iCloud), or null where it can't be used */
+let securePromise: Promise<{ store: Secure } | null> | null = null;
+/**
+ * the secure store, ready (prefix set, no iCloud), or null where it can't be used. Boxed: a Capacitor plugin
+ * proxy answers every property, `then` too, so a promise resolved with it never settles (the restore hung)
+ */
 const secure = () => (securePromise ??= import('@aparajita/capacitor-secure-storage')
   .then(async ({ SecureStorage }) => {
     await SecureStorage.setKeyPrefix(SECURE_PREFIX);
     await SecureStorage.setSynchronize(false);
-    return SecureStorage;
+    return { store: SecureStorage };
   })
   .catch(() => null));
 
@@ -42,7 +45,7 @@ export async function getBangumiToken(): Promise<string | null> {
     try { cached = localStorage.getItem(KEY); } catch { cached = null; }
     return cached;
   }
-  const store = await secure();
+  const store = (await secure())?.store;
   if (store) {
     try {
       const got = await store.getItem(SECURE_KEY);
@@ -62,7 +65,7 @@ export async function setBangumiToken(token: string | null) {
     try { if (token) localStorage.setItem(KEY, token); else localStorage.removeItem(KEY); } catch { /* full */ }
     return;
   }
-  const store = await secure();
+  const store = (await secure())?.store;
   if (store) {
     try {
       if (token) await store.setItem(SECURE_KEY, token); else await store.removeItem(SECURE_KEY);
@@ -87,7 +90,7 @@ export async function getSecret(name: SecretName): Promise<string | null> {
   if (!isNative()) {
     try { v = localStorage.getItem(`cunmu/${name}`); } catch { v = null; }
   } else {
-    const store = await secure();
+    const store = (await secure())?.store;
     let done = false;
     if (store) { try { v = await store.getItem(name); done = true; } catch { /* the file below */ } }
     if (!done || !v) {
@@ -106,7 +109,7 @@ export async function setSecret(name: SecretName, value: string | null) {
     try { if (value) localStorage.setItem(`cunmu/${name}`, value); else localStorage.removeItem(`cunmu/${name}`); } catch { /* full */ }
     return;
   }
-  const store = await secure();
+  const store = (await secure())?.store;
   const dropIt = () => Filesystem.deleteFile({ path: secretFile(name), directory: Directory.Data }).catch(() => undefined);
   if (store) {
     try {

@@ -17,13 +17,13 @@ Mostly fixes: data safety, imports and sync, and a few serious problems on speci
 ### Import and sync
 
 - Merging an import keeps what you changed yourself.
-- Undoing a Steam import also puts back playtime. A read that only moved playtime can be undone, and consecutive auto-syncs that only move playtime share one undo record.
+- Undoing a Steam import also puts back playtime. A read that only moved playtime can be undone, and consecutive re-reads that only move playtime share one undo record.
 - Douban spreadsheets are read more accurately. A second Douban row or Steam game matching the same work comes in on its own, and unknown 豆备 labels no longer stop the import.
 - Backup files can be dropped onto the window or onto 收录 (Add). An empty Steam library shows as empty. A Bangumi profile link is read as the username.
 - A WeRead paste skips highlights already on the book, and says so when nothing new arrived.
 - After disconnecting Bangumi or Steam, a read still in progress no longer reconnects. Dates follow your own time zone.
 - 来源 (Sources) names the newest import record of each kind.
-- The import line on the home page stays until Bangumi, Douban and Steam have all been imported, or you dismiss it.
+- The import line on the home page stays until Bangumi, Douban and Steam have all been imported, the library reaches 30 works, or you dismiss it.
 
 ### Backup and restore
 

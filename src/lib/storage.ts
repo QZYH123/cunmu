@@ -145,6 +145,9 @@ export const storage = {
   /** 删除全部内容: every copy, both keys */
   async clear() {
     if (onDisk()) { await writer.flush(); await durable.clear(); await fs.remove(BAK_FILE); }
-    try { for (const k of [KEY, BAK, LEGACY_KEY, LEGACY_BAK]) localStorage.removeItem(k); } catch { /* fine */ }
+    try { for (const k of [KEY, BAK, LEGACY_KEY, LEGACY_BAK]) localStorage.removeItem(k); } catch { return; }
+    // the unreadable copy is gone: a new library (删除全部内容) has to be able to save
+    blocked = false;
+    setFailing(false);
   },
 };

@@ -7,17 +7,21 @@ import { Preview, Seal, Section, WorkPreviewBody } from './Bits';
 import { Avatar } from './Cover';
 import { useLongPress } from '../lib/motion';
 import { LINK_PREVIEW, SIDE_MENTIONS } from '../tokens';
+import { openInShow } from './ShowMode';
 
 interface LinkHover { enter: (seg: Segment, el: HTMLElement) => void; leave: () => void }
 
 function AutoLink({ seg, onLong, hover, lit }: { seg: Segment; onLong: (seg: Segment, el: HTMLElement) => void; hover: LinkHover; lit?: boolean }) {
   const nav = useNavigate();
+  const { show, me } = useStore();
   const to = seg.kind === 'person' ? `/person/${seg.target}` : `/entry/${seg.target}`;
-  const lp = useLongPress((el) => onLong(seg, el), () => nav(to));
+  // a span, so the 给人看 click guard (anchors only) does not see it; a person page lists 只给自己 works
+  const go = () => { if (show && !openInShow(to, me.onlyMe)) return; nav(to); };
+  const lp = useLongPress((el) => onLong(seg, el), go);
   return (
     <span
       className={`autolink ${lit ? 'lit' : ''}`} role="link" tabIndex={0} {...lp} data-target={seg.target}
-      onKeyDown={(e) => e.key === 'Enter' && nav(to)}
+      onKeyDown={(e) => e.key === 'Enter' && go()}
       onPointerEnter={(e) => { if (e.pointerType === 'mouse') hover.enter(seg, e.currentTarget); }}
       onPointerLeave={(e) => { if (e.pointerType === 'mouse') hover.leave(); }}
       onFocus={(e) => { if (e.currentTarget.matches(':focus-visible')) hover.enter(seg, e.currentTarget); }}
@@ -86,7 +90,7 @@ export function Prose({ paragraphs, selfId, className = 't-body prose', dropcap,
           onPointerLeave={pv.hover ? hover.leave : undefined}
           onClose={() => setPv(null)}
           actions={[
-            { label: '打开', run: () => { setPv(null); nav(pv.seg.kind === 'person' ? `/person/${pv.seg.target}` : `/entry/${pv.seg.target}`); } },
+            ...(show && !openInShow(pv.seg.kind === 'person' ? `/person/${pv.seg.target}` : `/entry/${pv.seg.target}`, me.onlyMe) ? [] : [{ label: '打开', run: () => { setPv(null); nav(pv.seg.kind === 'person' ? `/person/${pv.seg.target}` : `/entry/${pv.seg.target}`); } }]),
             ...(show ? [] : [{ label: '不是这个，取消链接', run: () => { unlink(selfId, pv.seg.target!); setPv(null); } }]),
           ]}
         >
@@ -97,7 +101,7 @@ export function Prose({ paragraphs, selfId, className = 't-body prose', dropcap,
               <div className="preview-meta">
                 <span className="t-label c-3">人物 · {person.roles[0]}</span>
                 <span className="preview-title">{person.name}</span>
-                <span className="t-small c-2">出现在 {person.works.length} 部作品里</span>
+                <span className="t-small c-2">出现在 {person.works.filter((w) => !(show && me.onlyMe.includes(w.id))).length} 部作品里</span>
               </div>
             </>
           )}

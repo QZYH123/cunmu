@@ -14,7 +14,7 @@ interface Note { target: string; y: number }
  * no screen-height of text carries more than 4. Hovering a link lights its note and vice versa.
  */
 export function Marginalia({ body, lit, onLit }: { body: RefObject<HTMLElement>; lit?: string; onLit: (t?: string) => void }) {
-  const { d } = useStore();
+  const { d, show, me } = useStore();
   const [notes, setNotes] = useState<Note[]>([]);
   const self = useRef<HTMLElement>(null);
   useLayoutEffect(() => {
@@ -67,7 +67,7 @@ export function Marginalia({ body, lit, onLit }: { body: RefObject<HTMLElement>;
             <span className="margin-text">
               <span className="margin-title ellipsis">{w ? w.title : p!.name}</span>
               <span className="t-caption c-3 ellipsis">
-                {w ? [KIND_LABEL[w.kind], w.year].filter(Boolean).join(' · ') : `${p!.works.length} 部`}
+                {w ? [KIND_LABEL[w.kind], w.year].filter(Boolean).join(' · ') : `${p!.works.filter((x) => !(show && me.onlyMe.includes(x.id))).length} 部`}
               </span>
             </span>
           </Link>

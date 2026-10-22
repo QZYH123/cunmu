@@ -3,7 +3,7 @@ import { SteamSheet } from './pages/SteamConnect';
 import { readSteamDraft } from './lib/steamDraft';
 import { steamReachable } from './lib/steamNet';
 import { createContext, lazy, Suspense, useCallback, useContext, useEffect, useState } from 'react';
-import { createHashRouter, Outlet, RouterProvider, ScrollRestoration, useLocation, useNavigate } from 'react-router-dom';
+import { createHashRouter, RouterProvider, ScrollRestoration, useLocation, useNavigate } from 'react-router-dom';
 import { routeArrivals } from './lib/motion';
 import { StoreProvider, useStore } from './data/store';
 import { BangumiAgent } from './data/bangumiAgent';
@@ -19,7 +19,7 @@ import { AddSheet } from './pages/Add';
 import { DoubanSheet } from './components/DoubanSheet';
 import { PaletteProvider } from './components/CommandPalette';
 import { ContextPreview } from './components/ContextPreview';
-import { ShowBar, useShowGuard } from './components/ShowMode';
+import { ShowBar, ShowOutlet, useShowGuard } from './components/ShowMode';
 import { Shortcuts } from './components/Shortcuts';
 
 import FullWall from './pages/FullWall';
@@ -53,7 +53,8 @@ function useDocTitle() {
     const [, a, b, c] = pathname.split('/').map(decodePart);
     const work = (id: string) => store.d.byId.get(id) ?? store.removedWorks.find((w) => w.id === id);
     let name = store.title?.trim() ?? '';
-    if (a === 'entry' || a === 'essay') { const w = work(b); if (w) name = w.kind === 'essay' ? (w.title || '随笔') : `《${w.title}》`; }
+    const hiddenWork = store.show && (a === 'entry' || a === 'essay') && store.me.onlyMe.includes(b);
+    if (!hiddenWork && (a === 'entry' || a === 'essay')) { const w = work(b); if (w) name = w.kind === 'essay' ? (w.title || '随笔') : `《${w.title}》`; }
     else if (a === 'year') name = c ? `${b} · ${cnMonth(Number(c))}` : b;
     else if (a === 'person') name = store.d.persons.get(b)?.name ?? '人物';
     else if (a === 'kind') name = KIND_LABEL[b as Kind] ?? '分类';
@@ -70,7 +71,7 @@ function useDocTitle() {
     else if (a === 'interest') name = store.me.interests.find((i) => i.id === b)?.name ?? '兴趣';
     else if (a === 'period') name = store.me.periods.find((p) => p.id === b)?.name ?? '时期';
     document.title = name ? `${name} · ${APP_NAME}` : APP_NAME;
-  }, [pathname, store.d, store.removedWorks, store.title, store.me]);
+  }, [pathname, store.d, store.removedWorks, store.title, store.me, store.show]);
 }
 
 /** r5 #3: files dropped anywhere on the window go to the 豆瓣 sheet — a backup is read, anything else shows that sheet's own error;
@@ -135,7 +136,7 @@ function Layout() {
         <DesktopBar onPlus={sheets.add} onShow={() => { store.setShow(true); navTo('/'); window.scrollTo(0, 0); }} />
         <ShowBar />
         {/* the page itself (one main landmark; the box adds nothing to the layout) */}
-        <main className="page-main"><Outlet /></main>
+        <main className="page-main"><ShowOutlet /></main>
         <TabBar onPlus={sheets.add} />
         <PageRail />
         <Toasts />

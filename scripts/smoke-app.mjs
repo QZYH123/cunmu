@@ -348,6 +348,43 @@ await withPage('给人看: a work page does not list what is 只给自己 among 
   if (/秘密/.test(t)) throw new Error(`a hidden title shows: ${t.match(/.{0,20}秘密.{0,10}/)[0]}`);
 });
 
+await withPage('给人看: a person link and the address of a 只给自己 work never put that work on the page', async (page) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await open(page, '/');
+  await page.evaluate(() => {
+    const day = '2020-01-01';
+    const mk = (id, o) => ({ id, kind: 'book', title: 'T', credits: [{ name: '同一人', role: '作者', core: true }], genres: [], info: [], finished: day, collected: day, source: 'manual', cover: null, sources: [{ provider: 'manual', externalId: id }], claims: [{ source: 'manual_add', value: day, precision: 'day', baseLevel: 1, observedAt: day }], ...o });
+    localStorage.clear();
+    localStorage.setItem('cunmu/library', JSON.stringify({ schemaVersion: 4,
+      extras: [mk('a', { title: '公开之书' }), mk('b', { title: '秘密之书' }), mk('c', { kind: 'essay', title: '一篇', credits: [], body: ['同一人写过公开之书。'] })],
+      me: { onlyMe: ['b'] } }));
+  });
+  await page.reload();
+  await page.waitForTimeout(400);
+  await page.getByRole('button', { name: '给人看' }).first().click();
+  await page.waitForTimeout(400);
+  await page.evaluate(() => { location.hash = '/essay/c'; });
+  await page.locator('h1').filter({ hasText: '一篇' }).first().waitFor({ timeout: 5000 });
+  await page.evaluate(() => {
+    window.__sawSecret = false;
+    new MutationObserver(() => {
+      if ((document.body.textContent || '').includes('秘密之书')) window.__sawSecret = true;
+    }).observe(document.body, { subtree: true, childList: true, characterData: true });
+  });
+  const note = page.locator('.margin-note', { hasText: '同一人' });
+  if (await note.count()) {
+    const cap = await note.innerText();
+    if (/2\s*部/.test(cap)) throw new Error(`person note counts a hidden work: ${cap}`);
+  }
+  await page.locator('.autolink', { hasText: '同一人' }).first().click();
+  await page.waitForTimeout(300);
+  await page.evaluate(() => { location.hash = '/entry/b'; });
+  await page.waitForTimeout(400);
+  if (await page.evaluate(() => window.__sawSecret)) throw new Error('a 只给自己 work was put on the page');
+  if ((await page.locator('body').innerText()).includes('秘密之书')) throw new Error('a 只给自己 title is still showing');
+  if ((await page.title()).includes('秘密')) throw new Error(`tab title leaked: ${await page.title()}`);
+});
+
 await withPage('the app going to the background keeps a half-written essay, and leaving still keeps it once', async (page) => {
   await open(page, '/write');
   await page.locator('.editor-body').waitFor({ timeout: 5000 });

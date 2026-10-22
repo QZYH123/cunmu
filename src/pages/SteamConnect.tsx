@@ -98,7 +98,7 @@ export function SteamSheet({ open, onClose }: { open: boolean; onClose: () => vo
     });
     onClose();
     nav('/');
-    setTimeout(() => store.toast(r.added ? `搬进来 ${fmtNum(r.added)} 部游戏${r.matched ? `，${fmtNum(r.matched)} 部已有的记上了时长` : ''}` : r.matched ? `${fmtNum(r.matched)} 部已有的游戏记上了时长` : '没有新的游戏'), DUR.place);
+    setTimeout(() => store.toast(r.added ? `搬进来 ${fmtNum(r.added)} 部游戏${r.matched ? `，${fmtNum(r.matched)} 部已有的记上了时长` : ''}` : r.matched ? `${fmtNum(r.matched)} 部已有的游戏记上了时长` : '没有新的游戏', STEAM_UNDO(store, r.batchId)), DUR.place);
   };
 
   return (
@@ -191,14 +191,14 @@ export function SteamSheet({ open, onClose }: { open: boolean; onClose: () => vo
 }
 
 /** 再读一次 from 设置 › 来源: the same read with the key kept on this device; false = the sheet is needed */
-export async function runSteamSync(store: ReturnType<typeof useStore>): Promise<'sheet' | { ok: true; added: number } | { ok: false; say: string }> {
+export async function runSteamSync(store: ReturnType<typeof useStore>): Promise<'sheet' | { ok: true; added: number; batchId?: string } | { ok: false; say: string }> {
   const c = store.connections.steam;
   const key = await getSecret('steam-key');
   if (!c || !key || !steamReachable() || c.steamId === 'file') return 'sheet';
   try {
     const games = await readOwnedGames(key, c.steamId);
     const r = store.applySteam({ games, includeUnplayed: !!c.includeUnplayed, conn: { ...c, status: 'connected', lastOkSyncAt: new Date().toISOString(), problem: undefined }, sync: true });
-    return { ok: true, added: r.added };
+    return { ok: true, added: r.added, batchId: r.batchId };
   } catch (e) {
     const k = e instanceof SteamError ? e.kind : 'net';
     store.setSteamProblem(k === 'user' ? 'private' : k);
@@ -238,6 +238,9 @@ export async function runSteamDetails(store: ReturnType<typeof useStore>, onStep
 export const EMPTY_OWNED = '这份列表里没有游戏。账号的「游戏详情」没有公开时，列表会是空的。';
 
 /** the web build cannot ask Steam; the row on 设置 says so (the word lives in this file) */
+/** the 撤销 on the toast after a read that left an import record: that record goes, as 设置 › 撤销这次导入 would */
+export const STEAM_UNDO = (store: ReturnType<typeof useStore>, batchId: string | undefined) =>
+  batchId ? { label: '撤销', run: () => { store.undoBatch(batchId); store.toast('这次导入撤销了'); } } : undefined;
 export const STEAM_WEB = '成就要在手机或电脑上的存目里读取。';
 
 /** r21 the Steam row's words for the batch read (games only, STYLE v0.4 §3.19.8: 成就 allowed here) */

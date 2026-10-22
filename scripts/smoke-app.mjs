@@ -666,6 +666,25 @@ await withPage('导出全部内容: a ZIP download on the web, Bangumi covers by
   if (!text.includes('https://lain.bgm.tv/pic/cover/l/aa/bb/9585_x.jpg')) throw new Error('the export dropped the Bangumi cover address');
 });
 
+await withPage('Steam: 设置 › 撤销这次导入 takes the import back after the confirm', async (page) => {
+  await open(page);
+  await page.evaluate(() => {
+    const now = new Date().toISOString();
+    const game = { id: 'steam-620', kind: 'game', title: '搬来的游戏', credits: [], finished: '2024-05-01', collected: '2024-05-01', source: 'steam', cover: null, genres: [], info: [], play: { minutes: 90, provider: 'steam', appid: 620 }, sources: [{ provider: 'steam', externalId: '620', batchId: 'st-1', firstSeenAt: now }], claims: [] };
+    const manual = { id: 'manual-x', kind: 'book', title: '自己加的书', credits: [], finished: '2024-05-01', collected: '2024-05-01', source: 'manual', cover: null, genres: [], info: [], sources: [{ provider: 'manual', externalId: 'manual-x' }], claims: [] };
+    localStorage.setItem('cunmu/library', JSON.stringify({ schemaVersion: 4, extras: [manual, game], notes: {}, removed: {}, batches: [{ id: 'st-1', provider: 'steam', label: 'Steam · 1 部', createdAt: now, created: ['steam-620'], merged: [], skipped: [], quoteIds: [], steamPrior: { plays: {}, extras: {} } }], workSources: [], linked: [], unlinked: [], promoted: [], pulls: {}, plays: {}, connections: { bangumi: null, weread: { connected: false }, steam: { status: 'connected', steamId: 'file', lastOkSyncAt: now } }, settings: {}, sample: { on: false } }));
+  });
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await open(page, '/me');
+  await page.getByRole('button', { name: '撤销这次导入' }).click({ timeout: 5000 });
+  await sheet(page).getByRole('button', { name: '撤销导入' }).click();
+  await toast(page, '这次导入撤销了').waitFor({ timeout: 5000 });
+  const s = await LS(page);
+  if (s.extras.some((w) => w.id === 'steam-620')) throw new Error('the Steam game is still here');
+  if (!s.batches.find((b) => b.id === 'st-1')?.undoneAt) throw new Error('the record is not marked undone');
+  if (await page.getByRole('button', { name: '撤销这次导入' }).count()) throw new Error('撤销这次导入 is still offered with nothing left to undo');
+});
+
 await withPage('从文件恢复: the app’s own export comes back after 换掉', async (page) => {
   await open(page);
   await page.evaluate(() => {

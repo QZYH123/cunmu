@@ -244,6 +244,7 @@ export function UndoImportSheet({ batch, onClose }: { batch: ImportBatch | null;
       const r = store.undoBatch(b.id);
       if (r.removed + r.kept === 0 && b.created.length + b.merged.length > 0 && !b.quoteIds.length) { setBusy(false); setErr(true); return; }
       onClose();
+      if (b.provider === 'steam') store.toast('这次导入撤销了');
     }, DUR.readFile);
   };
   const created = b?.created.length ?? 0;
@@ -254,7 +255,8 @@ export function UndoImportSheet({ batch, onClose }: { batch: ImportBatch | null;
         <h2 className="t-title">撤销这次导入</h2>
         <KeyBlocks blocks={[
           { k: '会删掉', lines: [b?.provider === 'weread_paste' ? `这次放进来的摘抄${created ? `和 ${created} 本书` : ''}会从这里删掉。你后来在上面写过东西的，会留着。` : `这次搬进来的 ${fmtNum(created)} 条会从这里删掉。你后来在上面写过东西的，会留着。`] },
-          ...(merged && b?.provider !== 'weread_paste' ? [{ k: '会改回', lines: [`和其他来源合在一起的 ${fmtNum(merged)} 部，只去掉豆瓣那部分，作品留在墙上。`] }] : []),
+          ...(merged && b?.provider === 'steam' ? [{ k: '会改回', lines: [`已经在这里的 ${fmtNum(merged)} 部，游戏时长改回这次导入之前的样子，作品留在墙上。`] }] : []),
+          ...(merged && b?.provider !== 'weread_paste' && b?.provider !== 'steam' ? [{ k: '会改回', lines: [`和其他来源合在一起的 ${fmtNum(merged)} 部，只去掉豆瓣那部分，作品留在墙上。`] }] : []),
           { k: '不受影响', lines: ['在这次导入之前就在的作品，和其他来源搬来的东西。'] },
         ]} />
         {err && <p className="t-small c-2 field-say">没撤销掉，再试一次。</p>}

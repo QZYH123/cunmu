@@ -26,7 +26,7 @@ import type { Kind } from '../data/types';
 import { runBangumiSync } from '../data/bangumiAgent';
 import { BANGUMI_FILE_NO_TOKEN, STEAM_FILE_NO_KEY } from '../data/restore';
 import { steamReachable } from '../lib/steamNet';
-import { runSteamDetails, runSteamSync, STEAM_ACH, STEAM_WEB } from './SteamConnect';
+import { runSteamDetails, runSteamSync, STEAM_ACH, STEAM_UNDO, STEAM_WEB } from './SteamConnect';
 import { TopBar } from '../components/Shell';
 import { AboutYou } from '../components/AboutYou';
 import { lastBatchOf } from '../data/batches';
@@ -104,6 +104,7 @@ export default function Me() {
   const lastOf = (p: ImportBatch['provider']) => lastBatchOf(store.batches, p);
   const douban = lastOf('douban_xlsx');
   const paste = lastOf('weread_paste');
+  const steamLast = lastOf('steam');
   const batchCount = (b: ImportBatch) => new Set([...b.created, ...b.merged]).size;
 
   // r19 the Steam row: how many games came, when it last read, what stopped it; 再读一次 with the kept key
@@ -116,7 +117,7 @@ export default function Me() {
     const r = await runSteamSync(store);
     setSteamBusy(false);
     if (r === 'sheet') sheets.steam();
-    else if (r.ok) store.toast(r.added ? `读了一次：多了 ${fmtNum(r.added)} 部游戏` : '读了一次：时长更新了，没有新的游戏');
+    else if (r.ok) store.toast(r.added ? `读了一次：多了 ${fmtNum(r.added)} 部游戏` : '读了一次：时长更新了，没有新的游戏', STEAM_UNDO(store, r.batchId));
     else store.toast(r.say);
   };
   // r20 every game's Steam record (what it has of yours, how rare) and the store's facts, spaced out
@@ -138,6 +139,7 @@ export default function Me() {
       ]}
       actions={[
         { label: steamBusy ? '正在读取' : '再读一次', run: () => void steamAgain() },
+        ...(steamLast ? [{ label: '撤销这次导入', run: () => setUndo(steamLast) }] : []),
         ...(steamReachable() ? [{ label: detailStep ? STEAM_ACH.reading(detailStep[0], detailStep[1]) : STEAM_ACH.read, run: () => void readDetails() }] : []),
         { label: '断开 Steam', run: () => setLayer('steam-off') },
       ]}

@@ -67,3 +67,11 @@ test('steam auto-sync: a manual import, a run that adds games, or an undo in bet
   // nothing in between: one record
   assert.equal(recordSyncUpdate([old, ...first].map((b) => ({ ...b, undoneAt: b.id === 'm' ? '2026-10-20T01:00:00Z' : b.undoneAt })), run('b2', '2026-10-21T02:00:00Z')).length, 2);
 });
+
+test('设置 › Steam 撤销这次导入: the newest Steam record still standing, none once all are undone', async () => {
+  const { lastBatchOf } = await import('../src/data/batches');
+  const b = (id: string, at: string, o: Partial<ImportBatch> = {}): ImportBatch => ({ id, provider: 'steam', label: id, createdAt: at, created: [], merged: [], skipped: [], quoteIds: [], ...o });
+  const list = [b('s1', '2026-10-01T00:00:00Z'), b('d1', '2026-10-09T00:00:00Z', { provider: 'douban_xlsx' }), b('s2', '2026-10-05T00:00:00Z'), b('s3', '2026-10-08T00:00:00Z', { undoneAt: '2026-10-08T01:00:00Z' })];
+  assert.equal(lastBatchOf(list, 'steam')?.id, 's2');
+  assert.equal(lastBatchOf(list.map((x) => ({ ...x, undoneAt: 'x' })), 'steam'), null);
+});

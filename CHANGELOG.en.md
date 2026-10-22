@@ -17,9 +17,9 @@ Mostly fixes: data safety, imports and sync, and a few serious problems on speci
 ### Import and sync
 
 - Merging an import keeps what you changed yourself.
-- Undoing a Steam import also puts back playtime. A read that only moved playtime can be undone, and consecutive re-reads that only move playtime share one undo record.
+- Steam imports can now be undone: 撤销这次导入 (Undo this import) in the Steam row of Settings, and 撤销 (Undo) on the import notice. Undoing also puts back playtime. A read that only moved playtime can be undone, and consecutive re-reads that only move playtime share one undo record.
 - Douban spreadsheets are read more accurately. A second Douban row or Steam game matching the same work comes in on its own, and unknown 豆备 labels no longer stop the import.
-- Backup files can be dropped onto the window or onto 收录 (Add). An empty Steam library shows as empty. A Bangumi profile link is read as the username.
+- Douban backup files can be dropped onto the window or onto 收录 (Add); a dropped 存目 backup goes to 从文件恢复 (Restore from file) instead of the Douban sheet. An empty Steam library shows as empty. A Bangumi profile link is read as the username.
 - A WeRead paste skips highlights already on the book, and says so when nothing new arrived.
 - After disconnecting Bangumi or Steam, a read still in progress no longer reconnects. Dates follow your own time zone.
 - 来源 (Sources) names the newest import record of each kind.
@@ -27,7 +27,8 @@ Mostly fixes: data safety, imports and sync, and a few serious problems on speci
 
 ### Backup and restore
 
-- Backups carry every referenced picture and Steam cover address, and cover shapes are mended on restore.
+- Backups carry every referenced picture, Steam cover address and hand-entered cover address, and cover shapes are mended on restore.
+- Restore waits at most 3 seconds for saved tokens instead of hanging.
 - Restoring a JSON file warns when a picture is neither in the file nor on the device.
 - Hand-edited backup files are read without breaking pages.
 - Exported essay file names are safe on Windows.
@@ -55,7 +56,7 @@ Mostly fixes: data safety, imports and sync, and a few serious problems on speci
 
 ### Interface and wording
 
-- 一直喜欢的 on the home page is now called 兴趣 (Interests), the name used everywhere else.
+- 一直喜欢的 on the home page is now 兴趣 (Interests); the tag groups in the index, search and entry pages, formerly also 兴趣, are now 标签 (Tags).
 - Wording across the app is unified and clearer.
 - Secondary and quiet text has more contrast, long titles wrap to a second line, and text on covers stays legible.
 - Long words and links wrap, and narrow phones never scroll sideways.

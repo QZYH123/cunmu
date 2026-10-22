@@ -43,6 +43,14 @@ test('export: a Steam cover travels like a Bangumi one; other hosts do not', asy
   assert.equal((await import('../src/data/store')).travels(c('https://evil.example/steamstatic.com/x.jpg')), null);
 });
 
+test('export: a cover address you typed for a hand-added work travels and comes back on restore', async () => {
+  const { travels } = await import('../src/data/store');
+  const c = { thumb: 'https://img.example.org/a.jpg', medium: 'https://img.example.org/a.jpg', aspect: 0.7 };
+  assert.deepEqual(travels(c, 'manual'), c);
+  assert.equal(travels(c, 'douban'), null);
+  assert.equal(travels({ ...c, medium: 'http://img.example.org/a.jpg' }, 'manual'), null);
+});
+
 test('export Markdown names: unique ignoring case, no Windows device names or trailing dots, emoji kept whole', async () => {
   const { markdownBase } = await import('../src/lib/exportMd');
   const used = new Set<string>();

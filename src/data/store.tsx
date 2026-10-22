@@ -36,8 +36,10 @@ export type { Theme, CatView, YearView, CatSort, CatSortKey, CatGroup, WorkNote,
 /** the covers a file carries: your own pictures (by reference) and Bangumi's (by address, https only) */
 /** Steam's image hosts (the ones the desktop policy lets through) */
 const STEAM_COVER = /^https:\/\/(shared\.steamstatic\.com|shared\.cloudflare\.steamstatic\.com|cdn\.cloudflare\.steamstatic\.com|cdn\.akamai\.steamstatic\.com|steamcdn-a\.akamaihd\.net)\//;
-export const travels = (c: Work['cover'] | undefined): Work['cover'] =>
-  c && (c.medium.startsWith('idb:') || (!DEMO && (/^https:\/\/lain\.bgm\.tv\//.test(c.medium) || STEAM_COVER.test(c.medium)))) ? c : null;
+/** a work you added by hand keeps any https cover address you typed for it */
+export const travels = (c: Work['cover'] | undefined, source?: Work['source']): Work['cover'] =>
+  c && (c.medium.startsWith('idb:') || (source === 'manual' && /^https:\/\/\S+$/i.test(c.medium))
+    || (!DEMO && (/^https:\/\/lain\.bgm\.tv\//.test(c.medium) || STEAM_COVER.test(c.medium)))) ? c : null;
 
 export interface SourceValues { title: string; maker: string; cover: CoverImage | null }
 
@@ -814,7 +816,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           const raw = new Map<string, Work['cover']>();
           for (const w of [...(s.bangumi?.done ?? []), ...(s.bangumi?.doing ?? []), ...s.extras]) raw.set(w.id, w.cover);
           return own.map(({ cover: _c, date: _d, finished: _f, isSample: _s, images: _i, ...w }) => (
-            { ...w, sourceKey: sourceKeyOf(w.id), cover: travels(raw.get(w.id)) }
+            { ...w, sourceKey: sourceKeyOf(w.id), cover: travels(raw.get(w.id), w.source) }
           ));
         })(),
         // your pictures keep their 'idb:<id>' src; the export ZIP puts each one at 图片/<id>.jpg
@@ -853,7 +855,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const pullWorks = eb ? works.filter(fromPull).map(({ sourceKey: _k, ...w }) => fixCoverAspect({ ...w, cover: travels(w.cover), finished: '' } as Work)) : [];
       // works the demo catalogue provides come back with it; the rest are yours and come back as they were
       const extras = works.filter((w) => !fromPull(w) && (!catalogue.has(w.id) || w.kind === 'essay'))
-        .map(({ sourceKey: _k, ...w }) => fixCoverAspect({ ...w, cover: travels(w.cover), finished: '' } as Work))
+        .map(({ sourceKey: _k, ...w }) => fixCoverAspect({ ...w, cover: travels(w.cover, w.source), finished: '' } as Work))
         .map((w) => (w.quotes === undefined ? w : { ...w, quotes: normalizeQuotes(w.quotes) }));
       const prev = ownIds();
       setS((x) => ({

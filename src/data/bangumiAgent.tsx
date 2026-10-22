@@ -15,20 +15,23 @@ import { bgmClient } from '../lib/bangumiNet';
 import { getBangumiToken } from '../lib/secrets';
 import { initCoverCache, localCover, warmCovers } from '../lib/coverCache';
 import { isNative } from '../lib/native';
+import { bangumiMayLand, syncStamp } from './syncGen';
 
 type Store = ReturnType<typeof useStore>;
 export const SYNC_EVERY_MS = 6 * 3600_000;
 /** people found in the background are saved at least this often (not a UI timing) */
 const SAVE_PEOPLE_MS = 15_000;
 let syncing: Promise<SyncOutcome> | null = null;
-export type SyncOutcome = { ok: true; added: number; removed: number } | { ok: false; problem: 'token' | 'gone' | 'net' };
+export type SyncOutcome = { ok: true; added: number; removed: number } | { ok: false; problem: 'token' | 'gone' | 'net' } | { stale: true };
 
 /** one sync: read every 看过 / 在看 again and lay the pull over the last one (lib/bangumi.ts planSync) */
 export function runBangumiSync(store: Store): Promise<SyncOutcome> {
   syncing ??= (async (): Promise<SyncOutcome> => {
+    const started = syncStamp();
     const b = store.connections.bangumi;
     if (!b || b.status !== 'connected') return { ok: false, problem: 'gone' };
     const token = b.mode === 'token' ? await getBangumiToken() : null;
+    if (!bangumiMayLand(started)) return { stale: true };
     // a restore that found no token already says so ('absent'); do not call that a dead token
     if (b.mode === 'token' && !token) {
       if (b.problem !== 'absent') store.setBangumiProblem('token');
@@ -39,14 +42,18 @@ export function runBangumiSync(store: Store): Promise<SyncOutcome> {
       const username = b.mode === 'token' ? (await client.me()).username : b.username;
       const items = await client.collections(username);
       const prev = store.bangumi ?? null;
+      // the library was restored, or Bangumi was disconnected, while this read was out
+      if (!bangumiMayLand(started)) return { stale: true };
       // a public collection that went private reads as empty: keep what is here rather than empty the wall
       if (!items.length && prev && (prev.done.length || prev.doing.length)) { store.setBangumiProblem('gone'); return { ok: false, problem: 'gone' }; }
       const now = new Date().toISOString();
       const r = planSync(prev, items, { epoch: b.epoch, now, prevSyncAt: b.lastOkSyncAt });
       const { problem: _p, ...rest } = b;
-      store.applyBangumi({ pull: r.pull, conn: { ...rest, username, lastOkSyncAt: now }, added: r.added.filter((id) => r.pull.done.some((w) => w.id === id)), sync: true });
+      const landed = store.applyBangumi({ pull: r.pull, conn: { ...rest, username, lastOkSyncAt: now }, added: r.added.filter((id) => r.pull.done.some((w) => w.id === id)), sync: true, started });
+      if (!landed) return { stale: true };
       return { ok: true, added: r.added.length, removed: r.removed.length };
     } catch (e) {
+      if (!bangumiMayLand(started)) return { stale: true };
       const code = e instanceof BgmError ? e.code : 'net';
       const problem = code === 'token' ? 'token' : code === 'gone' ? 'gone' : 'net';
       store.setBangumiProblem(problem);

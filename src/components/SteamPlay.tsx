@@ -4,6 +4,7 @@ import type { Work } from '../data/types';
 import { fmtPlaytime, type AchSummary } from '../lib/steam';
 import { fmtYMD } from '../data/derive';
 import { getSecret } from '../lib/secrets';
+import { steamMayLand, syncStamp } from '../data/syncGen';
 import { readAchievements, readAppDetails, steamReachable, SteamError } from '../lib/steamNet';
 import { Section, Dots } from './Bits';
 import { localDay } from '../lib/today';
@@ -36,15 +37,18 @@ export function SteamPlay({ work }: { work: Work }) {
   const canRead = steamReachable() && !!conn && conn.steamId !== 'file' && !work.isSample;
   const read = async () => {
     if (busy || !conn) return;
+    const started = syncStamp();
     const key = await getSecret('steam-key');
+    if (!steamMayLand(started)) return;
     if (!key) { store.toast('先在「设置 › 来源」里连上 Steam'); return; }
     setBusy(true);
     try {
       const [ach, facts] = [await readAchievements(key, conn.steamId, play.appid), await readAppDetails(play.appid).catch(() => null)];
-      store.learnSteam(work.id, { ...(ach ? { ach } : null), ...(facts ? { store: facts } : null) });
+      if (!steamMayLand(started)) return;
+      store.learnSteam(work.id, { ...(ach ? { ach } : null), ...(facts ? { store: facts } : null) }, started);
       if (!ach) store.toast('这部游戏没有成就');
     } catch (e) {
-      store.toast(SAY[e instanceof SteamError ? e.kind : 'net']);
+      if (steamMayLand(started)) store.toast(SAY[e instanceof SteamError ? e.kind : 'net']);
     } finally { setBusy(false); }
   };
   return (

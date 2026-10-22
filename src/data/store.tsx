@@ -16,6 +16,7 @@ import { getBangumiToken, getSecret, secretOrNone, setBangumiToken, setSecret } 
 import { bangumiFromBackup, steamFromBackup } from './restore';
 import { clearSteamDraft } from '../lib/steamDraft';
 import { recordSyncUpdate, steamPriorOf, syncUpdateTarget, undoSteamPrior } from './steamUndo';
+import { bangumiMayLand, bumpBangumiGeneration, bumpLibraryGeneration, bumpSteamGeneration, steamMayLand, type SyncStamp } from './syncGen';
 import { withViewTransition } from '../lib/motion';
 import { clearCoverCache } from '../lib/coverCache';
 import type { CoverImage, Credit, Dataset, DateClaim, Quote, Work } from './types';
@@ -135,14 +136,14 @@ interface Store extends PersistedV2 {
   /** demo build: a simulated light sync — marks made since (在看 → 看过) come in; works you took out stay out */
   syncBangumi: () => number;
   /** app build: a Bangumi pull (lib/bangumi.ts planSync) and the connection it came with; `added` arrive on the wall */
-  applyBangumi: (r: { pull: BangumiPull; conn: BangumiConnection; added: string[]; first?: boolean; /** from the background sync: dropped when Bangumi was disconnected meanwhile */ sync?: boolean }) => void;
+  applyBangumi: (r: { pull: BangumiPull; conn: BangumiConnection; added: string[]; first?: boolean; /** from the background sync: dropped when Bangumi was disconnected, or the library was replaced, meanwhile */ sync?: boolean; /** syncStamp() when the read started */ started?: SyncStamp }) => boolean;
   /** what the background learned about Bangumi works: core creators, real cover shapes */
   learnBangumi: (patch: { people?: Record<string, Credit[]>; aspects?: Record<string, number> }) => void;
   /** r19 a Steam read (lib/steam.ts): new games join as one batch, times move on for the ones already here;
    *  returns how many arrived and how many matched a game you had */
-  applySteam: (r: { games: SteamGame[]; conn: SteamConnection; includeUnplayed: boolean; /** 再读一次: dropped when Steam was disconnected meanwhile */ sync?: boolean }) => { added: number; matched: number; skipped: number; /** the import record this read left (none when nothing changed) */ batchId?: string };
+  applySteam: (r: { games: SteamGame[]; conn: SteamConnection; includeUnplayed: boolean; /** 再读一次: dropped when Steam was disconnected, or the library was replaced, meanwhile */ sync?: boolean; /** syncStamp() when the read started */ started?: SyncStamp }) => { applied: boolean; added: number; matched: number; skipped: number; /** the import record this read left (none when nothing changed, or the read was dropped) */ batchId?: string };
   /** r20 what was read for one game on demand: its achievements, the store's facts */
-  learnSteam: (workId: string, patch: { ach?: AchSummary; store?: StoreFacts }) => void;
+  learnSteam: (workId: string, patch: { ach?: AchSummary; store?: StoreFacts }, started?: SyncStamp) => void;
   /** Steam's games stay (they are yours now); the connection, its key and the playtime laid on other works go */
   disconnectSteam: () => void;
   setSteamProblem: (p: SteamConnection['problem'] | null) => void;
@@ -598,6 +599,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (verdict === 'merged') announce({ kind: 'batch', ids: [], prevIds: prev });
     },
     disconnectBangumi: () => {
+      bumpBangumiGeneration();
       const prev = ownIds();
       setS((x) => {
         const b = x.connections.bangumi;
@@ -617,9 +619,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       announce({ kind: 'batch', ids: [], prevIds: prev });
       if (!DEMO) { void setBangumiToken(null); void clearCoverCache(); }
     },
-    applySteam: ({ games, conn, includeUnplayed, sync }) => {
-      // a read that comes back after you disconnected Steam does not connect it again
-      if (sync && !latest.current.connections.steam) return { added: 0, matched: 0, skipped: 0 };
+    applySteam: ({ games, conn, includeUnplayed, sync, started }) => {
+      // a read that comes back after you disconnected Steam, or after the library was replaced, does not connect it again
+      if (!sync) bumpSteamGeneration();
+      else if (!steamMayLand(started) || !latest.current.connections.steam) return { applied: false, added: 0, matched: 0, skipped: 0 };
       const at = nowISO();
       const own = library.filter((w) => !w.isSample);
       const plan = planSteam({ games, at, includeUnplayed }, own.filter((w) => w.source !== 'steam'));
@@ -628,7 +631,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const id = batchId();
       const prev = ownIds();
       const upd = (x0: PersistedV2): PersistedV2 => {
-        if (sync && !x0.connections.steam) return x0;
+        if (sync && (!steamMayLand(started) || !x0.connections.steam)) return x0;
         // a game another read brought in meanwhile (this call's view of the library can be a step behind) is
         // updated below, never added a second time
         const here = new Set(x0.extras.map((w) => w.id));
@@ -665,12 +668,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       // which record this read leaves, so its toast can undo just that one (the update is pure: a dry run says)
       const cur = latest.current;
       const peek = upd(cur);
+      // a dropped read leaves no record, so the toast must not offer 撤销 for one
+      if (sync && peek === cur) return { applied: false, added: 0, matched: 0, skipped: 0 };
       const made = peek.batches === cur.batches ? undefined : peek.batches.find((b) => b.id === id) ? id : syncUpdateTarget(peek.batches)?.id;
       setS(upd);
       if (fresh.length) announce({ kind: fresh.length > 8 ? 'batch' : 'single', ids: fresh.map((w) => w.id), prevIds: prev });
-      return { added: fresh.length, matched: Object.keys(plan.plays).length, skipped: plan.skipped, batchId: made };
+      return { applied: true, added: fresh.length, matched: Object.keys(plan.plays).length, skipped: plan.skipped, batchId: made };
     },
-    learnSteam: (wid, patch) => setS((x) => {
+    learnSteam: (wid, patch, started) => setS((x) => {
+      // an achievement read that finishes after a restore or a new account must not land on the new library
+      if (started && !steamMayLand(started)) return x;
       const ex = x.extras.find((w) => w.id === wid && w.source === 'steam' && w.play);
       if (ex) {
         const w1 = { ...ex, play: { ...ex.play!, ...patch } };
@@ -682,6 +689,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       return { ...x, plays: { ...x.plays, [wid]: { ...p, ...patch } } };
     }),
     disconnectSteam: () => {
+      bumpSteamGeneration();
       setS((x) => withoutSteam(x));
       void setSecret('steam-key', null);
     },
@@ -692,14 +700,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (p) next.problem = p; else delete next.problem;
       return { ...x, connections: { ...x.connections, steam: next } };
     }),
-    applyBangumi: ({ pull, conn, added, first, sync }) => {
-      // a background sync that finishes after 断开 (or a new connection) must not bring the old one back
+    applyBangumi: ({ pull, conn, added, first, sync, started }) => {
+      // a background sync that finishes after 断开, a new connection, or a replaced library must not bring the old one back
       const cur = latest.current.connections.bangumi;
       const gone = (b: BangumiConnection | null | undefined) => !b || b.status !== 'connected' || b.epoch !== conn.epoch;
-      if (sync && gone(cur)) return;
+      if (!sync) bumpBangumiGeneration();
+      else if (!bangumiMayLand(started) || gone(cur)) return false;
       const prev = ownIds();
       setS((x0) => {
-        if (sync && gone(x0.connections.bangumi)) return x0;
+        if (sync && (!bangumiMayLand(started) || gone(x0.connections.bangumi))) return x0;
         const x = first ? leaveSample(x0) : x0;
         // people and cover shapes the background learned while this read was out stay (the pull carries the older set)
         const had = x.bangumi;
@@ -710,6 +719,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         return { ...x, bangumi: { ...pull, ...kept }, connections: { ...x.connections, bangumi: conn } };
       });
       if (first || added.length) announce({ kind: first || added.length > 8 ? 'batch' : 'single', ids: first ? [] : added, prevIds: prev });
+      return true;
     },
     learnBangumi: ({ people, aspects }) => setS((x) => {
       if (!x.bangumi) return x;
@@ -842,6 +852,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     importBackup: async (b) => {
       const j = b as Partial<CunmuExport> | null;
       if (!j || !isBackupFormat(j.format) || !Array.isArray(j.works)) return false;
+      // a read already in flight must not land on this library, nor one that starts while the token is looked up
+      bumpLibraryGeneration();
       // the file never has the token or the key; keep using the ones still on this device
       const [hasToken, hasKey] = await Promise.all([
         secretOrNone(getBangumiToken()).then((t) => !!t),
@@ -858,6 +870,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         .map(({ sourceKey: _k, ...w }) => fixCoverAspect({ ...w, cover: travels(w.cover, w.source), finished: '' } as Work))
         .map((w) => (w.quotes === undefined ? w : { ...w, quotes: normalizeQuotes(w.quotes) }));
       const prev = ownIds();
+      bumpLibraryGeneration();
       setS((x) => ({
         ...x, ...CLEAN,
         extras,
@@ -887,6 +900,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       return true;
     },
     deleteAll: async () => {
+      bumpLibraryGeneration();
       await clearImages();
       await storage.clear();
       await setBangumiToken(null);
@@ -894,6 +908,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       await clearCoverCache();
       clearSpineColours();
       clearSteamDraft();
+      bumpLibraryGeneration();
       setS((x) => ({ ...DEFAULTS, ...CLEAN, dev: { tier: 0, dataset: x.dev.dataset, wereadRemoved: false }, connections: NO_CONNECTIONS, theme: x.theme, reduceMotion: x.reduceMotion, fontScale: x.fontScale }));
     },
     promote: (id) => setS((x) => ({ ...x, promoted: [...new Set([...x.promoted, id])] })),

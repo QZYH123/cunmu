@@ -6,6 +6,7 @@ import { fmtNum } from '../data/derive';
 import { Sheet, Dots } from '../components/Bits';
 import { ExplainList } from './Connect';
 import { getSecret, setSecret } from '../lib/secrets';
+import { steamMayLand, syncStamp } from '../data/syncGen';
 import { parseOwnedGames, type SteamGame } from '../lib/steam';
 import { readAchievements, readAppDetails, readOwnedGames, readProfile, resolveSteamUser, steamReachable, SteamError } from '../lib/steamNet';
 import { openOutside } from '../lib/openOut';
@@ -191,15 +192,20 @@ export function SteamSheet({ open, onClose }: { open: boolean; onClose: () => vo
 }
 
 /** 再读一次 from 设置 › 来源: the same read with the key kept on this device; false = the sheet is needed */
-export async function runSteamSync(store: ReturnType<typeof useStore>): Promise<'sheet' | { ok: true; added: number; batchId?: string } | { ok: false; say: string }> {
+export async function runSteamSync(store: ReturnType<typeof useStore>): Promise<'sheet' | { ok: true; added: number; batchId?: string } | { ok: false; say: string } | { stale: true }> {
+  const started = syncStamp();
   const c = store.connections.steam;
   const key = await getSecret('steam-key');
+  if (!steamMayLand(started)) return { stale: true };
   if (!c || !key || !steamReachable() || c.steamId === 'file') return 'sheet';
   try {
     const games = await readOwnedGames(key, c.steamId);
-    const r = store.applySteam({ games, includeUnplayed: !!c.includeUnplayed, conn: { ...c, status: 'connected', lastOkSyncAt: new Date().toISOString(), problem: undefined }, sync: true });
+    if (!steamMayLand(started)) return { stale: true };
+    const r = store.applySteam({ games, includeUnplayed: !!c.includeUnplayed, conn: { ...c, status: 'connected', lastOkSyncAt: new Date().toISOString(), problem: undefined }, sync: true, started });
+    if (!r.applied) return { stale: true };
     return { ok: true, added: r.added, batchId: r.batchId };
   } catch (e) {
+    if (!steamMayLand(started)) return { stale: true };
     const k = e instanceof SteamError ? e.kind : 'net';
     store.setSteamProblem(k === 'user' ? 'private' : k);
     return { ok: false, say: SAY[k] };
@@ -211,21 +217,26 @@ export async function runSteamSync(store: ReturnType<typeof useStore>): Promise<
  * achievements and the store's facts; a game read in the last `fresh` days is skipped. Stops at the first
  * refusal (a key or privacy problem would fail every game the same way).
  */
-export async function runSteamDetails(store: ReturnType<typeof useStore>, onStep: (done: number, total: number) => void, fresh = 7): Promise<{ read: number; say?: string }> {
+export async function runSteamDetails(store: ReturnType<typeof useStore>, onStep: (done: number, total: number) => void, fresh = 7): Promise<{ read: number; say?: string; stale?: boolean }> {
+  const started = syncStamp();
   const c = store.connections.steam;
   const key = await getSecret('steam-key');
+  if (!steamMayLand(started)) return { read: 0, stale: true };
   if (!c || !key || !steamReachable()) return { read: 0, say: '先在这台设备上连上 Steam' };
   const cut = Date.now() - fresh * 86400000;
   const todo = store.library.filter((w) => w.play && !w.isSample && !(w.play.ach && Date.parse(w.play.ach.at) > cut));
   let n = 0;
   for (const w of todo) {
+    if (!steamMayLand(started)) return { read: n, stale: true };
     onStep(n, todo.length);
     try {
       const ach = await readAchievements(key, c.steamId, w.play!.appid);
       const facts = await readAppDetails(w.play!.appid).catch(() => null);
-      store.learnSteam(w.id, { ...(ach ? { ach } : null), ...(facts ? { store: facts } : null) });
+      if (!steamMayLand(started)) return { read: n, stale: true };
+      store.learnSteam(w.id, { ...(ach ? { ach } : null), ...(facts ? { store: facts } : null) }, started);
       n++;
     } catch (e) {
+      if (!steamMayLand(started)) return { read: n, stale: true };
       const k = e instanceof SteamError ? e.kind : 'net';
       if (k !== 'net') return { read: n, say: SAY[k] };
     }

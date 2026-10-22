@@ -117,6 +117,7 @@ export default function Me() {
     const r = await runSteamSync(store);
     setSteamBusy(false);
     if (r === 'sheet') sheets.steam();
+    else if ('stale' in r) return;
     else if (r.ok) store.toast(r.added ? `读了一次：多了 ${fmtNum(r.added)} 部游戏` : '读了一次：时长更新了，没有新的游戏', STEAM_UNDO(store, r.batchId));
     else store.toast(r.say);
   };
@@ -127,6 +128,7 @@ export default function Me() {
     setDetailStep([0, 0]);
     const r = await runSteamDetails(store, (a, b) => setDetailStep([a, b]));
     setDetailStep(null);
+    if (r.stale) { if (r.read) store.toast(STEAM_ACH.done(fmtNum(r.read))); return; }
     store.toast(r.say ?? (r.read ? STEAM_ACH.done(fmtNum(r.read)) : '都是最近读过的'));
   };
   const steamRow = steam ? (
@@ -153,6 +155,7 @@ export default function Me() {
     setSyncing(true);
     const r = await runBangumiSync(store);
     setSyncing(false);
+    if ('stale' in r) return;
     if (r.ok) store.toast(r.added ? `同步了一次：多了 ${fmtNum(r.added)} 部` : '同步了一次：没有新的');
     else store.toast(r.problem === 'token' ? '令牌用不了了，换一个就能接着同步' : r.problem === 'gone' ? '这次没读到收藏，搬进来的都还在' : '现在连不上 Bangumi，过一会儿再试');
   };

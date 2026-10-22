@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import raw from './fixtures/steam-owned-games.json';
 import ach from './fixtures/steam-achievements.json';
-import { fmtPlaytime, parseAppDetails, parseProfileXml, profileXmlUrl, summarizeAchievements, withStoreFacts, parseOwnedGames, parseSteamUser, planSteam, steamWork, type SteamPull } from '../src/lib/steam';
+import { fmtPlaytime, laidPlay, parseAppDetails, parseProfileXml, profileXmlUrl, summarizeAchievements, withStoreFacts, parseOwnedGames, parseSteamUser, planSteam, playOf, steamWork, type Play, type SteamPull } from '../src/lib/steam';
 import { migrateV1toV2, migrateV3toV4, DEFAULTS } from '../src/data/persist';
 import type { Work } from '../src/data/types';
 
@@ -68,6 +68,23 @@ test('steam: unplayed games stay out unless asked; a game you have by title gain
   const later = planSteam({ games: games.map((g) => ({ ...g, playtime_forever: g.playtime_forever ? g.playtime_forever + 60 : 0 })), at: AT }, [mine], -480);
   assert.equal(later.works.length, a.works.length);
   assert.equal(later.works[0].play!.minutes, 7623);
+});
+
+test('steam: a later read that no longer reports 最近两周 or 最后玩于 drops them, and keeps achievements', () => {
+  const ach = { unlocked: 1, total: 2, at: '2026-01-01T00:00:00.000Z', list: [] } as NonNullable<Play['ach']>;
+  const prev: Play = { minutes: 100, recentMinutes: 40, lastPlayed: '2024-10-14', provider: 'steam', appid: 1, ach };
+  const quiet = laidPlay(prev, playOf({ appid: 1, name: 'X', playtime_forever: 120 }));
+  assert.equal(quiet.minutes, 120);
+  assert.equal(quiet.recentMinutes, undefined);
+  assert.equal(quiet.lastPlayed, undefined);
+  assert.equal(quiet.ach, ach);
+  // spreading the old play over the new one is what left 「最近两周」 on the page after Steam stopped reporting it
+  const stuck = { ...prev, ...playOf({ appid: 1, name: 'X', playtime_forever: 120 }) };
+  assert.equal(stuck.recentMinutes, 40);
+  const still = laidPlay(prev, playOf({ appid: 1, name: 'X', playtime_forever: 120, playtime_2weeks: 10, rtime_last_played: 1728900000 }, -480));
+  assert.equal(still.recentMinutes, 10);
+  assert.equal(still.lastPlayed, '2024-10-14');
+  assert.equal(still.ach, ach);
 });
 
 test('steam: playtime in words', () => {

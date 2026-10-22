@@ -330,7 +330,7 @@ function WorkEntry({ work }: { work: Work }) {
           </dd>
         </div>
         {genres.length > 0 && (
-          <div className="info-row"><dt>兴趣</dt><dd>{genres.map((g, i) => <span key={g}>{i > 0 && '、'}<Link className="infolink" to={`/index/interests?g=${encodeURIComponent(g)}`}>{g}</Link></span>)}</dd></div>
+          <div className="info-row"><dt>标签</dt><dd>{genres.map((g, i) => <span key={g}>{i > 0 && '、'}<Link className="infolink" to={`/index/interests?g=${encodeURIComponent(g)}`}>{g}</Link></span>)}</dd></div>
         )}
         {linkedList.length > 0 && (
           <div className="info-row"><dt>作品</dt><dd>{linkedList.map((x, i) => <span key={x.id}>{i > 0 && '、'}<Link className="infolink" to={`/entry/${x.id}`}>{x.title}</Link></span>)}</dd></div>

@@ -45,7 +45,7 @@ export default function IndexPage() {
         <div className="cat-tools idx-tools">
           <Seg
             className="cat-seg"
-            options={[{ value: 'people', label: '人物' }, { value: 'periods', label: '年份' }, { value: 'interests', label: '兴趣' }]}
+            options={[{ value: 'people', label: '人物' }, { value: 'periods', label: '年份' }, { value: 'interests', label: '标签' }]}
             value={tab as Tab}
             onChange={(v) => nav(`/index/${v}`, { replace: true })}
           />

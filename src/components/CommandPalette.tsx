@@ -69,7 +69,7 @@ export function useSearchHits(term: string, expanded: Set<string> = new Set()): 
         key: w.id, group: KIND_LABEL[k], to: k === 'essay' ? `/essay/${w.id}` : `/entry/${w.id}`, label: w.title,
         meta: searchMeta(w, t), work: w,
       }))),
-      ...capped('兴趣', r.interests, ([g, ws]) => ({ key: `g-${g}`, group: '兴趣', to: `/index/interests?g=${encodeURIComponent(g)}`, label: g, meta: `${ws.length} 条`, interest: true })),
+      ...capped('标签', r.interests, ([g, ws]) => ({ key: `g-${g}`, group: '标签', to: `/index/interests?g=${encodeURIComponent(g)}`, label: g, meta: `${ws.length} 条`, interest: true })),
       ...r.years.map((y) => ({ key: `y${y}`, group: '年份', to: `/year/${y}`, label: String(y), meta: `${d.years.get(y)!.works.length} 条` })),
     ];
     return { hits, empty: !hits.length };

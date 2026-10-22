@@ -151,13 +151,13 @@ export default function SearchPage() {
             })}
             {results!.interests.length > 0 && (
               <section className="result-group">
-                <div className="t-label c-3">兴趣 · <RollingNumber value={String(results!.interests.length)} /></div>
-                {cap('兴趣', results!.interests)[0].map(([g, ws]) => (
+                <div className="t-label c-3">标签 · <RollingNumber value={String(results!.interests.length)} /></div>
+                {cap('标签', results!.interests)[0].map(([g, ws]) => (
                   <Link key={g} to={`/index/interests?g=${encodeURIComponent(g)}`} className="list-row search-row no-thumb">
                     <div className="list-main"><span className="t-ui"><Hl text={g} q={term} /></span><span className="list-meta c-3">{fmtNum(ws.length)} 条</span></div>
                   </Link>
                 ))}
-                {more('兴趣', cap('兴趣', results!.interests)[1])}
+                {more('标签', cap('标签', results!.interests)[1])}
               </section>
             )}
             {results!.years.length > 0 && (

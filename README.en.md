@@ -67,7 +67,7 @@ Favourites, lasting interests, the named chapters of your life, your own notes. 
 <img src="docs/images/phone-years-spines.jpg" alt="Shelves by year">
 
 **A shelf for every year**
-Books, anime, film and TV, music and games, shelved by year as spines or covers. Works by the same creator, from the same chapter, or on the same interest find each other.
+Books, anime, film and TV, music and games, shelved by year as spines or covers. Works by the same creator, from the same chapter, or sharing a tag find each other.
 </td>
 <td width="33%" valign="top">
 <img src="docs/images/phone-handover.jpg" alt="Hand-over mode">

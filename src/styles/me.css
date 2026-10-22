@@ -54,7 +54,7 @@
 .mh-strip { display: flex; gap: 6px; align-items: flex-end; margin-top: var(--s-4); overflow: hidden; }
 .mh-strip > * { flex: none; display: block; }
 
-/* 一直喜欢的 */
+/* 兴趣 */
 .mh-int + .mh-int { border-top: var(--hairline) solid var(--line-inner); }
 .mh-int-link { display: grid; grid-template-columns: 1fr auto; column-gap: var(--s-4); padding: var(--s-5) 0; border-radius: var(--r-sm); }
 .mh-int:first-child .mh-int-link { padding-top: 0; }

@@ -143,7 +143,7 @@ export default function MeHome() {
   const segLinks = (segs: Seg[][]) => segs.flatMap((s, i) => [...(i ? [{ text: '、' }] : []), ...s]);
   const info = [
     firstWork && { key: '始于', value: <LeadText className="mh-infotext" segs={[{ text: `${fmtYM(firstWork.finished)} · 《` }, { text: firstWork.title, to: `/entry/${firstWork.id}`, kind: 'work' }, { text: '》' }]} /> },
-    me.interests.length > 0 && { key: '一直喜欢', value: <LeadText className="mh-infotext" segs={segLinks(me.interests.slice(0, 4).map((i) => [{ text: i.name, to: `/interest/${i.id}`, kind: 'interest' as const }]))} /> },
+    me.interests.length > 0 && { key: '兴趣', value: <LeadText className="mh-infotext" segs={segLinks(me.interests.slice(0, 4).map((i) => [{ text: i.name, to: `/interest/${i.id}`, kind: 'interest' as const }]))} /> },
     people.length > 0 && { key: '常遇见', value: <LeadText className="mh-infotext" segs={segLinks(people.map((p) => [{ text: p, to: `/person/${personId(p)}`, kind: 'person' as const }]))} /> },
     periods.length > 0 && { key: '时期', value: <LeadText className="mh-infotext" segs={[{ text: `${periods.length} 段，最近一段是「` }, { text: periods[periods.length - 1].name, to: `/period/${periods[periods.length - 1].id}`, kind: 'period' }, { text: '」' }]} /> },
     (essays.length > 0 || photos.length > 0) && { key: '写过', value: [essays.length && `${essays.length} 篇随笔`, photos.length && `${photos.length} 张照片`].filter(Boolean).join('，') },
@@ -272,10 +272,10 @@ function Interests({ list, works }: { list: Interest[]; works: Work[] }) {
   return (
     <section className="mh-sec" aria-labelledby="mh-ints">
       <div className="section-head mh-sec-head">
-        <h2 id="mh-ints" className="t-h2">一直喜欢的</h2>
+        <h2 id="mh-ints" className="t-h2">兴趣</h2>
         {!show && <button className="btn-text quiet mh-sec-act" onClick={() => { setRound((r) => r + 1); setAdding(true); }}>添一个</button>}
       </div>
-      {rows.length === 0 && <p className="t-small c-3 mh-quiet">一直喜欢的作者、题材、系列，会排在这里。</p>}
+      {rows.length === 0 && <p className="t-small c-3 mh-quiet">喜欢的作者、题材、系列，可以各添成一个兴趣，排在这里。</p>}
       {rows.length > 0 && (
         <ul className="mh-ints">
           {rows.map(({ i, ms, first, last }) => (

@@ -57,7 +57,7 @@
 <img src="docs/images/phone-home.jpg" alt="首页">
 
 **扉页写的是你**
-最爱、一直喜欢的事、有名字的几段时期、你自己写下的随笔。都由记录提议，你点一下决定留不留。
+最爱、兴趣、有名字的几段时期、你自己写下的随笔。都由记录提议，你点一下决定留不留。
 </td>
 <td width="33%" valign="top">
 <img src="docs/images/phone-years-spines.jpg" alt="按年份的书架">

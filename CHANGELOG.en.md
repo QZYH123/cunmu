@@ -20,7 +20,7 @@ Mostly fixes: data safety, imports and sync, and a few serious problems on speci
 
 - Merging an import keeps what you changed yourself.
 - Steam imports can now be undone: 撤销这次导入 (Undo this import) in the Steam row of Settings, and 撤销 (Undo) on the import notice. Undoing also puts back playtime. A read that only moved playtime can be undone, and consecutive re-reads that only move playtime share one undo record.
-- Douban spreadsheets are read more accurately. A second Douban row or Steam game matching the same work comes in on its own, and unknown 豆备 labels no longer stop the import.
+- Douban spreadsheets are read more accurately. A second Douban row or Steam game matching the same work comes in on its own, and unknown labels from 豆伴 (a Douban backup extension) no longer stop the import.
 - Douban backup files can be dropped onto the window or onto 收录 (Add); a dropped 存目 backup goes to 从文件恢复 (Restore from file) instead of the Douban sheet. An empty Steam library shows as empty. A Bangumi profile link is read as the username.
 - A WeRead paste skips highlights already on the book, and says so when nothing new arrived.
 - After disconnecting Bangumi or Steam, a read still in progress no longer reconnects. Dates follow your own time zone.
@@ -46,7 +46,7 @@ Mostly fixes: data safety, imports and sync, and a few serious problems on speci
 
 - Going back from an entry opened from search returns to the same results, words and scroll position.
 - The cover wall's kind, year and grouping are kept in the address, so going back returns to them.
-- Search matches every credit, shows the original title when that is why a row matched, treats full-width and half-width characters alike, leaves Enter and Esc to an input method still composing, and no longer offers to add a work from an empty search.
+- Search matches every credit and original titles, shows the original title when that is what matched, treats full-width and half-width characters alike, leaves Enter and Esc to an input method still composing, and no longer offers to add a work from an empty search.
 - Grouping by genre lists a work under each of its genres. Undated works sort last and say the date is unknown.
 - Long index lists can be expanded instead of being cut off, and a period page shows all its works.
 - 设置 (Settings) opens at once even in a large library.

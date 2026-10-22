@@ -1,5 +1,5 @@
-import { useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import { isBackupFormat, LEGACY_EXPORT, TIERS, useStore, type Theme } from '../data/store';
 import type { ImportBatch } from '../data/persist';
@@ -249,6 +249,16 @@ export default function Me() {
       store.toast('这个文件读不出来，换一个存目导出的文件再试');
     }
   };
+
+  // a 存目 backup dropped on the window or on 收录 comes here, to the same restore (and its confirm)
+  const loc = useLocation();
+  const navMe = useNavigate();
+  useEffect(() => {
+    const f = (loc.state as { restoreFile?: unknown } | null)?.restoreFile;
+    if (!(f instanceof File)) return;
+    navMe('/me', { replace: true, state: null });
+    void restore(f);
+  }, [loc.state]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const noExport = !own.length || sample;
 

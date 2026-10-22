@@ -38,6 +38,7 @@ import Editor from './pages/Editor';
 import Writing from './pages/Writing';
 import { Doing, Removed, Unknown } from './pages/Lists';
 import { decodePart } from './lib/decode';
+import { isCunmuBackup } from './data/backupFile';
 
 /** bangumi: 'token' opens on the token card, { user } reads that account at once; douban: a dropped backup file */
 interface Sheets { weread: () => void; bangumi: (start?: unknown) => void; douban: (file?: unknown) => void; add: (query?: unknown) => void; steam: () => void }
@@ -72,7 +73,8 @@ function useDocTitle() {
   }, [pathname, store.d, store.removedWorks, store.title, store.me]);
 }
 
-/** r5 #3: files dropped anywhere on the window go to the 豆瓣 sheet — a backup is read, anything else shows that sheet's own error */
+/** r5 #3: files dropped anywhere on the window go to the 豆瓣 sheet — a backup is read, anything else shows that sheet's own error;
+ *  a 存目 backup goes to 从文件恢复 instead */
 function useBackupDrop(onFiles: (files: File[]) => void) {
   useEffect(() => {
     const over = (e: DragEvent) => { if (e.dataTransfer?.types.includes('Files')) e.preventDefault(); };
@@ -109,17 +111,22 @@ function Layout() {
     },
     douban: (file) => {
       const files = file instanceof File ? [file] : Array.isArray(file) && file.every((f) => f instanceof File) ? file : null;
-      setBackup(files);
-      setOpen('douban');
+      if (files) void dropped(files); else { setBackup(null); setOpen('douban'); }
     },
     add: (q) => { setAddQ(typeof q === 'string' ? q : ''); setOpen('add'); },
     steam: () => setOpen('steam'),
   };
   const close = () => setOpen(null);
+  // a 存目 backup goes to 设置 › 从文件恢复 (its own confirm); anything else to the 豆瓣 sheet
+  async function dropped(files: File[]) {
+    if (files.length === 1 && await isCunmuBackup(files[0])) { setOpen(null); navTo('/me', { state: { restoreFile: files[0] } }); return; }
+    setBackup(files);
+    setOpen('douban');
+  }
   // the app was closed while the person was getting a Steam key: open 从 Steam 搬进来 again where they were
   useEffect(() => { if (steamReachable() && readSteamDraft()?.away) setOpen('steam'); }, []);
   // 给人看 changes nothing: a file dropped on the window is not taken in
-  const onBackup = useCallback((files: File[]) => { if (store.show) return; setBackup(files); setOpen('douban'); }, [store.show]);
+  const onBackup = useCallback((files: File[]) => { if (store.show) return; void dropped(files); }, [store.show]); // eslint-disable-line react-hooks/exhaustive-deps
   useBackupDrop(onBackup);
   return (
     <SheetCtx.Provider value={sheets}>

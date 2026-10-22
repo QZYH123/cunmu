@@ -685,6 +685,23 @@ await withPage('Steam: 设置 › 撤销这次导入 takes the import back after
   if (await page.getByRole('button', { name: '撤销这次导入' }).count()) throw new Error('撤销这次导入 is still offered with nothing left to undo');
 });
 
+await withPage('drop: a 存目 backup dropped on the window goes to 从文件恢复, not the 豆瓣 sheet', async (page) => {
+  await open(page);
+  await seedBooks(page, ['一本书']);
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await open(page, '/');
+  await page.evaluate(() => {
+    const json = JSON.stringify({ format: 'cunmu-export/1', works: [{ id: 'manual-y', kind: 'book', title: '备份里的书', credits: [], genres: [], info: [], collected: '2024-05-01', source: 'manual', sources: [{ provider: 'manual', externalId: 'manual-y' }], claims: [] }], notes: {} });
+    const dt = new DataTransfer();
+    dt.items.add(new File([json], 'cunmu.json', { type: 'application/json' }));
+    window.dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true, cancelable: true }));
+  });
+  await sheet(page).getByRole('button', { name: '换掉' }).waitFor({ timeout: 5000 });
+  if (await page.getByText('不是豆伴').count()) throw new Error('the backup went to the 豆瓣 sheet');
+  await sheet(page).getByRole('button', { name: '换掉' }).click();
+  await toast(page, '恢复了 1 条').waitFor({ timeout: 5000 });
+});
+
 await withPage('从文件恢复: the app’s own export comes back after 换掉', async (page) => {
   await open(page);
   await page.evaluate(() => {

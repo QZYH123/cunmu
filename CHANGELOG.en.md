@@ -13,6 +13,8 @@ Mostly fixes: data safety, imports and sync, and a few serious problems on speci
 - Saves: an unreadable or newer save is never overwritten; a failed save is reported; 删除全部内容 (Delete everything) removes every copy.
 - Disconnecting Steam now asks first and says the key and the playtime on existing games will go. Games already brought in stay.
 - A work's name can no longer be saved empty.
+- A Bangumi or Steam read still in progress is dropped if you restore a file, delete everything, switch accounts or undo that import meanwhile, instead of writing onto the new library.
+- After an unreadable save, a library started with 删除全部内容 (Delete everything) is saved again.
 
 ### Import and sync
 
@@ -23,6 +25,7 @@ Mostly fixes: data safety, imports and sync, and a few serious problems on speci
 - A WeRead paste skips highlights already on the book, and says so when nothing new arrived.
 - After disconnecting Bangumi or Steam, a read still in progress no longer reconnects. Dates follow your own time zone.
 - 来源 (Sources) names the newest import record of each kind.
+- Steam's 最近两周 (last two weeks) and 最后玩于 (last played) go away once a later read no longer reports them.
 - The import line on the home page stays until Bangumi, Douban and Steam have all been imported, the library reaches 30 works, or you dismiss it.
 
 ### Backup and restore
@@ -37,6 +40,7 @@ Mostly fixes: data safety, imports and sync, and a few serious problems on speci
 
 - Works marked 只给自己 (Only me) are hidden in mentions, linked works, 这篇提到了 (Mentioned here) and essay links, and nothing offers to edit them.
 - A period with no visible works is not shown.
+- A 只给自己 work no longer flashes before the redirect, and it is left out of a person's count, the preview's 打开 (Open) and the window title.
 
 ### Browsing and search
 

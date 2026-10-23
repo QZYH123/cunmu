@@ -111,6 +111,7 @@ export function docTitle(input: DocTitleInput): string {
   else if (a === 'search') name = '搜索';
   else if (a === 'wall') name = '整面墙';
   else if (a === 'doing') name = '在看';
+  else if (a === 'card') name = '名片';
   else if (a === 'unknown') name = '时间未知';
   else if (a === 'write') name = '写';
   else if (a === 'writing') name = '随笔';

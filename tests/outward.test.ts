@@ -160,6 +160,7 @@ test('guest outlets: the lead, the line, a period, the title and search carry no
   assert.equal(docTitle(titleOf({ show: false, pathname: '/interest/i-secret', interests: me.interests, periods: me.periods })), 'SECRET-I · 存目');
   assert.equal(docTitle(titleOf({ pathname: '/year/2020/3' })), '2020 · 三月 · 存目');
   assert.equal(docTitle(titleOf({ libraryTitle: '', pathname: '/' })), '存目');
+  assert.equal(docTitle(titleOf({ pathname: '/card' })), '名片 · 存目');
   // the owner's own line is shown as written. taste.rows is not a field yet; this is that outlet.
   const mine = 'SECRET-OWN 这是我写的';
   assert.equal(mine.trim() || autoLine(guestCtx), mine);
@@ -185,6 +186,7 @@ test('给人看: a hidden interest or period is not opened; omitting the list st
   assert.equal(openInShow('/interest/i-secret', []), true);
   assert.equal(openInShow('/person/p-x', me.onlyMe, ov.hiddenPeriods, ov.hiddenInterests), false);
   assert.equal(openInShow('/search', []), false);
+  assert.equal(openInShow('/card', []), false);
 });
 
 test('常遇见 counts the works it is given: hidden works do not add a person, and do not add to a count', () => {

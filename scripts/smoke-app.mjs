@@ -10,7 +10,7 @@
  */
 import { chromium } from 'playwright-core';
 import { spawn, spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -867,6 +867,175 @@ await withPage('desktop (Windows app): runs under its content security policy', 
   await page.locator('h1').first().waitFor({ timeout: 5000 });
   await page.waitForTimeout(800);
   if (blocked.length) throw new Error(`blocked by the policy: ${blocked[0]}`);
+});
+
+// ---- card (layout A) ----
+const CARD_COVER = 'https://lain.bgm.tv/pic/cover/l/card/smoke.jpg';
+function cardWork(i) {
+  const year = 2010 + (i % 8);
+  const month = String((i % 12) + 1).padStart(2, '0');
+  const day = `${year}-${month}-15`;
+  const id = `c${i}`;
+  return {
+    id, kind: 'book', title: `书${i}`,
+    credits: [{ name: i % 2 ? '伊坂幸太郎' : '渡边信一郎', role: '作者', core: true }],
+    finished: day, collected: day, source: 'manual',
+    sources: [{ provider: 'manual', externalId: id }],
+    claims: [{ source: 'manual_add', value: day, precision: 'day', baseLevel: 1, observedAt: day }],
+    cover: i === 0 ? null : { thumb: CARD_COVER, medium: CARD_COVER, aspect: 0.7 },
+    genres: ['推理'], tags: ['推理'], info: [],
+  };
+}
+function cardSave(over = {}) {
+  const works = Array.from({ length: 14 }, (_, i) => cardWork(i));
+  return {
+    schemaVersion: 4,
+    title: '我的书单名字',
+    extras: works,
+    me: {
+      profile: { line: '题'.repeat(28) },
+      favorites: ['c0', 'c1', 'c2', 'c3', 'c4'].map((id) => ({ id, at: '2026-01-01' })),
+      periods: [
+        { id: 'p-early', name: '一二三四五六七八九十甲乙', from: '2010', to: '2014', include: [], exclude: [], createdAt: '2020-01-02' },
+        { id: 'p-mid', name: '子丑寅卯辰巳午未申酉戌亥', from: '2015', to: '2017', include: [], exclude: [], createdAt: '2020-01-01' },
+      ],
+      taste: {
+        on: true,
+        rows: { long: { text: '长'.repeat(60) }, met: { text: '人'.repeat(60) }, turn: { text: '转'.repeat(60) } },
+      },
+    },
+    sample: { on: false },
+    ...over,
+  };
+}
+async function plant(page, save) {
+  await page.addInitScript((json) => { localStorage.setItem('cunmu/library', json); }, JSON.stringify(save));
+  await open(page);
+}
+function pngSize(buf) {
+  if (buf.length < 24 || buf.readUInt32BE(12) !== 0x49484452) throw new Error('not a PNG');
+  return { w: buf.readUInt32BE(16), h: buf.readUInt32BE(20) };
+}
+async function cardPixels(page, buf) {
+  return page.evaluate(async (bytes) => {
+    const bmp = await createImageBitmap(new Blob([new Uint8Array(bytes)], { type: 'image/png' }));
+    const c = document.createElement('canvas');
+    c.width = bmp.width; c.height = bmp.height;
+    const g = c.getContext('2d');
+    g.drawImage(bmp, 0, 0);
+    const data = g.getImageData(0, 0, c.width, c.height).data;
+    const bg = [data[0], data[1], data[2]];
+    const ink = (i) => Math.abs(data[i] - bg[0]) + Math.abs(data[i + 1] - bg[1]) + Math.abs(data[i + 2] - bg[2]) > 24;
+    let all = 0, mid = 0, fav = 0, n = 0;
+    for (let y = 0; y < c.height; y += 2) {
+      for (let x = 0; x < c.width; x += 2) {
+        n += 1;
+        const i = (y * c.width + x) * 4;
+        if (!ink(i)) continue;
+        all += 1;
+        const py = y / c.height;
+        if (py >= 0.10 && py < 0.58) mid += 1;
+        if (py >= 0.62 && py < 0.84) fav += 1;
+      }
+    }
+    return { all, mid, fav, ratio: all / n };
+  }, [...buf]);
+}
+async function exportCard(page) {
+  await page.locator('.card[data-fit="done"]').waitFor({ timeout: 15000 });
+  const fit = await page.locator('.card-mid').evaluate((el) => ({ h: el.scrollHeight, over: el.getAttribute('data-overflow') }));
+  if (fit.h > 345) throw new Error(`middle is ${fit.h}px`);
+  if (fit.over) throw new Error('middle overflowed');
+  const small = await page.locator('.card').evaluate((root) => {
+    const bad = [];
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    let n;
+    while ((n = walker.nextNode())) {
+      const text = n.textContent?.replace(/\s+/g, '') ?? '';
+      if (!text) continue;
+      const el = n.parentElement;
+      if (!el) continue;
+      const px = parseFloat(getComputedStyle(el).fontSize);
+      const floor = el.closest('[data-badge]') ? 20 : 24;
+      if (px * 2 + 0.2 < floor) bad.push(`${text.slice(0, 8)} ${px}px`);
+    }
+    return bad;
+  });
+  if (small.length) throw new Error(`type under the floor: ${small[0]}`);
+  const save = page.getByRole('button', { name: '存成图' });
+  await save.waitFor({ timeout: 15000 });
+  if (await save.isDisabled()) throw new Error('存成图 stayed disabled');
+  const [dl] = await Promise.all([
+    page.waitForEvent('download', { timeout: 20000 }),
+    save.click(),
+  ]);
+  const name = dl.suggestedFilename();
+  if (!/^Cunmu-card-\d{4}-\d{2}-\d{2}\.png$/.test(name)) throw new Error(`file name ${name}`);
+  if (name.includes('书单')) throw new Error('the title leaked into the file name');
+  const buf = readFileSync(await dl.path());
+  const { w, h } = pngSize(buf);
+  if (w !== 1080 || h !== 1440) throw new Error(`png ${w}x${h}`);
+  if (buf.length > 3 * 1024 * 1024) throw new Error(`png ${buf.length} bytes`);
+  console.log(`card png ${buf.length} bytes`);
+  return buf;
+}
+
+const COVER_PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAACgAAAA8CAIAAACb22+3AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAW0lEQVRYhe3YQQkAIBREQXNthI2w/YMYQw8D3gVRh//Omifr2LiOei5XPKf6QObLDCSKxWCxWBwWg8VicVg0LcZgXili4kvkpgpskxQjog6LwWKxOCwGi/2PxQuDfSG5knaZFgAAAABJRU5ErkJggg==', 'base64');
+
+await withPage('名片: layout A exports 1080×1440, fits, and keeps the type floor', async (page) => {
+  await page.route('**/lain.bgm.tv/**', (route) => route.fulfill({
+    status: 200, contentType: 'image/png', body: COVER_PNG, headers: { 'access-control-allow-origin': '*' },
+  }));
+  await plant(page, cardSave());
+  await page.getByRole('button', { name: '更多' }).click();
+  await page.getByRole('menuitem', { name: '存成名片' }).waitFor({ timeout: 5000 });
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: '做成名片' }).click();
+  const buf = await exportCard(page);
+  const px = await cardPixels(page, buf);
+  if (!(px.ratio > 0.02)) throw new Error(`image is empty (${(px.ratio * 100).toFixed(2)}%)`);
+  if (!px.mid || !px.fav) throw new Error(`blank band mid=${px.mid} fav=${px.fav}`);
+  mkdirSync('/opt/cursor/artifacts', { recursive: true });
+  writeFileSync('/opt/cursor/artifacts/card-sample.png', buf);
+  await page.screenshot({ path: '/opt/cursor/artifacts/card-page.png', fullPage: true });
+});
+
+await withPage('名片: a cover that is not a picture still exports, and the favorites stay', async (page) => {
+  await page.route('**/lain.bgm.tv/**', (route) => {
+    if (route.request().resourceType() === 'image') {
+      return route.fulfill({ status: 200, contentType: 'image/jpeg', body: JPEG, headers: { 'access-control-allow-origin': '*' } });
+    }
+    return route.fulfill({ status: 200, contentType: 'text/plain', body: 'not-an-image', headers: { 'access-control-allow-origin': '*' } });
+  });
+  await plant(page, cardSave());
+  await page.getByRole('button', { name: '做成名片' }).click();
+  const buf = await exportCard(page);
+  const px = await cardPixels(page, buf);
+  if (!px.fav) throw new Error('favorites went blank when the cover was not a picture');
+});
+
+await withPage('名片: 给人看 sends /card back home and keeps a private title off the page', async (page) => {
+  const day = '2016-06-15';
+  const claim = { source: 'manual_add', value: day, precision: 'day', baseLevel: 1, observedAt: day };
+  const book = (id, title) => ({
+    id, kind: 'book', title, credits: [], finished: day, collected: day, source: 'manual',
+    sources: [{ provider: 'manual', externalId: id }], claims: [claim],
+    cover: null, genres: [], info: [],
+  });
+  await plant(page, {
+    schemaVersion: 4,
+    extras: [book('pub', '海边的书'), book('sec', 'SECRET-CARD')],
+    me: { onlyMe: ['sec'], taste: { on: true, rows: { long: { text: 'SECRET-OWN' } } } },
+    sample: { on: false },
+  });
+  await page.getByRole('button', { name: '给人看' }).click();
+  await page.evaluate(() => { location.hash = '#/card'; });
+  await page.waitForFunction(() => !location.hash.includes('/card'), null, { timeout: 5000 });
+  const h1 = await page.locator('h1').first().innerText();
+  if (h1 !== '我看过的') throw new Error(`home title ${h1}`);
+  if (await page.getByRole('button', { name: '存成图' }).count()) throw new Error('the card stayed open');
+  const text = await page.locator('body').innerText();
+  if (text.includes('SECRET-')) throw new Error(`给人看 shows a cipher: ${text.match(/SECRET-\S{0,16}/)?.[0]}`);
 });
 
 // ---- report ----

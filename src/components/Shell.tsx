@@ -57,7 +57,7 @@ export const homeIsWall = (s: { library: unknown[]; sample: { on: boolean } }) =
 /** which place a path belongs to: 首页 (「我」 and its interests and periods), 随笔 (the list, an essay, and its editor), 全部 (everything else you browse).
  *  `/write?for=` is a note on a work, so it stays with 全部. */
 export function placeOf(p: string, search = ''): 'home' | 'all' | 'index' | 'writing' | 'search' | 'settings' | 'other' {
-  if (p === '/' || p.startsWith('/interest') || p.startsWith('/period')) return 'home';
+  if (p === '/' || p === '/card' || p.startsWith('/interest') || p.startsWith('/period')) return 'home';
   if (p.startsWith('/index')) return 'index';
   if (p.startsWith('/search')) return 'search';
   if (p.startsWith('/settings') || p.startsWith('/me')) return 'settings';
@@ -98,6 +98,7 @@ export function DesktopBar({ onPlus, onShow }: { onPlus: () => void; onShow?: ()
   const mine = !homeIsWall(store);
   const items = [
     ...(mine && onShow ? [{ label: '存成一张长图', note: '给人看时的样子', run: () => nav('/', { state: { act: 'image' } }) }] : []),
+    ...(mine && !store.show ? [{ label: '存成名片', run: () => nav('/card') }] : []),
     ...(mine ? [{ label: '换首页封面', run: () => nav('/', { state: { act: 'cover' } }) }] : []),
     { label: '设置', run: () => nav('/settings') },
   ];

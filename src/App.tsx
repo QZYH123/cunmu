@@ -33,6 +33,7 @@ import IndexPage from './pages/IndexPage';
 import SearchPage from './pages/Search';
 import Me from './pages/Me';
 import Organize from './pages/Organize';
+const CardSheet = lazy(() => import('./components/CardSheet'));
 const Privacy = lazy(() => import('./pages/About').then((m) => ({ default: m.Privacy })));
 const Licenses = lazy(() => import('./pages/About').then((m) => ({ default: m.Licenses })));
 import Editor from './pages/Editor';
@@ -186,6 +187,7 @@ const router = createHashRouter([
       { path: '/me/removed', element: <Removed /> },
       { path: '/me/privacy', element: <Suspense fallback={null}><Privacy /></Suspense> },
       { path: '/me/licenses', element: <Suspense fallback={null}><Licenses /></Suspense> },
+      { path: '/card', element: <Suspense fallback={null}><CardSheet /></Suspense> },
       { path: '/doing', element: <Doing /> },
       { path: '/unknown', element: <Unknown /> },
       { path: '/write', element: <Editor /> },

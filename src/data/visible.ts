@@ -121,3 +121,9 @@ export function docTitle(input: DocTitleInput): string {
   else if (a === 'period') name = input.periods.find((p) => p.id === b)?.name ?? '时期';
   return name ? `${name} · ${input.appName}` : input.appName;
 }
+
+/** 偏爱's own view keeps 只给自己 and drops the sample; a guest's view is outwardView().works */
+export function worksForTaste(library: readonly Work[], me: MeData, today: string, mode: 'own' | 'outward'): Work[] {
+  if (mode === 'outward') return outwardView(library, me, today).works;
+  return library.filter((w) => !w.isSample);
+}

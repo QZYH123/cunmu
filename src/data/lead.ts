@@ -88,7 +88,8 @@ export function homeLead(c: LeadCtx): Seg[] {
   const kinds = kindPhrase(ws);
   out.push({ text: first ? `${who}从 ${first.finished.slice(0, 4)} 年开始记下${verbsOf(ws)}的东西` : `${who}记下${verbsOf(ws)}的东西` });
   out.push({ text: kinds ? `，${kinds}。` : '。' });
-  const ints = c.interests.slice(0, 2);
+  // an interest with nothing in these works is not named, even when the caller forgot to leave it out
+  const ints = c.interests.filter((i) => interestMembers(i, ws).length > 0).slice(0, 2);
   const people = oftenMet(ws, 3, c.known);
   if (ints.length || people.length) {
     if (ints.length) out.push({ text: '一直喜欢' }, ...joinAnd(ints.map(ofInterest)));
@@ -115,8 +116,10 @@ export function autoLine(c: LeadCtx): string {
   const ws = c.works.filter((w) => w.kind !== 'essay');
   if (!ws.length) return '';
   const first = firstDated(ws);
-  const most = c.interests.length
-    ? c.interests.map((i) => ({ i, n: interestMembers(i, ws).length })).sort((a, b) => b.n - a.n).slice(0, 2).map((x) => x.i.name)
+  // 0 members is not "most": an empty interest must not fill the line under the name
+  const ranked = c.interests.map((i) => ({ i, n: interestMembers(i, ws).length })).filter((x) => x.n > 0).sort((a, b) => b.n - a.n).slice(0, 2);
+  const most = ranked.length
+    ? ranked.map((x) => x.i.name)
     : (kindPhrase(ws).match(/^(.+?)最多/)?.[1] ? [kindPhrase(ws).match(/^(.+?)最多/)![1]] : []);
   const head = first ? `${first.finished.slice(0, 4)} 年起，` : '';
   return `${head}${verbsOf(ws)} ${ws.length.toLocaleString('en-US')} 部${most.length ? `，多是${most.join('和')}` : ''}。`;
@@ -151,7 +154,7 @@ export function periodLead(p: Period, c: LeadCtx): Seg[] {
   const tc = new Map<string, number>();
   for (const w of ms) for (const t of tagsOf(w)) if (!isMetaTag(t)) tc.set(t, (tc.get(t) ?? 0) + 1);
   const top = [...tc.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0];
-  const own = c.interests.find((i) => top && (i.rule.tags ?? []).includes(top[0]));
+  const own = c.interests.filter((i) => interestMembers(i, ws).length > 0).find((i) => top && (i.rule.tags ?? []).includes(top[0]));
   if (top && top[1] >= ms.length * 0.5) out.push({ text: `这段日子${verb}的几乎都是` }, ...(own ? ofInterest(own) : [{ text: top[0] }]), { text: '：' });
   else if (top && top[1] >= ms.length * 0.3) out.push({ text: `这段日子${verb}了不少` }, ...(own ? ofInterest(own) : [{ text: top[0] }]), { text: '：' });
   else out.push({ text: `这段日子${verb}得很密：` });

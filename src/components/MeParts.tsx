@@ -10,7 +10,8 @@ import { useStore } from '../data/store';
 import type { Work } from '../data/types';
 import { KIND_ASPECT } from '../data/types';
 import { personId } from '../data/derive';
-import { chapterOrder, shownPeriods, FAV_MAX, INTEREST_LINE_MAX, INTEREST_NAME_MAX, interestMembers, ownInterest, shownTo, withMembers, type Interest } from '../data/me';
+import { chapterOrder, FAV_MAX, INTEREST_LINE_MAX, INTEREST_NAME_MAX, interestMembers, ownInterest, withMembers, type Interest } from '../data/me';
+import { outwardView, shownLibrary } from '../data/visible';
 import { asFavorites, asInterest, asPeriod, favCandidates, nameFromCard, sheetMembers, suggestions, whyFor, type FavPick, type Suggestion } from '../data/suggest';
 import { keptLead, plain, spaced, type LeadCtx, type Seg } from '../data/lead';
 import { todayISO } from '../lib/today';
@@ -29,21 +30,30 @@ export function fit(w: Work, bw: number, bh: number): [number, number] {
 }
 
 /**
- * The 「我」 view of the library: in 给人看 nothing 只给自己 and no sample; the lead's context; the periods in
- * chapter order; what the next suggestion is (never while showing).
+ * The 「我」 view of the library. While 给人看, works, periods, interests and 最爱 come from outwardView
+ * (nothing 只给自己, no sample, and no interest or period a guest would find empty). The owner sees the whole
+ * library. Suggestions are the owner's: never while showing.
  */
 export function useMeView() {
   const store = useStore();
   const { library, d, me, show } = store;
   const today = todayISO();
   return useMemo(() => {
-    const visible = show ? library.filter(shownTo(me.onlyMe)) : library;
-    const works = visible.filter((w) => w.kind !== 'essay');
-    const periods = show ? shownPeriods(chapterOrder(me.periods), works, today) : chapterOrder(me.periods);
-    const ctx: LeadCtx = { name: store.title?.trim() ?? '', works: visible, interests: me.interests, periods, today, known: (n) => d.persons.has(personId(n)) };
-    const favs = me.favorites.map((f) => ({ f, w: d.byId.get(f.id) })).filter((x): x is { f: typeof x.f; w: Work } => !!x.w && (!show || !me.onlyMe.includes(x.w.id)));
+    const ov = outwardView(library, me, today);
+    // essays stay in the lead's works (「也写一点东西」); outwardView().works leaves them out
+    const visible = show ? shownLibrary(library, me.onlyMe) : library;
+    const works = show ? ov.works : visible.filter((w) => w.kind !== 'essay');
+    const periods = show ? ov.periods : chapterOrder(me.periods); // outward-allow: the owner sees every period
+    const interests = show ? ov.interests : me.interests; // outward-allow: the owner sees every interest
+    const ctx: LeadCtx = { name: store.title?.trim() ?? '', works: visible, interests, periods, today, known: (n) => d.persons.has(personId(n)) };
+    const favSource = show ? ov.favorites : me.favorites;
+    const favs = favSource.map((f) => ({ f, w: d.byId.get(f.id) })).filter((x): x is { f: typeof x.f; w: Work } => !!x.w);
     const next: Suggestion | null = show ? null : suggestions(library, { title: store.title, me, today })[0] ?? null;
-    return { visible, works, periods, ctx, favs, next, today };
+    return {
+      visible, works, periods, ctx, favs, next, today,
+      hiddenPeriods: show ? ov.hiddenPeriods : [],
+      hiddenInterests: show ? ov.hiddenInterests : [],
+    };
   }, [library, d, me, show, store.title, today]);
 }
 

@@ -75,6 +75,8 @@ export interface LeadCtx {
   today: string;
   /** a person who has a page (derive's persons) */
   known?: (name: string) => boolean;
+  /** 偏爱 is already naming the people, so this paragraph does not say 常遇见 again */
+  skipOften?: boolean;
 }
 
 /** the home lead: since when, what most, what you keep coming back to, the periods, the writing */
@@ -90,7 +92,7 @@ export function homeLead(c: LeadCtx): Seg[] {
   out.push({ text: kinds ? `，${kinds}。` : '。' });
   // an interest with nothing in these works is not named, even when the caller forgot to leave it out
   const ints = c.interests.filter((i) => interestMembers(i, ws).length > 0).slice(0, 2);
-  const people = oftenMet(ws, 3, c.known);
+  const people = c.skipOften ? [] : oftenMet(ws, 3, c.known);
   if (ints.length || people.length) {
     if (ints.length) out.push({ text: '一直喜欢' }, ...joinAnd(ints.map(ofInterest)));
     if (people.length) out.push({ text: ints.length ? '，常遇见' : '常遇见' }, ...joinAnd(people.map(ofPerson)));
@@ -173,3 +175,13 @@ export function periodLead(p: Period, c: LeadCtx): Seg[] {
 
 /** how many numbers a paragraph says (tests hold a lead to one) */
 export const numbersIn = (s: string) => (s.match(/\d[\d,]*/g) ?? []).length;
+
+/**
+ * When a 偏爱 row is actually on the page, the home paragraph drops 常遇见.
+ * A grey line, or a row you switched off, does not count: nothing there is naming people.
+ * An interest's paragraph and a period's paragraph are left as they are.
+ */
+export function withTasteRows<T extends LeadCtx>(ctx: T, rows: readonly { sentence: unknown; off: boolean }[]): T {
+  if (!rows.some((row) => row.sentence != null && !row.off)) return ctx;
+  return { ...ctx, skipOften: true };
+}

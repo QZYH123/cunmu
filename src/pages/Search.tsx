@@ -2,7 +2,6 @@ import { useFly } from '../components/CoverWall';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Search as SearchIcon } from 'lucide-react';
-import { useStore } from '../data/store';
 import type { Work } from '../data/types';
 import { KIND_LABEL, KIND_ORDER } from '../data/types';
 import { fmtNum } from '../data/derive';
@@ -12,7 +11,7 @@ import { Avatar, Cover } from '../components/Cover';
 import { ListRow, RollingNumber } from '../components/Bits';
 import { useEnterClass, useFlip } from '../lib/motion';
 import { isDesk, useBreakpoint } from '../lib/useWidth';
-import { GROUP_CAP, PalettePanel, searchLibrary, searchPath, searchStateOf, type SearchState } from '../components/CommandPalette';
+import { GROUP_CAP, PalettePanel, searchLibrary, searchPath, searchStateOf, useShownIndex, type SearchState } from '../components/CommandPalette';
 import { SEARCH_PLACEHOLDER } from '../lib/naming';
 
 /** Matched characters in ink 600, the rest secondary 400 — weight, never colour highlight. */
@@ -44,7 +43,7 @@ function useKeptSearch(): [SearchState, (s: SearchState) => void] {
 }
 
 export default function SearchPage() {
-  const { d, library } = useStore();
+  const { d, library } = useShownIndex();
   const sheets = useSheets();
   const loc = useLocation();
   const enter = useEnterClass();

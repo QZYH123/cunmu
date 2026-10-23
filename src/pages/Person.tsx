@@ -5,6 +5,7 @@ import { Avatar, Cover } from '../components/Cover';
 import { InfoBox, ListRow, Section } from '../components/Bits';
 import { Colophon, Mentions } from '../components/Prose';
 import { fmtYMD, isLatin, listDate } from '../data/derive';
+import { shownTo } from '../data/me';
 import { titleSize } from '../components/HeroZone';
 import { useEnterClass } from '../lib/motion';
 import { isDesk, useBreakpoint, useWidth } from '../lib/useWidth';
@@ -22,9 +23,14 @@ import { spaceLiterals, wallAspectOf } from '../components/CoverWall';
 
 export default function Person() {
   const { id = '' } = useParams();
-  const { d } = useStore();
+  const { d, show, me } = useStore();
   const enter = useEnterClass();
-  const p = d.persons.get(id);
+  const raw = d.persons.get(id);
+  // 给人看: works kept 只给自己 are not this person's, and a person who then has none is not named
+  const p = !raw ? undefined : !show ? raw : (() => {
+    const works = raw.works.filter(shownTo(me.onlyMe));
+    return works.length ? { ...raw, works } : undefined;
+  })();
   const { h1, h1Gone, section } = useSectionSpy([id]);
   const bp = useBreakpoint();
   const desk = isDesk(bp);

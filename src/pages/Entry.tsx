@@ -95,12 +95,14 @@ function EntryImage({ im, onOpen, square }: { im: UserImage; onOpen: (url: strin
 }
 
 function PersonName({ c }: { c: Credit }) {
-  const { d, promote } = useStore();
+  const { d, promote, show } = useStore();
   const id = personId(c.name);
   const isEntry = d.persons.has(id);
   const [card, setCard] = useState<DOMRect | null>(null);
   const [fresh, setFresh] = useState(false);
   if (isEntry) return <Link to={`/person/${id}`} className={`infolink ${fresh ? 'appear' : ''}`}>{c.name}</Link>;
+  // 给人看: the count includes 只给自己 works, and 「收进索引」 is the owner's. The name stays, as plain text.
+  if (show) return <span className="staff-name">{c.name}</span>;
   const count = d.allPeople.get(id)?.works.length ?? 1;
   return (
     <>

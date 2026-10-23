@@ -4,6 +4,7 @@ import { openShortcutHelp } from '../lib/shortcutHelp';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { useStore } from '../data/store';
+import { shownIndex } from '../data/visible';
 import type { Kind, Work } from '../data/types';
 import { KIND_LABEL, KIND_ORDER } from '../data/types';
 import { creatorLine } from '../data/derive';
@@ -44,8 +45,18 @@ export function searchLibrary(term: string, library: Work[], d: ReturnType<typeo
   return { works, people, interests, years };
 }
 
+/** While 给人看, search indexes only what a guest may see. The owner keeps the store's own index. */
+export function useShownIndex() {
+  const store = useStore();
+  return useMemo(() => (
+    store.show
+      ? shownIndex(store.library, store.me.onlyMe, store.settings, store.promoted, store.doing)
+      : { library: store.library, d: store.d }
+  ), [store.show, store.library, store.d, store.me.onlyMe, store.settings, store.promoted, store.doing]);
+}
+
 export function useSearchHits(term: string, expanded: Set<string> = new Set()): { hits: Hit[]; empty: boolean } {
-  const { d, library } = useStore();
+  const { d, library } = useShownIndex();
   return useMemo(() => {
     const t = fold(term.trim());
     if (!t) {
@@ -208,6 +219,7 @@ export const usePalette = () => useContext(Ctx);
 const isTyping = (t: EventTarget | null) => t instanceof HTMLElement && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
 
 export function PaletteProvider({ children, onAdd }: { children: ReactNode; onAdd?: () => void }) {
+  const showing = useStore().show;
   const [open, setOpen] = useState(false);
   const [closing, setClosing] = useState(false);
   const back = useRef<HTMLElement | null>(null);
@@ -225,6 +237,8 @@ export function PaletteProvider({ children, onAdd }: { children: ReactNode; onAd
     setClosing(true);
     void afterAnimations(document.querySelector('.palette-scrim'), DUR.fade).then(() => { setOpen(false); setClosing(false); back.current?.focus?.(); });
   };
+  // an open palette lists the whole library; 给人看 closes it instead of leaving those rows up
+  useEffect(() => { if (showing) { setOpen(false); setClosing(false); } }, [showing]);
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
       const cmdK = (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k';

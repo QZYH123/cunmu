@@ -38,6 +38,7 @@ export const HINT = {
   more: '再多一些记录，这里会有一句。',
   people: '人物还在补，补完这里会多一行。',
   allOff: '偏爱的句子都关着。改一下 ›',
+  dated: '记录里有可信日期的作品，才会被数进去。',
 } as const;
 
 /** values that keep every written variant inside the voice rules */

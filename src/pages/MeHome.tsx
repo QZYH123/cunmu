@@ -20,6 +20,7 @@ import { Cover } from '../components/Cover';
 import { InfoBox, Menu, Seal, type MenuItem } from '../components/Bits';
 import { MiniRow } from '../components/YearMini';
 import { chapterNo, CoverPickSheet, FavEditSheet, fit, InterestSheet, Lead, LeadText, Pill, Strip, SuggestCard, useMeView } from '../components/MeParts';
+import { TasteBlock } from '../components/TasteBlock';
 import { Dateline } from '../components/Dateline';
 import { fileTitle, titleOf } from '../lib/naming';
 import { imageTarget, saveImageOut } from '../lib/saveOut';
@@ -154,6 +155,7 @@ export default function MeHome() {
 
   const menuItems: MenuItem[] = [
     { label: '存成一张长图', note: '给人看时的样子', run: () => void saveImage() },
+    { label: '存成名片', run: () => nav('/card') },
     { label: '换首页封面', run: () => setSheet('cover') },
     { label: '设置', run: () => nav('/settings') },
   ];
@@ -192,6 +194,7 @@ export default function MeHome() {
           {next && <SuggestCard key={next.key} s={next} />}
           {!desk && plateEl}
           <Lead segs={lead} mine={me.profile.lead} onSave={(t) => store.setProfile({ lead: t })} />
+          <TasteBlock mode={show ? 'outward' : 'own'} />
           {!desk && infoEl}
 
           <Favorites favs={favs} desk={desk} onEdit={() => setSheet('favs')} />

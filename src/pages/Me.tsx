@@ -397,6 +397,10 @@ export default function Me() {
             <span className="t-ui">大字号</span>
             <i className={`switch ${store.fontScale !== 1 ? 'on' : ''}`} />
           </button>
+          <button className="me-row" onClick={() => store.setTasteOn(!store.me.taste.on)} role="switch" aria-checked={store.me.taste.on}>
+            <span className="t-ui">显示偏爱</span>
+            <i className={`switch ${store.me.taste.on ? 'on' : ''}`} />
+          </button>
         </section>
 
         <section className="me-group">

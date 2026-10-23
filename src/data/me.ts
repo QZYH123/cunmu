@@ -65,7 +65,7 @@ export interface MeData {
   dismissed: string[];
   /** 偏爱: the switch, and per-row off / swap / your own sentence */
   taste: TastePrefs;
-  /** card choices; no card is drawn from this yet */
+  /** card choices: arrangement, colours, byline, total, corner mark */
   card: CardPrefs;
 }
 export const EMPTY_ME: MeData = { profile: {}, favorites: [], interests: [], periods: [], onlyMe: [], dismissed: [], taste: EMPTY_TASTE, card: EMPTY_CARD };

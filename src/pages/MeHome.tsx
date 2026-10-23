@@ -11,7 +11,7 @@ import { MoreHorizontal } from 'lucide-react';
 import { useStore } from '../data/store';
 import type { Work } from '../data/types';
 import { fmtNum, fmtYM, fmtYMD } from '../data/derive';
-import { interestMembers, periodMembers, spanText, type Interest, type Period } from '../data/me';
+import { interestMembers, periodMembers, shownTo, spanText, type Interest, type Period } from '../data/me';
 import { whyFor } from '../data/suggest';
 import { autoLine, homeLead, oftenMet, type Seg } from '../data/lead';
 import { personId } from '../data/derive';
@@ -95,9 +95,12 @@ export default function MeHome() {
   };
   const enterShow = () => { store.setShow(true); window.scrollTo(0, 0); };
 
+  // 换封面 / 最爱 list every favorite, including 只给自己: never while showing (the long image turns 给人看 on)
+  useEffect(() => { if (show) setSheet(null); }, [show]);
   // the desktop bar's ··· (and a deep link) ask for a sheet by navigating here with it
   useEffect(() => {
     const act = (loc.state as { act?: HomeAct } | null)?.act;
+    if (show) return;
     if (act === 'cover' || act === 'favs') setSheet(act);
     if (act === 'image') void saveImage();
   }, [loc.key]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -119,7 +122,7 @@ export default function MeHome() {
   /* ----- the one picture ----- */
   const plate = useMemo(() => {
     const pick = (id?: string) => (id ? d.byId.get(id) : undefined);
-    const ok = (w?: Work) => !!w?.cover && (!show || !me.onlyMe.includes(w.id));
+    const ok = (w?: Work) => !!w?.cover && (!show || shownTo(me.onlyMe)(w));
     const fromFav = favs.find((x) => ok(x.w))?.w;
     const w = [pick(me.profile.frontispiece), fromFav].find(ok) ?? works.find((x) => x.cover && (x.rating10 ?? 0) >= 9) ?? works.find((x) => x.cover);
     if (!w) return null;
@@ -143,7 +146,7 @@ export default function MeHome() {
   const segLinks = (segs: Seg[][]) => segs.flatMap((s, i) => [...(i ? [{ text: '、' }] : []), ...s]);
   const info = [
     firstWork && { key: '始于', value: <LeadText className="mh-infotext" segs={[{ text: `${fmtYM(firstWork.finished)} · 《` }, { text: firstWork.title, to: `/entry/${firstWork.id}`, kind: 'work' }, { text: '》' }]} /> },
-    me.interests.length > 0 && { key: '兴趣', value: <LeadText className="mh-infotext" segs={segLinks(me.interests.slice(0, 4).map((i) => [{ text: i.name, to: `/interest/${i.id}`, kind: 'interest' as const }]))} /> },
+    ctx.interests.length > 0 && { key: '兴趣', value: <LeadText className="mh-infotext" segs={segLinks(ctx.interests.filter((_, n) => n < 4).map((i) => [{ text: i.name, to: `/interest/${i.id}`, kind: 'interest' as const }]))} /> },
     people.length > 0 && { key: '常遇见', value: <LeadText className="mh-infotext" segs={segLinks(people.map((p) => [{ text: p, to: `/person/${personId(p)}`, kind: 'person' as const }]))} /> },
     periods.length > 0 && { key: '时期', value: <LeadText className="mh-infotext" segs={[{ text: `${periods.length} 段，最近一段是「` }, { text: periods[periods.length - 1].name, to: `/period/${periods[periods.length - 1].id}`, kind: 'period' }, { text: '」' }]} /> },
     (essays.length > 0 || photos.length > 0) && { key: '写过', value: [essays.length && `${essays.length} 篇随笔`, photos.length && `${photos.length} 张照片`].filter(Boolean).join('，') },
@@ -192,7 +195,7 @@ export default function MeHome() {
           {!desk && infoEl}
 
           <Favorites favs={favs} desk={desk} onEdit={() => setSheet('favs')} />
-          <Interests list={me.interests} works={works} />
+          <Interests list={ctx.interests} works={works} />
           <Periods list={periods} works={works} today={view.today} />
           <Writing essays={essays} photos={photos} />
 
@@ -209,8 +212,8 @@ export default function MeHome() {
         {desk && <aside className="mh-side">{plateEl}{infoEl}</aside>}
       </div>
       {menu && <Menu anchor={menu} onClose={() => setMenu(null)} items={menuItems} label="更多" />}
-      <CoverPickSheet open={sheet === 'cover'} onClose={() => setSheet(null)} />
-      <FavEditSheet open={sheet === 'favs'} onClose={() => setSheet(null)} />
+      <CoverPickSheet open={!show && sheet === 'cover'} onClose={() => setSheet(null)} />
+      <FavEditSheet open={!show && sheet === 'favs'} onClose={() => setSheet(null)} />
       {drawing && createPortal(
         <div className={`drawing-veil ${veilOut ? 'leaving' : ''}`} role="status" ref={veil}>
           {drawn ? <img className="drawing-thumb" src={drawn} alt="" /> : <span>正在排版 · 第 {step} / 3 步</span>}

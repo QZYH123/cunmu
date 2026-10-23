@@ -7,9 +7,10 @@ import { createHashRouter, RouterProvider, ScrollRestoration, useLocation, useNa
 import { routeArrivals } from './lib/motion';
 import { StoreProvider, useStore } from './data/store';
 import { BangumiAgent } from './data/bangumiAgent';
-import { KIND_LABEL, type Kind } from './data/types';
-import { cnMonth } from './data/derive';
 import { APP_NAME } from './lib/native';
+import { shownTo } from './data/me';
+import { docTitle } from './data/visible';
+import { useMeView } from './components/MeParts';
 import { DesktopBar, homeIsWall, TabBar, Toasts } from './components/Shell';
 import Home from './pages/Home';
 import MeHome from './pages/MeHome';
@@ -49,29 +50,25 @@ export const useSheets = () => useContext(SheetCtx);
 function useDocTitle() {
   const { pathname } = useLocation();
   const store = useStore();
+  const view = useMeView();
   useEffect(() => {
-    const [, a, b, c] = pathname.split('/').map(decodePart);
-    const work = (id: string) => store.d.byId.get(id) ?? store.removedWorks.find((w) => w.id === id);
-    let name = store.title?.trim() ?? '';
+    const [, a, b] = pathname.split('/').map(decodePart);
+    const found = store.d.byId.get(b) ?? store.removedWorks.find((w) => w.id === b);
     const hiddenWork = store.show && (a === 'entry' || a === 'essay') && store.me.onlyMe.includes(b);
-    if (!hiddenWork && (a === 'entry' || a === 'essay')) { const w = work(b); if (w) name = w.kind === 'essay' ? (w.title || '随笔') : `《${w.title}》`; }
-    else if (a === 'year') name = c ? `${b} · ${cnMonth(Number(c))}` : b;
-    else if (a === 'person') name = store.d.persons.get(b)?.name ?? '人物';
-    else if (a === 'kind') name = KIND_LABEL[b as Kind] ?? '分类';
-    else if (a === 'index') name = '索引';
-    else if (a === 'search') name = '搜索';
-    else if (a === 'wall') name = '整面墙';
-    else if (a === 'doing') name = '在看';
-    else if (a === 'unknown') name = '时间未知';
-    else if (a === 'write') name = '写';
-    else if (a === 'writing') name = '随笔';
-    else if (a === 'me') name = b === 'removed' ? '移出的作品' : b === 'organize' ? '整理方式' : '设置';
-    else if (a === 'settings') name = '设置';
-    else if (a === 'all') name = '全部';
-    else if (a === 'interest') name = store.me.interests.find((i) => i.id === b)?.name ?? '兴趣';
-    else if (a === 'period') name = store.me.periods.find((p) => p.id === b)?.name ?? '时期';
-    document.title = name ? `${name} · ${APP_NAME}` : APP_NAME;
-  }, [pathname, store.d, store.removedWorks, store.title, store.me, store.show]);
+    const person = a === 'person' ? store.d.persons.get(b) : undefined;
+    const personName = person && (!store.show || person.works.some(shownTo(store.me.onlyMe))) ? person.name : undefined;
+    document.title = docTitle({
+      pathname,
+      libraryTitle: store.title?.trim() ?? '',
+      appName: APP_NAME,
+      show: store.show,
+      onlyMe: store.me.onlyMe,
+      interests: view.ctx.interests,
+      periods: view.periods,
+      personName,
+      work: !hiddenWork && found && (a === 'entry' || a === 'essay') ? found : undefined,
+    });
+  }, [pathname, store.d, store.removedWorks, store.title, store.me, store.show, view]);
 }
 
 /** r5 #3: files dropped anywhere on the window go to the 豆瓣 sheet — a backup is read, anything else shows that sheet's own error;

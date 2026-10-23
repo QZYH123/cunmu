@@ -127,17 +127,18 @@ export function InterestPage() {
   const { id = '' } = useParams();
   const store = useStore();
   const nav = useNavigate();
-  const { me, show } = store;
+  const { show } = store;
   const view = useMeView();
   const enter = useEnterClass();
-  const i = me.interests.find((x) => x.id === id);
+  const i = view.ctx.interests.find((x) => x.id === id);
   // which part the sheet opens on; a fresh sheet each time (the last one keeps its leave)
   const [editing, setEditing] = useState<null | 'name' | 'works'>(null);
   const [round, setRound] = useState(0);
   const edit = (f: 'name' | 'works') => { setRound((r) => r + 1); setEditing(f); };
   const own = useOwnerMenu('兴趣');
   const ms = useMemo(() => (i ? interestMembers(i, view.works) : []), [i, view.works]);
-  if (!i) return <Gone what="兴趣" />;
+  // 给人看: a hidden interest is not mounted (the guard also sends the address home). The owner still sees an empty one, and Gone when the id is gone.
+  if (!i) return show ? null : <Gone what="兴趣" />;
   const dated = ms.filter((w) => w.finished);
   const first = dated.length ? dated.reduce((a, w) => (w.finished < a.finished ? w : a)) : undefined;
   const lead = interestLead(i, view.ctx);
@@ -213,7 +214,7 @@ export function PeriodPage() {
   const [editing, setEditing] = useState(false);
   const own = useOwnerMenu('时期');
   const ms = useMemo(() => (p ? periodMembers(p, view.works, view.today) : []), [p, view.works, view.today]);
-  if (!p) return <Gone what="时期" />;
+  if (!p) return show ? null : <Gone what="时期" />;
   const lead = periodLead(p, view.ctx);
   const essays = periodEssays(p, view.visible, view.today);
   const quoted = ms.map((w) => ({ w, ...whyFor(w) })).find((x) => x.why && [...x.why].length >= 8);

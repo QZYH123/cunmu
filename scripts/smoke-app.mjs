@@ -385,6 +385,92 @@ await withPage('给人看: a person link and the address of a 只给自己 work 
   if ((await page.title()).includes('秘密')) throw new Error(`tab title leaked: ${await page.title()}`);
 });
 
+await withPage('给人看: a hidden interest, its works and its name stay off the page and its address', async (page) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await open(page, '/');
+  await page.evaluate(() => {
+    const mk = (id, o) => {
+      const finished = o.finished || '2020-06-01';
+      return {
+        id, kind: 'book', title: 'T', credits: [], genres: [], info: [], finished, collected: finished, source: 'manual', cover: null,
+        sources: [{ provider: 'manual', externalId: id }],
+        claims: [{ source: 'manual_add', value: finished, precision: 'day', baseLevel: 1, observedAt: finished }],
+        ...o, finished,
+      };
+    };
+    // a data URL, so the owner's own page can paint this cover without a network request; the cipher is in the src
+    const pixel = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7#SECRET-C';
+    const cover = { thumb: pixel, medium: pixel, aspect: 0.7 };
+    localStorage.clear();
+    localStorage.setItem('cunmu/library', JSON.stringify({ schemaVersion: 4, extras: [
+      mk('pub', { title: '海边的书', finished: '2020-06-01', credits: [{ name: '公开作者', role: '作者', core: true }], genres: ['海边'] }),
+      mk('sec', { title: 'SECRET-W', finished: '2019-06-01', credits: [{ name: 'SECRET-P', role: '作者', core: true }], genres: ['SECRET-TAG'], cover }),
+    ], me: {
+      onlyMe: ['sec'],
+      profile: { frontispiece: 'sec' },
+      favorites: [{ id: 'sec', why: 'SECRET-FAV', at: '2020-01-01' }, { id: 'pub', why: '值得再看', at: '2020-01-01' }],
+      interests: [
+        { id: 'i-secret', name: 'SECRET-I', rule: {}, include: ['sec'], exclude: [] },
+        { id: 'i-open', name: '海边', rule: { tags: ['海边'] }, include: [], exclude: [] },
+      ],
+      periods: [
+        { id: 'p-secret', name: 'SECRET-T', from: '2019-01', to: '2019-12', include: [], exclude: [] },
+        { id: 'p-open', name: '那几年', from: '2020-01', to: '2020-12', include: [], exclude: [] },
+      ],
+    } }));
+  });
+  await page.reload();
+  await page.waitForTimeout(500);
+  await page.getByRole('button', { name: '给人看' }).first().click();
+  await page.locator('.showbar').waitFor({ timeout: 5000 });
+  await page.waitForTimeout(300);
+  const guestText = () => page.evaluate(() => {
+    const hidden = (el) => {
+      for (let n = el; n; n = n.parentElement) {
+        const s = getComputedStyle(n);
+        if (s.display === 'none' || s.visibility === 'hidden') return true;
+      }
+      return false;
+    };
+    const parts = [document.title, document.body.innerText];
+    for (const el of document.querySelectorAll('img, a, [alt], [aria-label], [title]')) {
+      if (hidden(el)) continue;
+      parts.push(el.getAttribute('alt') || '', el.getAttribute('aria-label') || '', el.getAttribute('title') || '', el.getAttribute('href') || '', el.getAttribute('src') || '', el.currentSrc || '');
+    }
+    return parts.join('\n');
+  });
+  const text = await guestText();
+  if (text.includes('SECRET-')) throw new Error(`给人看 shows a cipher: ${text.match(/SECRET-\S{0,16}/)[0]}`);
+  if (!text.includes('海边') || !text.includes('海边的书')) throw new Error('a visible interest or work was hidden');
+  const personId = await page.evaluate(() => {
+    let h = 2166136261;
+    const s = 'SECRET-P';
+    for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return `p-${(h >>> 0).toString(36)}`;
+  });
+  await page.evaluate(() => {
+    window.__sawSecret = false;
+    const watch = () => {
+      const blob = `${document.title}\n${document.body.innerText || ''}`;
+      if (blob.includes('SECRET-')) window.__sawSecret = true;
+    };
+    new MutationObserver(watch).observe(document.body, { subtree: true, childList: true, characterData: true });
+    const title = document.querySelector('title');
+    if (title) new MutationObserver(watch).observe(title, { childList: true, characterData: true, subtree: true });
+  });
+  for (const hash of ['/interest/i-secret', '/period/p-secret', '/entry/sec', `/person/${personId}`, '/search?q=SECRET-W']) {
+    await page.evaluate((h) => { location.hash = h; }, hash);
+    await page.waitForFunction(() => location.hash === '#/' || location.hash === '#' || location.hash === '', null, { timeout: 5000 });
+    await page.waitForTimeout(200);
+    if (await page.evaluate(() => window.__sawSecret)) throw new Error(`a cipher flashed on the way to ${hash}`);
+    const after = await guestText();
+    if (after.includes('SECRET-')) throw new Error(`${hash} left a cipher: ${after.match(/SECRET-\S{0,16}/)[0]}`);
+  }
+  if ((await page.evaluate(() => location.hash)) !== '#/' && (await page.evaluate(() => location.hash)) !== '#') {
+    throw new Error(`not sent home: ${await page.evaluate(() => location.hash)}`);
+  }
+});
+
 await withPage('the app going to the background keeps a half-written essay, and leaving still keeps it once', async (page) => {
   await open(page, '/write');
   await page.locator('.editor-body').waitFor({ timeout: 5000 });

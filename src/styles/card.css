@@ -14,7 +14,14 @@
 .card-mid {
   position: absolute; left: var(--card-pad); right: var(--card-pad);
   top: var(--card-mid-y); height: var(--card-mid-h); overflow: hidden;
+  display: flex; flex-direction: column;
 }
+/* auto margins, not justify-content: centre what fits, and stay top-aligned (and measurable) when it does not */
+.card-mid > :first-child { margin-top: auto; }
+.card-mid > :last-child { margin-bottom: auto; }
+/* nothing under the middle: it takes the room of the covers' band as well */
+.card[data-favs="0"] .card-mid { height: calc(var(--card-fav-y) + var(--card-fav-h) - var(--card-mid-y)); }
+.card[data-favs="0"] .card-rule-fav { display: none; }
 .card-headline { margin: 0; padding-top: var(--card-head-top); font: var(--card-title); color: var(--ink); }
 .card-headline + .card-lines, .card-headline + .card-leadline { margin-top: var(--card-after-head); }
 .card-line { display: flex; gap: var(--card-col-gap); align-items: flex-start; }
@@ -24,7 +31,7 @@
   letter-spacing: var(--card-track-label); color: var(--text-tertiary);
 }
 .card-line-text, .card-leadline { margin: 0; font: var(--card-lead); color: var(--text-reading); }
-.card-line-text { flex: 1; min-width: 0; }
+.card-line-text { flex: 1; min-width: 0; text-wrap: pretty; }
 .card-periods { margin-top: var(--card-period-before); }
 .card-period { margin: 0; font: var(--card-period); color: var(--ink); }
 .card-period + .card-period { margin-top: var(--card-period-gap); }
@@ -49,7 +56,7 @@
   border-top: var(--hairline) solid var(--line-inner);
 }
 .card-rule-mid { top: var(--card-mid-y); }
-.card-rule-fav { top: var(--card-fav-y); }
+.card-rule-fav { top: calc(var(--card-fav-y) - 14px); }
 .card-rule-mark { top: var(--card-mark-y); }
 
 .card-frame { width: 100%; }

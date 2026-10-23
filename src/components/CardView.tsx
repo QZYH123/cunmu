@@ -6,7 +6,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject }
 import type { Work } from '../data/types';
 import type { CardFav, CardModel } from '../data/card/model';
 import { applyDrops, maxDrops } from '../data/card/fit';
-import { favSlot, MID_H } from '../data/card/metrics';
+import { favSlot } from '../data/card/metrics';
 import { LiteralCover } from './Cover';
 
 export interface FitState { drop: number; done: boolean }
@@ -52,7 +52,7 @@ function useFit(model: CardModel, fontsOk: boolean, startDrop: number, mid: RefO
   useLayoutEffect(() => {
     const el = mid.current;
     if (!el || !fontsOk || cur.sig !== sig) return;
-    const over = el.scrollHeight > MID_H + 0.5;
+    const over = el.scrollHeight > el.clientHeight + 0.5;
     if (over && cur.drop < maxDrops(model)) { setSt({ sig, drop: cur.drop + 1, done: false }); return; }
     if (over) { console.warn('card mid overflow', model.key); el.dataset.overflow = '1'; }
     else delete el.dataset.overflow;
@@ -84,7 +84,7 @@ export default function CardView({ model, covers, startDrop = 0, onFit, exportMo
   const slot = favSlot(shown.favs.length);
 
   return (
-    <article className="card" data-theme={shown.theme} data-layout="A" data-fit={fit.done ? 'done' : 'wait'} data-export={exportMode ? '1' : undefined}>
+    <article className="card" data-theme={shown.theme} data-layout="A" data-favs={shown.favs.length} data-fit={fit.done ? 'done' : 'wait'} data-export={exportMode ? '1' : undefined}>
       <div className="card-top">
         <span>{left}</span>
         {total != null && <span>共 {total.toLocaleString('en-US')} 部</span>}

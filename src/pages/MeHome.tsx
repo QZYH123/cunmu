@@ -144,11 +144,13 @@ export default function MeHome() {
   const firstWork = useMemo(() => works.filter((w) => w.finished).reduce<Work | null>((a, w) => (!a || w.finished < a.finished ? w : a), null), [works]);
   const people = useMemo(() => oftenMet(works, 3, (n) => d.persons.has(personId(n))), [works, d]);
 
+  // 偏爱 already has a 常遇见 row: the same name does not appear twice on the page
+  const metRowShown = view.rows.some((r) => r.dim === 'met' && r.sentence != null && !r.off);
   const segLinks = (segs: Seg[][]) => segs.flatMap((s, i) => [...(i ? [{ text: '、' }] : []), ...s]);
   const info = [
     firstWork && { key: '始于', value: <LeadText className="mh-infotext" segs={[{ text: `${fmtYM(firstWork.finished)} · 《` }, { text: firstWork.title, to: `/entry/${firstWork.id}`, kind: 'work' }, { text: '》' }]} /> },
     ctx.interests.length > 0 && { key: '兴趣', value: <LeadText className="mh-infotext" segs={segLinks(ctx.interests.filter((_, n) => n < 4).map((i) => [{ text: i.name, to: `/interest/${i.id}`, kind: 'interest' as const }]))} /> },
-    people.length > 0 && { key: '常遇见', value: <LeadText className="mh-infotext" segs={segLinks(people.map((p) => [{ text: p, to: `/person/${personId(p)}`, kind: 'person' as const }]))} /> },
+    people.length > 0 && !metRowShown && { key: '常遇见', value: <LeadText className="mh-infotext" segs={segLinks(people.map((p) => [{ text: p, to: `/person/${personId(p)}`, kind: 'person' as const }]))} /> },
     periods.length > 0 && { key: '时期', value: <LeadText className="mh-infotext" segs={[{ text: `${periods.length} 段，最近一段是「` }, { text: periods[periods.length - 1].name, to: `/period/${periods[periods.length - 1].id}`, kind: 'period' }, { text: '」' }]} /> },
     (essays.length > 0 || photos.length > 0) && { key: '写过', value: [essays.length && `${essays.length} 篇随笔`, photos.length && `${photos.length} 张照片`].filter(Boolean).join('，') },
   ].filter(Boolean) as { key: string; value: React.ReactNode }[];

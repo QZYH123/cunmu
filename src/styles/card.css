@@ -1,0 +1,63 @@
+/* The card, at its logical size. The page scales a copy of this; the export draws this box itself. */
+
+.card {
+  width: var(--card-w); height: var(--card-h); position: relative; overflow: hidden;
+  background: var(--bg); color: var(--ink); font-family: var(--font-serif);
+}
+.card-top {
+  position: absolute; left: var(--card-pad); right: var(--card-pad);
+  top: var(--card-zone-top-y); height: var(--card-zone-top-h);
+  display: flex; align-items: center; justify-content: space-between; gap: var(--s-3);
+  font: var(--card-top); color: var(--text-secondary);
+}
+.card-top span { min-width: 0; }
+.card-mid {
+  position: absolute; left: var(--card-pad); right: var(--card-pad);
+  top: var(--card-mid-y); height: var(--card-mid-h); overflow: hidden;
+}
+.card-headline { margin: 0; padding-top: var(--card-head-top); font: var(--card-title); color: var(--ink); }
+.card-headline + .card-lines, .card-headline + .card-leadline { margin-top: var(--card-after-head); }
+.card-line { display: flex; gap: var(--card-col-gap); align-items: flex-start; }
+.card-line + .card-line { margin-top: var(--card-row-gap); }
+.card-line-label {
+  flex: none; width: var(--card-label-w); font: var(--card-label);
+  letter-spacing: var(--card-track-label); color: var(--text-tertiary);
+}
+.card-line-text, .card-leadline { margin: 0; font: var(--card-lead); color: var(--text-reading); }
+.card-line-text { flex: 1; min-width: 0; }
+.card-periods { margin-top: var(--card-period-before); }
+.card-period { margin: 0; font: var(--card-period); color: var(--ink); }
+.card-period + .card-period { margin-top: var(--card-period-gap); }
+.card-favs {
+  position: absolute; left: var(--card-pad); right: var(--card-pad);
+  top: var(--card-fav-y); height: var(--card-fav-h); overflow: hidden;
+}
+.card-fav-label { font: var(--card-label); letter-spacing: var(--card-track-label); color: var(--text-tertiary); }
+.card-fav-row { display: flex; gap: var(--card-fav-gap); align-items: flex-start; margin-top: var(--card-fav-label-gap); }
+.card-slot { position: relative; overflow: hidden; flex: none; border-radius: var(--r-card); }
+.card-slot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.card-why { flex: 1; min-width: 0; margin: 0; font: var(--card-lead); color: var(--text-reading); }
+.card-mark {
+  position: absolute; left: var(--card-pad); right: var(--card-pad);
+  top: var(--card-mark-y); height: var(--card-mark-h);
+  display: flex; align-items: center; justify-content: space-between;
+  font: var(--card-foot); color: var(--text-tertiary);
+}
+.card-mark[data-on="0"] { visibility: hidden; }
+.card-rule {
+  position: absolute; left: var(--card-pad); right: var(--card-pad); height: 0;
+  border-top: var(--hairline) solid var(--line-inner);
+}
+.card-rule-mid { top: var(--card-mid-y); }
+.card-rule-fav { top: var(--card-fav-y); }
+.card-rule-mark { top: var(--card-mark-y); }
+
+.card-frame { width: 100%; }
+.card-scale { margin: 0 auto; overflow: hidden; border: var(--hairline) solid var(--line-inner); }
+.card-zoom { width: var(--card-w); height: var(--card-h); transform-origin: top left; }
+.card-controls { display: flex; align-items: center; justify-content: space-between; gap: var(--s-4); margin-top: var(--s-5); }
+.card-controls .seg button:disabled { color: var(--text-disabled); }
+.card-note { margin-top: var(--s-4); }
+.card-empty { margin-top: var(--s-8); }
+.card-actions { display: flex; gap: var(--s-3); margin-top: var(--s-5); }
+.card-actions .btn { width: auto; flex: 1; }

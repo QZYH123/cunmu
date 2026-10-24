@@ -61,7 +61,7 @@ export function useMeView() {
     const favs = favSource.map((f) => ({ f, w: d.byId.get(f.id) })).filter((x): x is { f: typeof x.f; w: Work } => !!x.w);
     const next: Suggestion | null = show ? null : suggestions(library, { title: store.title, me, today })[0] ?? null;
     return {
-      visible, works, periods, ctx, favs, next, today,
+      visible, works, periods, ctx, favs, next, today, taste, rows,
       hiddenPeriods: show ? ov.hiddenPeriods : [],
       hiddenInterests: show ? ov.hiddenInterests : [],
     };

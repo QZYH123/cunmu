@@ -31,6 +31,26 @@
 .mh-rewrite-acts { display: flex; align-items: center; gap: var(--s-4); margin-top: var(--s-4); }
 .mh-rewrite-acts .btn { width: auto; }
 .mh-info { margin-top: var(--s-7); }
+
+/* 偏爱, under the paragraph */
+.taste { margin-top: var(--s-8); }
+.taste-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-3); }
+.taste-acts { margin-left: auto; display: flex; align-items: baseline; flex-wrap: wrap; justify-content: flex-end; }
+.taste-rows { margin-top: var(--s-5); padding-top: var(--s-5); border-top: var(--hairline) solid var(--line-inner); }
+.taste-row { display: flex; gap: var(--s-3); align-items: flex-start; }
+.taste-row + .taste-row { margin-top: var(--s-5); }
+.taste-key { flex: none; flex-basis: 4.5em; font: var(--t-label); color: var(--text-tertiary); }
+.taste-sentence { flex: 1; min-width: 0; margin: 0; padding: 0; border: 0; background: none; text-align: left; font: var(--t-body); color: var(--text-reading); }
+button.taste-sentence { cursor: pointer; }
+.taste-only { margin-top: var(--s-8); }
+.taste-ev { margin-top: var(--s-3); }
+.taste-ev p, .taste-ev li { margin: 0; }
+.taste-ev li + li { margin-top: var(--s-2); }
+.taste-ev ul { margin: var(--s-2) 0 0; padding: 0; list-style: none; }
+.taste-sheet-row { padding-top: var(--s-4); margin-top: var(--s-4); border-top: var(--hairline) solid var(--line-inner); }
+.taste-sheet-row .ask-field { margin-top: var(--s-3); }
+.taste-switch { display: inline-flex; align-items: center; gap: var(--s-2); margin-left: auto; background: none; border: 0; padding: 0; color: inherit; }
+.taste-done { margin-top: var(--s-5); }
 .mh-info .info-row dt { flex-basis: 4.5em; }
 .mh-infotext { font: var(--t-small); color: var(--ink); }
 

@@ -94,6 +94,35 @@ test('名片 and 偏爱 make no request', () => {
   }
 });
 
+const SKIP_DIR = new Set(['node_modules', 'dist', '.git']);
+
+function textFiles(rel: string): string[] {
+  const abs = join(ROOT, rel);
+  if (!existsSync(abs)) return [];
+  if (!statSync(abs).isDirectory()) return [abs];
+  const out: string[] = [];
+  for (const name of readdirSync(abs)) {
+    if (SKIP_DIR.has(name)) continue;
+    const p = join(abs, name);
+    if (statSync(p).isDirectory()) out.push(...textFiles(p.slice(ROOT.length + 1)));
+    else out.push(p);
+  }
+  return out;
+}
+
+test('the coined comparison is not in the source or the readmes', () => {
+  const phrase = '比 MBTI 更准';
+  const hits: string[] = [];
+  for (const rel of ['src', 'README.md', 'README.en.md']) {
+    for (const abs of textFiles(rel)) {
+      const file = abs.slice(ROOT.length + 1).split(/[/\\]/).join('/');
+      const lines = readFileSync(abs, 'utf8').split(/\r?\n/);
+      lines.forEach((text, i) => { if (text.includes(phrase)) hits.push(`${file}:${i + 1}`); });
+    }
+  }
+  assert.deepEqual(hits, []);
+});
+
 test('the scan matches a direct read and not a filtered slice', () => {
   assert.ok(PATTERNS.some((p) => p.re.test('const x = me.interests')));
   assert.ok(PATTERNS.some((p) => p.re.test('store.me.periods.find')));

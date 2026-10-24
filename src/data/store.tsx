@@ -23,6 +23,8 @@ import type { CoverImage, Credit, Dataset, DateClaim, Quote, Work } from './type
 import { KIND_ORDER, makerOf, sourceKeyOf, withMaker } from './types';
 import { todayISO } from '../lib/today';
 import { EMPTY_ME, FAV_MAX, fixMe, type Favorite, type Interest, type MeData, type Period, type Profile } from './me';
+import { fixCard } from './taste/prefs';
+import type { CardPrefs, Dim, TemplateId } from './taste/types';
 import { clearImages, imageURL } from '../lib/images';
 import { storage } from '../lib/storage';
 import { APP_VERSION, applyLook } from '../lib/native';
@@ -196,6 +198,12 @@ interface Store extends PersistedV2 {
   setOnlyMe: (id: string, on: boolean) => void;
   /** a suggestion answered 「不是」: never asked again */
   dismiss: (key: string) => void;
+  /** 显示偏爱 */
+  setTasteOn: (on: boolean) => void;
+  /** one row: leave it, pick another sentence, or write your own (empty text clears it) */
+  setTasteRow: (dim: Dim, patch: { off?: boolean; pick?: TemplateId | null; text?: string | null }) => void;
+  /** layout, colours, byline, total, corner mark */
+  setCardPrefs: (patch: Partial<CardPrefs>) => void;
   /** 给人看: the phone handed over — only what you put on the page, nothing to change (session, survives a reload) */
   show: boolean;
   setShow: (on: boolean) => void;
@@ -1015,6 +1023,25 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     removePeriod: (id) => setS((x) => ({ ...x, me: { ...x.me, periods: x.me.periods.filter((p) => p.id !== id) } })),
     setOnlyMe: (id, on) => setS((x) => ({ ...x, me: { ...x.me, onlyMe: on ? [...new Set([...x.me.onlyMe, id])] : x.me.onlyMe.filter((i) => i !== id) } })),
     dismiss: (key) => setS((x) => ({ ...x, me: { ...x.me, dismissed: [...new Set([...x.me.dismissed, key])] } })),
+    setTasteOn: (on) => setS((x) => ({ ...x, me: { ...x.me, taste: { ...x.me.taste, on } } })),
+    setTasteRow: (dim, patch) => setS((x) => {
+      const prev = { ...x.me.taste.rows[dim] };
+      if (patch.off === true) prev.off = true;
+      else if (patch.off === false) delete prev.off;
+      if (patch.pick === null) delete prev.pick;
+      else if (patch.pick) prev.pick = patch.pick;
+      if (patch.text === null) delete prev.text;
+      else if (typeof patch.text === 'string') {
+        const text = Array.from(patch.text.trim()).slice(0, 80).join('');
+        if (text) prev.text = text;
+        else delete prev.text;
+      }
+      const rows = { ...x.me.taste.rows };
+      if (!prev.off && !prev.pick && !prev.text) delete rows[dim];
+      else rows[dim] = prev;
+      return { ...x, me: { ...x.me, taste: { ...x.me.taste, rows } } };
+    }),
+    setCardPrefs: (patch) => setS((x) => ({ ...x, me: { ...x.me, card: fixCard({ ...x.me.card, ...patch }) } })),
   };
   return <Ctx.Provider value={store}>{children}</Ctx.Provider>;
 }

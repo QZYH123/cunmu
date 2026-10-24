@@ -11,6 +11,14 @@ const DIM_ORDER: readonly Dim[] = ['long', 'stay', 'met', 'turn'];
 const GRAY: readonly Dim[] = ['long', 'met'];
 const FALLBACK: Record<Dim, TemplateId> = { long: 'L1', stay: 'S1', met: 'M2', turn: 'Z1' };
 
+export const DIM_LABEL: Record<Dim, '长情' | '停留' | '常遇见' | '转向'> = {
+  long: '长情', stay: '停留', met: '常遇见', turn: '转向',
+};
+
+export function fallbackTid(dim: Dim): TemplateId {
+  return FALLBACK[dim];
+}
+
 export interface ShownRow {
   dim: Dim;
   sentence: Sentence | null;
@@ -71,4 +79,21 @@ export function resolveRows(result: TasteResult, prefs: TastePrefs, mode: 'own' 
 /** a 偏爱 row is actually saying something (a grey line or a switched-off row does not count) */
 export function showsTasteRow(rows: readonly Pick<ShownRow, 'sentence' | 'off'>[]): boolean {
   return rows.some((row) => row.sentence != null && !row.off);
+}
+
+/** the next sentence in this dimension, wrapping; null when there is nothing to switch to */
+export function nextTid(cands: readonly { tid: TemplateId }[], current: TemplateId | null): TemplateId | null {
+  if (cands.length < 2) return null;
+  const i = cands.findIndex((c) => c.tid === current);
+  if (i < 0) return cands[0].tid;
+  return cands[(i + 1) % cands.length].tid;
+}
+
+/** dimensions the edit sheet can show: a sentence, or words you wrote */
+export function sheetDims(result: TasteResult, prefs: TastePrefs): Dim[] {
+  if (!prefs.on || !result.gate.ok) return [];
+  return DIM_ORDER.filter((dim) => {
+    if (prefs.rows[dim]?.text) return true;
+    return result.rows[dim].length > 0;
+  });
 }

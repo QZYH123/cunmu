@@ -7,6 +7,7 @@ import './styles/components.css';
 import './styles/wall.css';
 import './styles/pages.css';
 import './styles/me.css';
+import './styles/card.css';
 // before App: its popstate listener must run ahead of the router's (desktop back flight)
 import './lib/backFlight';
 import App from './App';

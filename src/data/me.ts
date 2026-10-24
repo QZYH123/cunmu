@@ -3,6 +3,7 @@
  * 只给自己, and which suggestions were turned down. Pure: no React, no storage (persist.ts keeps it, store.tsx
  * changes it, tests/me.test.ts checks it).
  */
+import { EMPTY_CARD, EMPTY_TASTE, fixCard, fixTaste, type CardPrefs, type TastePrefs } from './taste/prefs';
 import type { Work } from './types';
 
 /** what you say about yourself (the name is PersistedV2.title, as before) */
@@ -62,8 +63,12 @@ export interface MeData {
   onlyMe: string[];
   /** suggestion keys answered 「不是」 (or taken): never asked again */
   dismissed: string[];
+  /** 偏爱: the switch, and per-row off / swap / your own sentence */
+  taste: TastePrefs;
+  /** card choices; no card is drawn from this yet */
+  card: CardPrefs;
 }
-export const EMPTY_ME: MeData = { profile: {}, favorites: [], interests: [], periods: [], onlyMe: [], dismissed: [] };
+export const EMPTY_ME: MeData = { profile: {}, favorites: [], interests: [], periods: [], onlyMe: [], dismissed: [], taste: EMPTY_TASTE, card: EMPTY_CARD };
 export const FAV_MAX = 9;
 
 /** an older save (or a hand-edited one): every field there, of the right shape — pure, idempotent */
@@ -84,6 +89,8 @@ export function fixMe(m: any): MeData {
     periods: arr<Period>(m?.periods, (x) => x && str(x.id) && str(x.name) && str(x.from)).map((x) => ({ ...x, to: str(x.to) ? x.to : null, include: ids(x.include), exclude: ids(x.exclude) })),
     onlyMe: [...new Set(ids(m?.onlyMe))],
     dismissed: [...new Set(ids(m?.dismissed))],
+    taste: fixTaste(m?.taste),
+    card: fixCard(m?.card),
   };
 }
 const dedupe = (fs: Favorite[]) => { const seen = new Set<string>(); return fs.filter((f) => !seen.has(f.id) && !!seen.add(f.id)); };

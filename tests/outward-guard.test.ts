@@ -8,7 +8,7 @@ import { join } from 'node:path';
  * The allowlist is the owner's own data: the type and its repair, the view itself, saves,
  * backup (persist), and the suggestion cards the owner is offered (never rendered while 给人看).
  * A line marked outward-allow is the owner branch of a shared view (`show ? ov : me.…`).
- * 名片 and 偏爱 do not exist yet; a hit there fails on its own, allowlist or not.
+ * 名片 and 偏爱 are not on the allowlist; a hit there fails on its own.
  */
 
 const ROOT = process.cwd();
@@ -79,9 +79,19 @@ test('guest pages do not read me.interests or me.periods except the owner allowl
   }
 });
 
+const NET = /\bfetch\s*\(|XMLHttpRequest|new\s+WebSocket/;
+
 test('名片 and 偏爱 read neither me.interests nor me.periods', () => {
   const hits = HARD.flatMap((p) => hitsIn(p));
   assert.deepEqual(hits.map(fmt), []);
+});
+
+test('名片 and 偏爱 make no request', () => {
+  for (const abs of HARD.flatMap((p) => filesUnder(p))) {
+    const file = abs.slice(ROOT.length + 1);
+    const hit = NET.exec(readFileSync(abs, 'utf8'));
+    assert.equal(hit, null, `${file} contains ${hit?.[0]}`);
+  }
 });
 
 test('the scan matches a direct read and not a filtered slice', () => {

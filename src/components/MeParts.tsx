@@ -6,6 +6,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowDown, ArrowUp, Check, Search, X } from 'lucide-react';
+import { DEMO } from '@demo';
 import { useStore } from '../data/store';
 import type { Work } from '../data/types';
 import { KIND_ASPECT } from '../data/types';
@@ -13,7 +14,10 @@ import { personId } from '../data/derive';
 import { chapterOrder, FAV_MAX, INTEREST_LINE_MAX, INTEREST_NAME_MAX, interestMembers, ownInterest, withMembers, type Interest } from '../data/me';
 import { outwardView, shownLibrary } from '../data/visible';
 import { asFavorites, asInterest, asPeriod, favCandidates, nameFromCard, sheetMembers, suggestions, whyFor, type FavPick, type Suggestion } from '../data/suggest';
-import { keptLead, plain, spaced, type LeadCtx, type Seg } from '../data/lead';
+import { keptLead, plain, spaced, withTasteRows, type LeadCtx, type Seg } from '../data/lead';
+import { computeTaste } from '../data/taste/engine';
+import { peopleStatus } from '../data/taste/people';
+import { resolveRows } from '../data/taste/pick';
 import { todayISO } from '../lib/today';
 import { titleOf, TITLE_MAX } from '../lib/naming';
 import { Cover } from './Cover';
@@ -36,7 +40,7 @@ export function fit(w: Work, bw: number, bh: number): [number, number] {
  */
 export function useMeView() {
   const store = useStore();
-  const { library, d, me, show } = store;
+  const { library, d, me, show, bangumi, connections } = store;
   const today = todayISO();
   return useMemo(() => {
     const ov = outwardView(library, me, today);
@@ -45,7 +49,14 @@ export function useMeView() {
     const works = show ? ov.works : visible.filter((w) => w.kind !== 'essay');
     const periods = show ? ov.periods : chapterOrder(me.periods); // outward-allow: the owner sees every period
     const interests = show ? ov.interests : me.interests; // outward-allow: the owner sees every interest
-    const ctx: LeadCtx = { name: store.title?.trim() ?? '', works: visible, interests, periods, today, known: (n) => d.persons.has(personId(n)) };
+    const tasteWorks = show ? ov.works : library.filter((w) => !w.isSample);
+    const people = peopleStatus(tasteWorks, bangumi ?? null, connections.bangumi ?? undefined, DEMO);
+    const taste = computeTaste({ works: tasteWorks, periods, today, people });
+    const rows = resolveRows(taste, me.taste, show ? 'outward' : 'own');
+    const ctx: LeadCtx = withTasteRows(
+      { name: store.title?.trim() ?? '', works: visible, interests, periods, today, known: (n) => d.persons.has(personId(n)) },
+      rows,
+    );
     const favSource = show ? ov.favorites : me.favorites;
     const favs = favSource.map((f) => ({ f, w: d.byId.get(f.id) })).filter((x): x is { f: typeof x.f; w: Work } => !!x.w);
     const next: Suggestion | null = show ? null : suggestions(library, { title: store.title, me, today })[0] ?? null;
@@ -54,7 +65,7 @@ export function useMeView() {
       hiddenPeriods: show ? ov.hiddenPeriods : [],
       hiddenInterests: show ? ov.hiddenInterests : [],
     };
-  }, [library, d, me, show, store.title, today]);
+  }, [library, d, me, show, store.title, today, bangumi, connections]);
 }
 
 /* ---------- the paragraph ---------- */

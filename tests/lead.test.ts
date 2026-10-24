@@ -4,7 +4,7 @@ import { planSync, type BgmCollection } from '../src/lib/bangumi';
 import { resolveDates } from '../src/data/resolve';
 import { asInterest, asPeriod, suggestions, INTERESTS_MAX } from '../src/data/suggest';
 import { EMPTY_ME, chapterOrder, type Interest, type MeData, type Period } from '../src/data/me';
-import { autoLine, homeLead, interestLead, numbersIn, oftenMet, orgLike, periodLead, plain, spaced, type LeadCtx, type Seg } from '../src/data/lead';
+import { autoLine, homeLead, interestLead, numbersIn, oftenMet, orgLike, periodLead, plain, spaced, withTasteRows, type LeadCtx, type Seg } from '../src/data/lead';
 import type { Work } from '../src/data/types';
 import reader from './fixtures/bangumi/reader-done-dates.json';
 import readerTags from './fixtures/bangumi/reader-tags.json';
@@ -85,6 +85,19 @@ test('lead: people are people — a studio or a company division is not 「常�
   assert.ok(!orgLike('今敏'));
   const w = (id: string, names: string[]): Work => ({ id, kind: 'anime', title: id, credits: names.map((name) => ({ name, role: '导演', core: true })), finished: '2020-01-01', collected: '', source: 'bangumi', cover: null, genres: [], info: [] });
   assert.deepEqual(oftenMet([w('a', ['今敏', '任天堂企画制作本部']), w('b', ['今敏', '任天堂企画制作本部'])]), ['今敏']);
+});
+
+test('lead: a 偏爱 row that is actually showing takes 常遇见 off the home paragraph', () => {
+  const w = (id: string): Work => ({ id, kind: 'anime', title: id, credits: [{ name: '今敏', role: '导演', core: true }], finished: '2020-01-01', collected: '', source: 'bangumi', cover: null, genres: [], info: [] });
+  const works = [w('a'), w('b')];
+  const interest: Interest = { id: 'i', name: '动画', rule: { people: ['今敏'] }, include: [], exclude: [], createdAt: '' };
+  const base: LeadCtx = { name: '沈舟', works, interests: [interest], periods: [], today: TODAY };
+  assert.match(plain(homeLead(base)), /常遇见/);
+  const on = withTasteRows(base, [{ sentence: { tid: 'M2' }, off: false }]);
+  assert.equal(/常遇见/.test(plain(homeLead(on))), false);
+  assert.match(plain(homeLead(withTasteRows(base, [{ sentence: null, off: false }]))), /常遇见/);
+  assert.match(plain(homeLead(withTasteRows(base, [{ sentence: { tid: 'M2' }, off: true }]))), /常遇见/);
+  assert.match(plain(interestLead(interest, on)), /常遇见/);
 });
 
 test('lead: a space where letters or digits meet Chinese across a link, none after punctuation', () => {

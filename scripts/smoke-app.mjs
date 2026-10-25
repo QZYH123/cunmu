@@ -995,9 +995,6 @@ await withPage('名片: layout A exports 1080×1440, fits, and keeps the type fl
   const px = await cardPixels(page, buf);
   if (!(px.ratio > 0.02)) throw new Error(`image is empty (${(px.ratio * 100).toFixed(2)}%)`);
   if (!px.mid || !px.fav) throw new Error(`blank band mid=${px.mid} fav=${px.fav}`);
-  mkdirSync('/opt/cursor/artifacts', { recursive: true });
-  writeFileSync('/opt/cursor/artifacts/card-sample.png', buf);
-  await page.screenshot({ path: '/opt/cursor/artifacts/card-page.png', fullPage: true });
 });
 
 await withPage('名片: a cover that is not a picture still exports, and the favorites stay', async (page) => {

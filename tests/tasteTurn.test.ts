@@ -509,7 +509,15 @@ test('H1 names what changed and the topic that did not; H4 needs a long topic an
   const line = h4.headlines.find((h) => h.id === 'H4')?.sentence;
   assert.equal(line?.text, '八年绕着『科幻』转，这几年更多是游戏。');
   voice(line!);
-  assert.equal(pickHeadline(h4, resolveRows(h4, EMPTY_TASTE, 'own'), '')?.text, line?.text);
+  const showingL4 = resolveRows(h4, EMPTY_TASTE, 'own');
+  assert.notEqual(showingL4.find((row) => row.dim === 'long')?.sentence?.tid, 'L3');
+  assert.equal(pickHeadline(h4, showingL4, ''), null);
+  const showingL3 = resolveRows(h4, { on: true, rows: { long: { pick: 'L3' } } }, 'own');
+  assert.equal(pickHeadline(h4, showingL3, '')?.text, line?.text);
+  const otherLong = showingL3.map((row) => (
+    row.dim === 'long' && row.sentence ? { ...row, sentence: { ...row.sentence, tid: 'L5' as const } } : row
+  ));
+  assert.equal(pickHeadline(h4, otherLong, ''), null);
 
   const heavyGames = games.map((w, i) => ({ ...w, play: { minutes: 6000, lastPlayed: w.finished, provider: 'steam' as const, appid: 9000 + i } }));
   const lived = tasteOf([...topic, ...heavyGames]);

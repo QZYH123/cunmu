@@ -110,8 +110,7 @@ export function pickHeadline(result: TasteResult, rows: readonly ShownRow[], use
   }
   if (kept(rows, 'long') && kept(rows, 'turn')) {
     const shown = kept(rows, 'long')?.sentence;
-    const h4s = result.headlines.filter((h) => h.id === 'H4').map((h) => h.sentence);
-    return h4s.find((h) => h.tid === shown?.tid) ?? h4s[0] ?? null;
+    return result.headlines.find((h) => h.id === 'H4' && h.sentence.tid === shown?.tid)?.sentence ?? null;
   }
   return null;
 }

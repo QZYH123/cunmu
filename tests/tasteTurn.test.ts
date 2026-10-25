@@ -190,10 +190,20 @@ test('dates that are not trusted, and games, stay out of the early side', () => 
     ...Array.from({ length: 6 }, (_, i) => played(2022, 2200 + i)),
     ...Array.from({ length: 6 }, (_, i) => played(2023, 2300 + i)),
   ]);
-  const lateGames = steam.rows.turn.find((s) => s.tid === 'Z1');
-  assert.equal(lateGames?.slots.nounLate, '游戏');
-  assert.equal(lateGames?.head?.includes('分界后 12 部'), true);
-  voice(lateGames!);
+  assert.equal(steam.rows.turn.some((s) => s.tid === 'Z1' || s.tid === 'Z1b'), false);
+  assert.equal(JSON.stringify(steam.rows.turn).includes('游戏'), false);
+
+  const beside = tasteOf([
+    ...spread('anime', 12, early),
+    ...spread('film', 12, late),
+    ...Array.from({ length: 20 }, (_, i) => played(2022 + (i % 2), 3000 + i)),
+  ]);
+  const kept = beside.rows.turn.find((s) => s.tid === 'Z1');
+  assert.equal(kept?.slots.nounLate, '影视');
+  assert.equal(kept?.head?.includes('分界后 12 部'), true);
+  assert.equal(kept?.head?.includes('游戏'), false);
+  assert.equal(kept?.text, '2016 到 2018 年，你记下的多是番；2022 年以后，多是影视。');
+  voice(kept!);
 });
 
 test('the default is the first of Z1, Z6, Z4, Z3, Z5 that holds', () => {

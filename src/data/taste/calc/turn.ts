@@ -123,12 +123,13 @@ function tvBetter(a: Split, b: Split): boolean {
 /**
  * The split year is the last year of the early side.
  * Games never enter that side, so a game cannot be what the early side was.
- * The late side keeps every kind, games included.
+ * A last-played year is not when the turn happened, so it settles neither the
+ * split nor the late kind. Any other year, games included, can still sit on the late side.
  */
 export function bestSplit(f: Facts): Split | null {
   const byYear = new Map<number, TasteWork[]>();
   for (const w of f.works) {
-    if (w.year == null) continue;
+    if (w.year == null || w.trust === 'lastPlayed') continue;
     const bucket = byYear.get(w.year) ?? [];
     bucket.push(w);
     byYear.set(w.year, bucket);

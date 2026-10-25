@@ -464,44 +464,32 @@ function seasonWord(p: TastePeriod): string | null {
   return '冬天';
 }
 
-function asTaste(w: Work, known: Map<string, TasteWork>): TasteWork {
-  const hit = known.get(w.id);
-  if (hit) return hit;
-  const year = /^\d{4}/.test(w.finished ?? '') ? Number(w.finished.slice(0, 4)) : null;
-  const kind: WorkKind = w.kind === 'essay' ? 'book' : w.kind;
-  return {
-    id: w.id, kind, title: w.title, year: Number.isFinite(year) ? year : null,
-    trust: 'source', precision: 'year', finished: w.finished ?? '', made: null,
-    topics: [], creators: [], minutes: typeof w.play?.minutes === 'number' ? w.play.minutes : null,
-  };
-}
-
 function Z2(f: Facts, ctx: TurnCtx): Hit | null {
-  let best: { p: TastePeriod; members: Work[] } | null = null;
+  const known = new Map(f.works.map((w) => [w.id, w]));
+  let best: { p: TastePeriod; members: TasteWork[] } | null = null;
   let tied = false;
   for (const p of ctx.periods) {
     if (!p.name.trim()) continue;
-    const members = periodMembers(p, [...ctx.works], ctx.today);
+    const members: TasteWork[] = [];
+    for (const w of periodMembers(p, [...ctx.works], ctx.today)) {
+      const hit = known.get(w.id);
+      if (hit) members.push(hit);
+    }
     if (members.length < GATES.Z2.minMembers) continue;
     if (!best || members.length > best.members.length) { best = { p, members }; tied = false; }
     else if (members.length === best.members.length) tied = true;
   }
   if (!best || tied) return null;
   const counts = new Map<WorkKind, number>();
-  for (const w of best.members) {
-    if (w.kind === 'essay') continue;
-    counts.set(w.kind, (counts.get(w.kind) ?? 0) + 1);
-  }
+  for (const w of best.members) counts.set(w.kind, (counts.get(w.kind) ?? 0) + 1);
   const top = topKind(counts);
   const noun = top && atLeast(top.n, best.members.length, 7, 10) ? NOUN[top.kind] : '';
   const season = seasonWord(best.p);
   const year = Number(best.p.from.slice(0, 4));
   if (!Number.isFinite(year) || year <= 0) return null;
-  const known = new Map(f.works.map((w) => [w.id, w]));
-  const evidence = best.members.slice(0, GATES.ev.max).map((w) => asTaste(w, known));
   return {
     slots: { year, n: best.members.length, noun, ...(season ? { season } : null) },
-    evidence,
+    evidence: best.members.slice(0, GATES.ev.max),
     variant: season ? 'full' : 'noSeason',
     head: `${best.p.name.trim()}：${best.members.length} 部`,
   };

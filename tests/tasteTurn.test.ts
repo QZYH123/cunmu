@@ -438,6 +438,20 @@ test('Z2 quotes a kept period, and only when it is strictly the fullest', () => 
   assert.equal(noNoun?.slots.n, mixed.length);
 
   assert.equal(tasteOf(summer).rows.turn.some((s) => s.tid === 'Z2'), false);
+
+  const doing = Array.from({ length: 4 }, (_, i) => mk({
+    id: `doing-${i}`, status: 'doing', kind: 'book', finished: `2019-07-${String(i + 10).padStart(2, '0')}`,
+  }));
+  const withDoing = tasteOf([...summer, ...doing], undefined, TODAY, [period('番剧的夏天', '2019-06-01', '2019-08-31')]);
+  const keptDoing = withDoing.rows.turn.find((s) => s.tid === 'Z2');
+  assert.equal(keptDoing?.slots.n, 12);
+  assert.equal(keptDoing?.text, '2019 年夏天，你一口气记下 12 部番。那是你记得最满的一个季节。');
+  assert.equal(keptDoing?.evidence.some((e) => e.id.startsWith('doing-')), false);
+
+  const outside = fBooks([2010, 2011, 2012], 1);
+  const short = tasteOf([...summer.slice(0, 9), ...doing, ...outside], undefined, TODAY, [period('夏天', '2019-06-01', '2019-08-31')]);
+  assert.equal(short.gate.ok, true);
+  assert.equal(short.rows.turn.some((s) => s.tid === 'Z2'), false);
 });
 
 test('Z7 is an empty stretch for the owner only, and it is not a 转向 row', () => {

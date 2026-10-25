@@ -235,6 +235,37 @@ test('since ignores last-played and a same-day clump; the total, the byline and 
   assert.equal(noMark.badge, null);
 });
 
+test('the fallback sentence skips last-played, a same-day clump and 在看, and still says an approximate year', () => {
+  const quiet = result({}, { gate: { trusted: 2, need: 12, ok: false } });
+  const works = [
+    played(2001, 1),
+    ...Array.from({ length: 15 }, (_, i) => manualAdd('2002-01-01', { id: `c${i}`, title: `堆${i}` })),
+    mk({ id: 'doing', status: 'doing', finished: '2003-01-01' }),
+    at(2008, 0, { id: 'real' }),
+  ];
+  const card = build({ view: view(works), taste: quiet });
+  assert.equal(card.lines.length, 0);
+  assert.equal(card.top.since, 2008);
+  assert.match(card.lead ?? '', /从 2008 年/);
+  assert.equal(/2001|2002|2003/.test(card.lead ?? ''), false);
+
+  const games = Array.from({ length: 12 }, (_, i) => played(2019, 3000 + i));
+  const onlyGames = build({ view: view(games), taste: tasteOf(games) });
+  assert.equal(onlyGames.lines.length, 0);
+  assert.equal(onlyGames.top.since, null);
+  assert.equal(onlyGames.lead, null);
+
+  const approx = mk({
+    id: 'yue',
+    title: '旧',
+    finished: '1999',
+    date: { value: '1999', precision: 'year', level: 3, source: 'bgm_updated_at', approx: true, locked: false },
+  });
+  const early = build({ view: view([approx, at(2008, 1, { id: 'later' })]), taste: quiet });
+  assert.equal(early.top.since, 2008);
+  assert.match(early.lead ?? '', /从 1999 年/);
+});
+
 test('arrangement follows the sentence count, unless a saved choice says otherwise', () => {
   const two = build({ view: view([]), taste: result({ long: [sentence('long', 'L1', '长')], met: [sentence('met', 'M2', '常')] }) });
   assert.equal(two.layout, 'A');

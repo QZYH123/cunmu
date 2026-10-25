@@ -294,9 +294,16 @@ export function buildCardModel(o: CardInput): CardModel {
     });
   }
 
+  // 始于 skips last-played and a same-day hand-add. The fallback sentence uses that
+  // same set, and also keeps an approximate year: 一段话 is allowed to say one.
+  const dated = toTasteWorks(o.view.works, o.today);
   let since: number | null = null;
-  for (const w of toTasteWorks(o.view.works, o.today)) {
-    if (w.year == null || w.trust === 'lastPlayed') continue;
+  const leadKeep = new Set<string>();
+  for (const w of dated) {
+    if (w.trust === 'lastPlayed') continue;
+    if (w.year == null && w.trust === 'added') continue;
+    leadKeep.add(w.id);
+    if (w.year == null) continue;
     if (since == null || w.year < since) since = w.year;
   }
   const counted = cardWorkCount(o.view.works);
@@ -306,7 +313,9 @@ export function buildCardModel(o: CardInput): CardModel {
 
   const lead = o.prefs.on && lines.length === 0
     ? firstSentence(plain(homeLead({
-      name: '', works: o.view.works, interests: o.view.interests, periods: o.view.periods, today: o.today, skipOften: true,
+      name: '',
+      works: o.view.works.filter((w) => w.kind === 'essay' || leadKeep.has(w.id)),
+      interests: o.view.interests, periods: o.view.periods, today: o.today, skipOften: true,
     })))
     : null;
 

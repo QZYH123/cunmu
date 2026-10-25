@@ -542,7 +542,7 @@ function Z7(f: Facts): Hit | null {
   if (!best) return null;
   const from = best.from;
   const to = best.to;
-  const works = f.works.filter((w) => w.year != null && w.year >= from && w.year <= to);
+  const works = f.works.filter((w) => w.year != null && w.trust !== 'lastPlayed' && w.year >= from && w.year <= to);
   return { slots: { from, to }, evidence: works, variant: 'full' };
 }
 

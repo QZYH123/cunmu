@@ -85,7 +85,7 @@ function realize(tid: TemplateId, dim: Dim, hit: Hit): Sentence | null {
 
 export function computeTaste(input: TasteInput): TasteResult {
   const ws = toTasteWorks(input.works, input.today);
-  const trusted = ws.reduce((n, w) => n + (w.year != null ? 1 : 0), 0);
+  const trusted = ws.reduce((n, w) => n + (w.year != null && w.trust !== 'lastPlayed' ? 1 : 0), 0);
   const gate = { trusted, need: GATES.total.trustedWorks, ok: trusted >= GATES.total.trustedWorks };
   if (!gate.ok) return { gate, rows: EMPTY_ROWS(), headlines: [], hollow: null, missing: {} };
 

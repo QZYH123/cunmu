@@ -38,7 +38,7 @@ export interface Facts {
   works: TasteWork[];
   topicYears: Map<string, Map<number, TasteWork[]>>;
   topics: Map<string, TopicStat>;
-  /** trusted works per year, games included: "the record has this year" */
+  /** works per year the record can use. A last-played year is left out; a game with another year still counts. */
   yearCount: Map<number, number>;
   recorded: Set<number>;
   /** latest trusted year among non-games that are not "last played" */
@@ -214,7 +214,7 @@ export function buildFacts(ws: TasteWork[], today: string, people: PeopleStatus)
   const yearCount = new Map<number, number>();
   let maxYear: number | null = null;
   for (const w of ws) {
-    if (w.year != null) yearCount.set(w.year, (yearCount.get(w.year) ?? 0) + 1);
+    if (w.year != null && w.trust !== 'lastPlayed') yearCount.set(w.year, (yearCount.get(w.year) ?? 0) + 1);
     const countsForSpan = w.kind !== 'game' && w.trust !== 'lastPlayed' && w.year != null;
     if (countsForSpan && (maxYear == null || w.year! > maxYear)) maxYear = w.year;
     if (!countsForSpan) continue;

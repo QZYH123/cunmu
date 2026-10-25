@@ -484,6 +484,13 @@ test('Z7 is an empty stretch for the owner only, and it is not a 转向 row', ()
   assert.equal(both.rows.turn[0].tid, 'Z1');
   assert.equal(both.hollow?.text, '2019 到 2021 年，几乎没留下记录。');
   assert.equal(both.rows.turn.some((s) => s.tid === 'Z7'), false);
+
+  const stretched = tasteOf([
+    ...around,
+    ...Array.from({ length: 12 }, (_, i) => played(2026, 9000 + i)),
+  ]);
+  assert.equal(stretched.hollow?.text, '2013 到 2015 年，几乎没留下记录。');
+  assert.equal(stretched.hollow?.evidence.some((e) => e.year === 2026), false);
 });
 
 test('H1 names what changed and the topic that did not; H4 needs a long topic and a turn toward games', () => {

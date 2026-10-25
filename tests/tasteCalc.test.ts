@@ -56,13 +56,14 @@ test('F6: a game, and the year it was last played, stays out of 长情', () => {
   assert.equal(only.maxYear, null);
   assert.equal(only.creators.length, 0);
   const g = tasteOf(games);
-  assert.equal(g.gate.ok, true);
+  assert.equal(g.gate.trusted, 0);
+  assert.equal(g.gate.ok, false);
   assert.equal(g.rows.long.length, 0);
-  assert.equal(g.missing.long, 'noTags');
-  assert.equal(g.missing.stay, undefined);
-  assert.equal(g.rows.stay.length, 0);
+  assert.equal(g.hollow, null);
+  assert.equal(only.yearCount.has(2026), false);
+  assert.equal(only.recorded.has(2026), false);
 
-  const books = fBooks([2010, 2011, 2012, 2013, 2014, 2015, 2016], 1);
+  const books = fBooks([2010, 2011, 2012, 2013, 2014, 2015, 2016], 2);
   const mixed = facts([...books, ...Array.from({ length: 5 }, (_, i) => played(2026, i))]);
   assert.equal(mixed.maxYear, 2016);
   const l5 = tasteOf([...books, ...Array.from({ length: 5 }, (_, i) => played(2026, i))]).rows.long.find((s) => s.tid === 'L5');
@@ -75,8 +76,20 @@ test('F6: a game, and the year it was last played, stays out of 长情', () => {
     ...fBooks([2010, 2011, 2012, 2013, 2014], 1, { tags: ['科幻'] }),
     ...Array.from({ length: 7 }, (_, i) => played(2026, i, ['科幻'])),
   ]);
-  assert.equal(few.gate.ok, true);
-  assert.equal(few.rows.long.some((s) => s.tid === 'L1' || s.tid === 'L5'), false);
+  assert.equal(few.gate.trusted, 5);
+  assert.equal(few.gate.ok, false);
+  assert.equal(few.rows.long.length, 0);
+
+  const gap = facts([
+    ...fBooks([2008, 2009], 2, { tags: ['推理'] }),
+    ...fBooks([2013, 2014], 2, { tags: ['推理'] }),
+    ...[2010, 2011, 2012].flatMap((y) => Array.from({ length: 3 }, (_, i) => played(y, y * 10 + i))),
+  ]);
+  assert.equal(gap.yearCount.has(2010), false);
+  assert.equal(gap.recorded.has(2011), false);
+  assert.equal(longCalc.L2(gap), null);
+  const mixedYear = facts([...fBooks([2016], 3), ...Array.from({ length: 5 }, (_, i) => played(2016, 5000 + i))]);
+  assert.equal(mixedYear.yearCount.get(2016), 3);
 });
 
 test('F7: 在看, a sample, and an essay are not in the batch', () => {

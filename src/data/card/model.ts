@@ -194,6 +194,50 @@ function firstSentence(text: string): string | null {
   return i < 0 ? t : t.slice(0, i + 1);
 }
 
+/** M2 is `name n 部` joined by ` · `. Take out the people a headline already named. */
+function listWithout(line: CardLine, drop: ReadonlySet<string>): CardLine | null {
+  const keep = (line.names ?? []).filter((name) => name && !drop.has(name));
+  if (!keep.length) return null;
+  const take = (text: string): string | null => {
+    const parts = text.split(' · ').filter((part) => keep.some((name) => part === name || part.startsWith(`${name} `)));
+    return parts.length === keep.length ? parts.join(' · ') : null;
+  };
+  const text = take(line.text);
+  if (text == null) return null;
+  const short = line.short == null ? undefined : take(line.short) ?? undefined;
+  return {
+    dim: line.dim,
+    tid: line.tid,
+    label: line.label,
+    text,
+    ...(short ? { short } : null),
+    names: keep,
+    own: line.own,
+  };
+}
+
+/**
+ * A guest headline that repeats a kept sentence leaves that sentence out.
+ * H2 is built from M3, so the same person can still sit in the default M2 list:
+ * those names leave the list, and a sentence that is only about them leaves too.
+ * Words you wrote stay.
+ */
+function linesBeside(lines: CardLine[], head: Sentence): CardLine[] {
+  const drop = new Set(head.names ?? []);
+  const out: CardLine[] = [];
+  for (const line of lines) {
+    if (line.own) { out.push(line); continue; }
+    if (line.tid === head.tid && line.dim === head.dim) continue;
+    const shared = drop.size > 0 && line.names?.some((name) => drop.has(name));
+    if (!shared) { out.push(line); continue; }
+    if (line.tid === 'M2') {
+      const next = listWithout(line, drop);
+      if (next) out.push(next);
+    }
+  }
+  return out;
+}
+
 function cardKey(m: Omit<CardModel, 'key'>): string {
   return [
     m.layout,
@@ -225,8 +269,7 @@ export function buildCardModel(o: CardInput): CardModel {
     others: 0,
   }));
   const head = pickHeadline(o.taste, shown, o.line);
-  // a guest headline that repeats a kept sentence leaves the sentence out; words you wrote stay
-  if (head && head.variant !== 'user') lines = lines.filter((l) => l.own || !(l.tid === head.tid && l.dim === head.dim));
+  if (head && head.variant !== 'user') lines = linesBeside(lines, head);
 
   const { shown: periods, eligible } = cardPeriods(o.view, o.taste, o.today);
   const byId = new Map(o.view.works.map((w) => [w.id, w]));

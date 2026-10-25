@@ -119,6 +119,60 @@ test('a guest headline that repeats a sentence drops that sentence; your line an
   assert.equal(written.lines.some((l) => l.own && l.text === '自己的常遇见'), true);
 });
 
+test('H2 leaves its person out of the default M2 list, and drops a sentence that is only about them', () => {
+  const h2 = sentence('met', 'M3', '六年，同一个名字：甲。', { names: ['甲'] });
+  const taste = result(
+    {
+      met: [
+        sentence('met', 'M2', '甲 6 部 · 乙 5 部 · 丙 4 部', { names: ['甲', '乙', '丙'] }),
+        sentence('met', 'M1', '甲和乙，在你不同年份的 8 部作品里反复出现。', { names: ['甲', '乙'] }),
+        h2,
+      ],
+      long: [sentence('long', 'L1', '从 2010 到 2021')],
+    },
+    { headlines: [{ id: 'H2', sentence: h2 }] },
+  );
+  const card = build({ view: view(fBooks([2016], 12)), taste });
+  assert.equal(card.headline, '六年，同一个名字：甲。');
+  const met = card.lines.find((l) => l.dim === 'met');
+  assert.equal(met?.tid, 'M2');
+  assert.equal(met?.text, '乙 5 部 · 丙 4 部');
+  assert.deepEqual(met?.names, ['乙', '丙']);
+  assert.equal(card.lines.some((l) => l.text.includes('甲')), false);
+  assert.equal(buildCaption(card).includes('甲'), false);
+  assert.match(buildCaption(card), /常遇见 乙、丙/);
+
+  const alone = build({
+    view: view([]),
+    taste: result(
+      { met: [sentence('met', 'M2', '甲 6 部', { names: ['甲'] }), h2] },
+      { headlines: [{ id: 'H2', sentence: h2 }] },
+    ),
+  });
+  assert.equal(alone.headline, h2.text);
+  assert.equal(alone.lines.some((l) => l.dim === 'met'), false);
+
+  const swapped = build({
+    view: view([]),
+    taste,
+    picks: { hide: [], swap: { met: 'M1' }, literal: [] },
+  });
+  assert.equal(swapped.headline, h2.text);
+  assert.equal(swapped.lines.some((l) => l.dim === 'met'), false);
+  assert.equal(swapped.lines.some((l) => l.dim === 'long'), true);
+
+  const mine = build({ view: view([]), taste, line: '我的题句' });
+  assert.equal(mine.headline, '我的题句');
+  assert.equal(mine.lines.find((l) => l.dim === 'met')?.text, '甲 6 部 · 乙 5 部 · 丙 4 部');
+
+  const written = build({
+    view: view([]),
+    taste,
+    prefs: { on: true, rows: { met: { text: '仍然写甲', pick: 'M2' } } },
+  });
+  assert.equal(written.lines.find((l) => l.dim === 'met')?.text, '仍然写甲');
+});
+
 test('periods need two named stretches, hollow years leave, and the two fullest are ordered by time', () => {
   const works = [
     ...Array.from({ length: 5 }, (_, i) => at(2011, i)),

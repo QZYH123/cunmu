@@ -1,6 +1,9 @@
 /** JSON in an export holds the records. Pictures the person added live in the ZIP's 图片 folder. */
 export const JSON_BACKUP_SAY = '记录在 JSON 里。自己加的图片在同一份 ZIP 的「图片」文件夹里，要一起导回。';
 
+/** Under the three export notes: an older 存目 drops 偏爱 and card settings, and keeps the rest. */
+export const EARLIER_RESTORE = '用更早版本的存目恢复这份文件时，偏爱和名片的设置不会带回来，其余内容都在。';
+
 const idOf = (s: unknown): string | null => (typeof s === 'string' && s.startsWith('idb:') ? s.slice(4) : null);
 
 function takeCover(ids: Set<string>, c: unknown) {

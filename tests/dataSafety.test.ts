@@ -1,10 +1,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { ExportConfirm } from '../src/components/DataSheets';
 import { freshQuotes, QUOTES_THERE } from '../src/data/quotes';
 import { keptLead } from '../src/data/lead';
 import { NAME_EMPTY, titleReady } from '../src/data/guards';
 import { STEAM_OFF_DROPS, STEAM_OFF_KEEPS, withoutSteam } from '../src/data/steamOff';
-import { JSON_BACKUP_SAY, missingImageIds, referencedImageIds, restoreNotice } from '../src/data/backupImages';
+import { EARLIER_RESTORE, JSON_BACKUP_SAY, missingImageIds, referencedImageIds, restoreNotice } from '../src/data/backupImages';
 
 const q = (text: string, where?: string) => ({ text, date: '2026-10-20', ...(where ? { where } : null) });
 
@@ -43,6 +46,10 @@ test('C-7: a JSON restore keeps a picture that is in the file or already on the 
   assert.equal(restoreNotice('恢复了 2 条', false), '恢复了 2 条');
   assert.match(JSON_BACKUP_SAY, /JSON/);
   assert.match(JSON_BACKUP_SAY, /图片/);
+  assert.equal(EARLIER_RESTORE, '用更早版本的存目恢复这份文件时，偏爱和名片的设置不会带回来，其余内容都在。');
+  const html = renderToStaticMarkup(createElement(ExportConfirm, { err: false, busy: false, onGo: () => {} }));
+  assert.match(html, /用更早版本的存目恢复这份文件时，偏爱和名片的设置不会带回来，其余内容都在。/);
+  assert.match(html, /class="t-small c-reading confirm-note"/);
 });
 
 test('B-5: an empty name cannot be saved', () => {

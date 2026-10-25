@@ -3,7 +3,7 @@ import { useStore } from '../data/store';
 import type { ImportBatch } from '../data/persist';
 import { fmtNum } from '../data/derive';
 import { Sheet, Dots } from './Bits';
-import { JSON_BACKUP_SAY } from '../data/backupImages';
+import { EARLIER_RESTORE, JSON_BACKUP_SAY } from '../data/backupImages';
 import { buildExportZip } from '../lib/exportMd';
 import { saveOut } from '../lib/saveOut';
 import { DUR } from '../tokens';
@@ -44,6 +44,24 @@ export function useExport() {
   };
 }
 
+export function ExportConfirm({ err, busy, onGo }: { err: boolean; busy: boolean; onGo: () => void }) {
+  return (
+    <div className="sheet-body confirm">
+      <h2 className="t-title">导出全部内容</h2>
+      <KeyBlocks blocks={[
+        { k: 'Markdown', lines: ['给自己读的。每部作品、每篇随笔一份，任何文本编辑器、笔记软件都能直接打开。'] },
+        { k: 'JSON', lines: [JSON_BACKUP_SAY] },
+        { k: '图片', lines: ['你自己加的图片、自己换上的封面会一起放进去。从别处带来的封面不放。'] },
+      ]} />
+      <p className="t-small c-reading confirm-note">{EARLIER_RESTORE}</p>
+      {err && <p className="t-small c-2 field-say">这次没导出来，再试一次。</p>}
+      <div className="sheet-actions">
+        <button className="btn btn-secondary" disabled={busy} onClick={onGo}>{busy ? <><Spin />正在整理</> : '导出'}</button>
+      </div>
+    </div>
+  );
+}
+
 /** 导出全部内容 (§3.18.1) — decided: your own pictures go in (case B), fetched covers never (a cover you set yourself is your picture) */
 export function ExportSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const store = useStore();
@@ -62,18 +80,7 @@ export function ExportSheet({ open, onClose }: { open: boolean; onClose: () => v
   };
   return (
     <Sheet open={open} onClose={onClose} label="导出全部内容" locked={busy}>
-      <div className="sheet-body confirm">
-        <h2 className="t-title">导出全部内容</h2>
-        <KeyBlocks blocks={[
-          { k: 'Markdown', lines: ['给自己读的。每部作品、每篇随笔一份，任何文本编辑器、笔记软件都能直接打开。'] },
-          { k: 'JSON', lines: [JSON_BACKUP_SAY] },
-          { k: '图片', lines: ['你自己加的图片、自己换上的封面会一起放进去。从别处带来的封面不放。'] },
-        ]} />
-        {err && <p className="t-small c-2 field-say">这次没导出来，再试一次。</p>}
-        <div className="sheet-actions">
-          <button className="btn btn-secondary" disabled={busy} onClick={go}>{busy ? <><Spin />正在整理</> : '导出'}</button>
-        </div>
-      </div>
+      <ExportConfirm err={err} busy={busy} onGo={() => void go()} />
     </Sheet>
   );
 }

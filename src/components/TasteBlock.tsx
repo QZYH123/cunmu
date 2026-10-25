@@ -8,7 +8,7 @@ import { useStore } from '../data/store';
 import { outwardView } from '../data/visible';
 import { HINT } from '../data/taste/copy';
 import { DIM_LABEL, nextTid, sheetDims } from '../data/taste/pick';
-import type { Dim, Evidence, TemplateId } from '../data/taste/types';
+import type { Dim, Evidence, Sentence, TemplateId } from '../data/taste/types';
 import { CARD_MIN_WORKS, cardWorkCount } from '../data/card/model';
 import { useMeView } from './MeParts';
 import { Sheet } from './Bits';
@@ -44,6 +44,24 @@ function EvidenceList({ list, head, link }: { list: readonly Evidence[]; head?: 
         ))}
       </ul>
       {dated && <p className="c-3">{HINT.dated}</p>}
+    </div>
+  );
+}
+
+/** Z7. The owner can read it; it never wears the 转向 label, and a guest never sees it. */
+function HollowLine({ sentence }: { sentence: Sentence | null }) {
+  const [open, setOpen] = useState(false);
+  if (!sentence) return null;
+  const evidence = sentence.evidence;
+  const canOpen = evidence.length > 0;
+  return (
+    <div className="taste-hollow">
+      {canOpen ? (
+        <button type="button" className="taste-sentence" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
+          {sentence.text}
+        </button>
+      ) : <p className="taste-sentence">{sentence.text}</p>}
+      {open && <EvidenceList list={evidence} head={sentence.head} link />}
     </div>
   );
 }
@@ -133,6 +151,7 @@ export function TasteBlock({ mode }: { mode: 'own' | 'outward' }) {
           <button type="button" className="btn-text quiet" onClick={() => setSheet(true)}>改一下</button>
           {after}
         </p>
+        <HollowLine sentence={view.taste.hollow} />
         <TasteSheet open={sheet} onClose={() => setSheet(false)} />
       </>
     );
@@ -171,6 +190,7 @@ export function TasteBlock({ mode }: { mode: 'own' | 'outward' }) {
           );
         })}
       </div>
+      <HollowLine sentence={view.taste.hollow} />
       <TasteSheet open={sheet} onClose={() => setSheet(false)} />
     </section>
   );

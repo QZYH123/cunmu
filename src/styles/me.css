@@ -37,6 +37,8 @@
 .taste-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-3); }
 .taste-acts { margin-left: auto; display: flex; align-items: baseline; flex-wrap: wrap; justify-content: flex-end; }
 .taste-rows { margin-top: var(--s-5); padding-top: var(--s-5); border-top: var(--hairline) solid var(--line-inner); }
+.taste-hollow { margin-top: var(--s-5); }
+.taste-hollow .taste-sentence { display: block; }
 .taste-row { display: flex; gap: var(--s-3); align-items: flex-start; }
 .taste-row + .taste-row { margin-top: var(--s-5); }
 .taste-key { flex: none; flex-basis: 4.5em; font: var(--t-label); color: var(--text-tertiary); }

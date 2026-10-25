@@ -61,7 +61,7 @@ test('a backup carries 偏爱 and the card, and merging two works does not touch
   const me = fixMe({
     ...EMPTY_ME,
     favorites: [{ id: 'a', at: 't' }],
-    taste: { on: true, rows: { met: { text: '常遇见这句' } } },
+    taste: { on: true, rows: { met: { text: '常遇见这句' }, turn: { off: true, pick: 'Z1b', text: '自己写的转向' } } },
     card: { theme: 'dark', byline: false, badge: true, layout: 'A' },
   });
   const exported = { format: 'cunmu-export/1', me };
@@ -70,5 +70,8 @@ test('a backup carries 偏爱 and the card, and merging two works does not touch
   const moved = repointMe(me, 'a', 'b');
   assert.equal(moved.favorites[0].id, 'b');
   assert.equal(moved.taste.rows.met?.text, '常遇见这句');
+  assert.equal(moved.taste.rows.turn?.off, true);
+  assert.equal(moved.taste.rows.turn?.pick, 'Z1b');
+  assert.equal(moved.taste.rows.turn?.text, '自己写的转向');
   assert.equal(moved.card.layout, 'A');
 });

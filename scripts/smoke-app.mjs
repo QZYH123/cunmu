@@ -1035,6 +1035,104 @@ await withPage('名片: 给人看 sends /card back home and keeps a private titl
   if (text.includes('SECRET-')) throw new Error(`给人看 shows a cipher: ${text.match(/SECRET-\S{0,16}/)?.[0]}`);
 });
 
+// ---- 转向 ----
+function shiftWork(id, kind, year, i, title) {
+  const day = `${year}-06-${String(i + 1).padStart(2, '0')}`;
+  return {
+    id, kind, title,
+    credits: [], finished: day, collected: day, source: 'manual',
+    sources: [{ provider: 'manual', externalId: id }],
+    claims: [{ source: 'manual_add', value: day, precision: 'day', baseLevel: 1, observedAt: day }],
+    cover: null, genres: [], info: [],
+  };
+}
+function shiftLibrary() {
+  const works = [];
+  for (const year of [2016, 2017, 2018]) {
+    for (let i = 0; i < 4; i++) works.push(shiftWork(`anime-${year}-${i}`, 'anime', year, i, `番${year}${i}`));
+  }
+  for (const year of [2022, 2023]) {
+    for (let i = 0; i < 6; i++) works.push(shiftWork(`game-${year}-${i}`, 'game', year, i, `游${year}${i}`));
+  }
+  return works;
+}
+const TURN = '2016 到 2018 年，你记下的多是番；2022 年以后，多是游戏。';
+const TURN_ID = '2016 到 2018 年，你是看番的人；2022 年以后，是玩游戏的人。';
+const HOLLOW = '2019 到 2021 年，几乎没留下记录。';
+
+await withPage('偏爱: 转向 can be opened, swapped and kept; a guest cannot, and the card leaves the gap out', async (page) => {
+  await plant(page, { schemaVersion: 4, extras: shiftLibrary(), sample: { on: false } });
+  await page.getByText(TURN).waitFor({ timeout: 5000 });
+  await page.getByText(HOLLOW).waitFor({ timeout: 5000 });
+  const keys = await page.locator('.taste-key').allInnerTexts();
+  if (keys.filter((k) => k === '转向').length !== 1) throw new Error(`转向 rows: ${keys.join(',')}`);
+  if (await page.locator('.taste-hollow .taste-key').count()) throw new Error('the gap wore the 转向 label');
+  const turnRow = page.locator('.taste-row', { hasText: '转向' });
+  const hint = await turnRow.locator('.taste-sentence').innerText();
+  if (hint.includes('再多一些记录')) throw new Error('转向 used the grey line');
+  await turnRow.getByRole('button').click();
+  await page.getByText('这句话是这么数出来的').waitFor({ timeout: 5000 });
+  await page.getByText('分界前 12 部').waitFor({ timeout: 5000 });
+  await page.getByRole('link', { name: /《番20160》/ }).waitFor({ timeout: 5000 });
+
+  await page.getByRole('button', { name: '做成名片' }).click();
+  await page.locator('.card[data-fit="done"]').waitFor({ timeout: 15000 });
+  const cardText = await page.locator('.card').innerText();
+  if (!cardText.includes('转向') || !cardText.includes('多是游戏')) throw new Error(`card missed the turn: ${cardText.slice(0, 180)}`);
+  if (cardText.includes('几乎没留下记录')) throw new Error('the card shows the empty stretch');
+  const labels = await page.locator('.card-line-label').allInnerTexts();
+  if (labels.at(-1) !== '转向') throw new Error(`line order ${labels.join(',')}`);
+  await page.getByRole('button', { name: '返回' }).click();
+  await page.getByText(HOLLOW).waitFor({ timeout: 5000 });
+
+  await page.getByRole('button', { name: '改一下' }).click();
+  const sheetRow = sheet(page).locator('.taste-sheet-row', { hasText: '转向' });
+  await sheetRow.getByRole('switch', { checked: true }).waitFor({ timeout: 5000 });
+  await sheetRow.getByRole('button', { name: '换一句' }).click();
+  await sheetRow.getByRole('textbox', { name: '自己写' }).fill('自己写的转向');
+  await sheet(page).getByRole('button', { name: '好了' }).click();
+  await page.getByText('自己写的转向').waitFor({ timeout: 5000 });
+  await page.waitForFunction(() => {
+    const saved = JSON.parse(localStorage.getItem('cunmu/library') || '{}');
+    return saved.me?.taste?.rows?.turn?.text === '自己写的转向' && saved.me?.taste?.rows?.turn?.pick === 'Z1b';
+  });
+  await page.getByRole('button', { name: '改一下' }).click();
+  await sheet(page).locator('.taste-sheet-row', { hasText: '转向' }).getByRole('button', { name: '改回按记录写的' }).click();
+  await sheet(page).getByRole('button', { name: '好了' }).click();
+  await page.getByText(TURN_ID).waitFor({ timeout: 5000 });
+
+  await page.getByRole('button', { name: '给人看' }).click();
+  await page.locator('.showbar').waitFor({ timeout: 5000 });
+  if (await page.getByText(HOLLOW).count()) throw new Error('a guest sees the empty stretch');
+  if (await page.locator('.taste-row button.taste-sentence').count()) throw new Error('a guest can open the evidence');
+  if (await page.getByText('这句话是这么数出来的').count()) throw new Error('a guest sees how it was counted');
+  const guest = await page.locator('.taste-row', { hasText: '转向' }).innerText();
+  if (!guest.includes('你是看番的人')) throw new Error(`guest line: ${guest}`);
+});
+
+await withPage('偏爱: no shift means no 转向 row', async (page) => {
+  const books = [];
+  for (const year of [2016, 2017, 2018]) {
+    for (let i = 0; i < 4; i++) books.push(shiftWork(`book-${year}-${i}`, 'book', year, i, `书${year}${i}`));
+  }
+  await plant(page, { schemaVersion: 4, extras: books, sample: { on: false } });
+  await page.locator('.taste').waitFor({ timeout: 5000 });
+  const quiet = await page.locator('.taste-key').allInnerTexts();
+  if (quiet.includes('转向')) throw new Error(`a shift appeared: ${quiet.join(',')}`);
+  if (await page.getByText('口味在变化').count()) throw new Error('a vague sentence stood in');
+});
+
+await withPage('偏爱: games kept private leave the shift off the page a guest sees', async (page) => {
+  const games = shiftLibrary().filter((w) => w.kind === 'game').map((w) => w.id);
+  await plant(page, { schemaVersion: 4, extras: shiftLibrary(), me: { onlyMe: games }, sample: { on: false } });
+  await page.getByText(TURN).waitFor({ timeout: 5000 });
+  await page.getByText(HOLLOW).waitFor({ timeout: 5000 });
+  await page.getByRole('button', { name: '给人看' }).click();
+  await page.locator('.showbar').waitFor({ timeout: 5000 });
+  const body = await page.locator('body').innerText();
+  if (body.includes('转向') || body.includes('多是游戏') || body.includes(HOLLOW)) throw new Error(`guest still sees it: ${body.slice(0, 240).replace(/\s+/g, ' ')}`);
+});
+
 // ---- report ----
 await browser.close();
 const failed = results.filter((r) => !r.ok);

@@ -213,6 +213,8 @@ export function buildCardModel(o: CardInput): CardModel {
   const picks = o.picks ?? EMPTY_PICKS;
   const hide = picks.hide;
   let lines = cardLines(o.taste, o.prefs, { ...picks, hide });
+  // 偏爱 and 转向 decide the arrangement before a headline takes one of them off the card
+  const tasteLines = lines.length;
   const shown: ShownRow[] = lines.map((line) => ({
     dim: line.dim,
     sentence: line.own
@@ -271,7 +273,7 @@ export function buildCardModel(o: CardInput): CardModel {
   if (o.prefs.on && lines.length === 0) notes.push('noLines');
 
   const draft: Omit<CardModel, 'key'> = {
-    layout: o.card.layout ?? autoLayout(lines.length, eligible),
+    layout: o.card.layout ?? autoLayout(tasteLines, eligible),
     theme: o.card.theme,
     top: { since, byline, total },
     headline: head?.text ?? null,

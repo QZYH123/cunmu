@@ -96,6 +96,17 @@ test('a guest headline that repeats a sentence drops that sentence; your line an
   assert.equal(dropped.headline, '六年，同一个名字：甲。');
   assert.equal(dropped.lines.some((l) => l.tid === 'M3'), false);
   assert.equal(dropped.lines.some((l) => l.dim === 'long'), true);
+  assert.equal(dropped.lines.length, 1);
+  assert.equal(dropped.layout, 'A');
+  const periods = [period('p1', '甲', '2010', '2012'), period('p2', '乙', '2015', '2017')];
+  const stillA = build({ view: view(fBooks([2011, 2016], 2), { periods }), taste });
+  assert.equal(stillA.lines.length, 1);
+  assert.equal(stillA.periods.length, 2);
+  assert.equal(stillA.layout, 'A');
+  const alone = result({ met: [m3] }, { headlines: [{ id: 'H2', sentence: { ...m3 } }] });
+  const thinCard = build({ view: view([]), taste: alone });
+  assert.equal(thinCard.lines.length, 0);
+  assert.equal(thinCard.layout, 'C');
 
   const mine = build({ view: view([]), taste, line: '我的题句' });
   assert.equal(mine.headline, '我的题句');
@@ -276,6 +287,30 @@ test('a card built from the outward view keeps your own sentence and no private 
   const hidden = build({ view: early, taste: quiet, prefs: me.taste });
   assert.equal(quiet.gate.ok, false);
   assert.doesNotMatch(JSON.stringify(hidden) + buildCaption(hidden), /SECRET-/);
+});
+
+test('a turn headline still counts, and the empty stretch never reaches the card', () => {
+  const early = fBooks([2016, 2017, 2018], 4, { kind: 'anime', tags: ['推理'] });
+  const lateBooks = fBooks([2022, 2023], 2, { tags: ['推理'] });
+  const lateGames = fBooks([2022, 2023], 6, { kind: 'game' });
+  const works = [...early, ...lateBooks, ...lateGames];
+  const taste = tasteOf(works);
+  const card = build({ view: view(works), taste });
+  assert.equal(taste.hollow?.text, '2019 到 2021 年，几乎没留下记录。');
+  assert.equal(card.headline, '变过的是番和游戏，没变的是『推理』。');
+  assert.equal(card.lines.some((l) => l.dim === 'turn'), false);
+  assert.equal(card.lines[0]?.dim, 'long');
+  assert.equal(card.layout, 'A');
+  assert.equal(JSON.stringify(card).includes('几乎没留下记录'), false);
+
+  const me: MeData = { ...EMPTY_ME, onlyMe: lateGames.map((w) => w.id) };
+  const seen = outwardView(works, me, TODAY);
+  const guestTaste = tasteOf(seen.works);
+  const guest = build({ view: seen, taste: guestTaste });
+  assert.equal(guestTaste.rows.turn.some((s) => s.tid === 'Z1'), false);
+  assert.equal(guest.headline, null);
+  assert.equal(JSON.stringify(guest).includes('多是游戏'), false);
+  assert.equal(JSON.stringify(guest).includes('几乎没留下记录'), false);
 });
 
 test('the edit sheet walks sentences and only lists a dimension that has one', () => {

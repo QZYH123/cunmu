@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { MoreHorizontal } from 'lucide-react';
+import { viewerWorks } from '../data/me';
 import { useStore } from '../data/store';
 import { ALL_BY_ID } from '@demo';
 import { KIND_LABEL, KIND_ORDER } from '../data/types';
@@ -71,7 +72,7 @@ export default function Essay() {
   const pull = pullOk ? (pulls[essay.id] ?? essay.pull) || undefined : undefined;
   const titled = !!essay.title;
   // 给人看: a work that is 只给自己 is not named among what this essay mentions
-  const works = mentioned.map((x) => d.byId.get(x)).filter((w) => !!w && !(store.show && store.me.onlyMe.includes(w.id)));
+  const works = viewerWorks(mentioned.map((x) => d.byId.get(x)), store.show, store.me.onlyMe);
   const people = mentioned.map((x) => d.persons.get(x)).filter(Boolean);
   const said = works.length + people.length;
   return (

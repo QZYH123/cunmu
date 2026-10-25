@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { EditWorkSheet } from '../components/EditWorkSheet';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { MoreHorizontal } from 'lucide-react';
-import { FAV_MAX } from '../data/me';
+import { FAV_MAX, viewerWorks } from '../data/me';
 import { useStore } from '../data/store';
 import { epigraphOf, normalizeQuotes } from '../data/quotes';
 import { ALL_BY_ID } from '@demo';
@@ -232,7 +232,14 @@ function WorkEntry({ work }: { work: Work }) {
   // a link you made by hand (linked) stays, one you took apart (unlinked) stays apart
   const unlinked = new Set(store.unlinked);
   const linkedIds = [...(work.related ?? []), ...[...linked].filter((k) => k.startsWith(`${work.id}>`)).map((k) => k.split('>')[1])];
-  const linkedList = [...new Set(linkedIds)].map((x) => d.byId.get(x)).filter((x): x is Work => !!x && !unlinked.has(`${work.id}>${x.id}`) && !(store.show && store.me.onlyMe.includes(x.id)));
+  const linkedList = viewerWorks(
+    [...new Set(linkedIds)].map((x) => {
+      const w = d.byId.get(x);
+      return w && !unlinked.has(`${work.id}>${w.id}`) ? w : undefined;
+    }),
+    store.show,
+    store.me.onlyMe,
+  );
   const imgs = work.images ?? [];
   // the pictures belong to 短评 (v0.4 §3.19.4): pictures alone still make the section
   const hasReview = !!work.review?.length || imgs.length > 0;

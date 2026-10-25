@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState, type RefObject } from 'react';
 import { Link } from 'react-router-dom';
+import { viewerWorks } from '../data/me';
 import { useStore } from '../data/store';
 import { KIND_LABEL } from '../data/types';
 import { Avatar, Cover, thumbSize } from './Cover';
@@ -67,7 +68,7 @@ export function Marginalia({ body, lit, onLit }: { body: RefObject<HTMLElement>;
             <span className="margin-text">
               <span className="margin-title ellipsis">{w ? w.title : p!.name}</span>
               <span className="t-caption c-3 ellipsis">
-                {w ? [KIND_LABEL[w.kind], w.year].filter(Boolean).join(' · ') : `${p!.works.filter((x) => !(show && me.onlyMe.includes(x.id))).length} 部`}
+                {w ? [KIND_LABEL[w.kind], w.year].filter(Boolean).join(' · ') : `${viewerWorks(p!.works, show, me.onlyMe).length} 部`}
               </span>
             </span>
           </Link>

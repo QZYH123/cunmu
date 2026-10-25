@@ -2,8 +2,19 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { openInShow } from '../src/components/ShowMode';
 import { normRange } from '../src/lib/longImage';
-import { shownPeriods, type Period } from '../src/data/me';
+import { shownPeriods, viewerWorks, type Period } from '../src/data/me';
 import type { Work } from '../src/data/types';
+
+test('给人看 counts drop samples and 只给自己; the owner still counts both', () => {
+  const works = [
+    { id: 'a' },
+    { id: 'secret' },
+    { id: 'sample', isSample: true as const },
+    undefined,
+  ];
+  assert.deepEqual(viewerWorks(works, false, ['secret']).map((w) => w.id), ['a', 'secret', 'sample']);
+  assert.deepEqual(viewerWorks(works, true, ['secret']).map((w) => w.id), ['a']);
+});
 
 test('给人看: a guest can open 首页, interests, periods and the works and essays they name — nothing else', () => {
   for (const p of ['/', '/interest/i-1', '/period/p-1', '/entry/bgm-1', '/essay/e-1']) assert.ok(openInShow(p, []), p);

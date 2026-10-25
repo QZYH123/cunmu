@@ -7,6 +7,7 @@ import { Preview, Seal, Section, WorkPreviewBody } from './Bits';
 import { Avatar } from './Cover';
 import { useLongPress } from '../lib/motion';
 import { LINK_PREVIEW, SIDE_MENTIONS } from '../tokens';
+import { viewerWorks } from '../data/me';
 import { openInShow } from './ShowMode';
 
 interface LinkHover { enter: (seg: Segment, el: HTMLElement) => void; leave: () => void }
@@ -101,7 +102,7 @@ export function Prose({ paragraphs, selfId, className = 't-body prose', dropcap,
               <div className="preview-meta">
                 <span className="t-label c-3">人物 · {person.roles[0]}</span>
                 <span className="preview-title">{person.name}</span>
-                <span className="t-small c-2">出现在 {person.works.filter((w) => !(show && me.onlyMe.includes(w.id))).length} 部作品里</span>
+                <span className="t-small c-2">出现在 {viewerWorks(person.works, show, me.onlyMe).length} 部作品里</span>
               </div>
             </>
           )}

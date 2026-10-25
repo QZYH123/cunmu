@@ -199,6 +199,18 @@ export function spanText(p: Pick<Period, 'from' | 'to'>): string {
 /** what a viewer (给人看, the long image) may see: nothing 只给自己, no sample */
 export const shownTo = (onlyMe: string[]) => { const s = new Set(onlyMe); return (w: Pick<Work, 'id'> & { isSample?: true }) => !s.has(w.id) && !w.isSample; };
 
+/** lists and counts a guest sees, the same cut as the person page. The owner still sees every work. */
+export function viewerWorks<T extends { id: string; isSample?: true }>(
+  works: readonly (T | null | undefined)[],
+  show: boolean,
+  onlyMe: readonly string[],
+): T[] {
+  const present = works.filter((w): w is T => !!w);
+  if (!show) return present;
+  const keep = shownTo([...onlyMe]);
+  return present.filter(keep);
+}
+
 /* ---------- ids ---------- */
 let seq = 0;
 export const meId = (prefix: 'i' | 'p') => `${prefix}-${Date.now().toString(36)}-${(seq++).toString(36)}`;

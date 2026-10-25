@@ -507,6 +507,14 @@ test('H1 names what changed and the topic that did not; H4 needs a long topic an
   const shown = resolveRows(r, EMPTY_TASTE, 'own');
   assert.equal(pickHeadline(r, shown, '')?.text, h1.text);
   assert.equal(pickHeadline(r, shown, '  我的题句  ')?.text, '我的题句');
+  const asZ1b = shown.map((row) => (
+    row.dim === 'turn' && row.sentence ? { ...row, sentence: { ...row.sentence, tid: 'Z1b' as const } } : row
+  ));
+  assert.equal(pickHeadline(r, asZ1b, '')?.text, h1.text);
+  const asZ4 = shown.map((row) => (
+    row.dim === 'turn' && row.sentence ? { ...row, sentence: { ...row.sentence, tid: 'Z4' as const } } : row
+  ));
+  assert.notEqual(pickHeadline(r, asZ4, '')?.text, h1.text);
   const off = resolveRows(r, { on: true, rows: { turn: { off: true } } }, 'own');
   assert.equal(pickHeadline(r, off, '')?.id, undefined);
   assert.notEqual(pickHeadline(r, off, '')?.text, h1.text);

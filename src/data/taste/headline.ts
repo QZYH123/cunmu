@@ -100,7 +100,8 @@ export function pickHeadline(result: TasteResult, rows: readonly ShownRow[], use
   if (line) {
     return { tid: 'L1', dim: 'long', segs: [{ text: line }], text: line, evidence: [], nums: 0, slots: {}, variant: 'user', star: false };
   }
-  if (kept(rows, 'turn')) {
+  const turn = kept(rows, 'turn')?.sentence;
+  if (turn && (turn.tid === 'Z1' || turn.tid === 'Z1b')) {
     const h1 = result.headlines.find((h) => h.id === 'H1')?.sentence;
     if (h1) return h1;
   }

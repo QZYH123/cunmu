@@ -261,13 +261,19 @@ export function buildFacts(ws: TasteWork[], today: string, people: PeopleStatus)
   return { works: ws, topicYears, topics, yearCount, recorded, maxYear, creators, people };
 }
 
+/** Index of the i-th of n evenly spaced picks. One pick keeps the middle, so n === 1 never divides by zero. */
+export function evenAt(length: number, n: number, i: number): number {
+  if (n <= 1) return Math.min(Math.max(length - 1, 0), Math.round((length - 1) / 2));
+  return Math.round((i * (length - 1)) / (n - 1));
+}
+
 export function evenPick<T>(xs: readonly T[], n: number): T[] {
   if (n <= 0 || xs.length === 0) return [];
   if (xs.length <= n) return [...xs];
   const used = new Set<number>();
   const idx: number[] = [];
   for (let i = 0; i < n; i++) {
-    let k = Math.round((i * (xs.length - 1)) / (n - 1));
+    let k = evenAt(xs.length, n, i);
     if (used.has(k)) {
       let up = k;
       while (up < xs.length && used.has(up)) up += 1;

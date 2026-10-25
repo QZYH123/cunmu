@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { longCalc } from '../src/data/taste/calc/long';
+import { evenMiddle, longCalc } from '../src/data/taste/calc/long';
 import { metCalc } from '../src/data/taste/calc/met';
-import { buildFacts, toTasteWork, toTasteWorks, trustedOf } from '../src/data/taste/facts';
+import { buildFacts, evenAt, evenPick, toTasteWork, toTasteWorks, trustedOf } from '../src/data/taste/facts';
 import { READY, TODAY, at, by, fBooks, gapWorks, manualAdd, mk, played, tasteOf } from './helpers/tasteFixtures';
 
 const facts = (works: ReturnType<typeof mk>[]) => buildFacts(toTasteWorks(works, TODAY), TODAY, READY);
@@ -170,6 +170,23 @@ test('a title long enough to break the line falls back, and a banned topic is no
   const banned = tasteOf(fBooks([2010, 2011, 2012, 2013, 2014, 2015], 2, { tags: ['回忆'] }));
   assert.ok(banned.rows.long.length > 0);
   for (const s of banned.rows.long) assert.equal(s.text.includes('回忆'), false);
+});
+
+test('one even sample keeps the middle and does not divide by zero', () => {
+  assert.equal(evenAt(5, 1, 0), 2);
+  assert.equal(evenAt(4, 1, 0), 2);
+  assert.equal(Number.isNaN(evenAt(8, 1, 0)), false);
+  assert.deepEqual(evenPick(['a', 'b', 'c', 'd', 'e'], 3), ['a', 'c', 'e']);
+  assert.deepEqual(evenPick(['a', 'b', 'c', 'd', 'e'], 1), ['c']);
+  assert.deepEqual(evenPick(['only'], 1), ['only']);
+  assert.deepEqual(evenPick(['a', 'b'], 0), []);
+  const works = ['a', 'b', 'c', 'd', 'e'].map((id) => ({
+    id, kind: 'book' as const, title: id, year: 2010, trust: 'source' as const,
+    precision: 'day' as const, finished: '2010-01-01', made: null, topics: [], creators: [], minutes: null,
+  }));
+  assert.deepEqual(evenMiddle(works, 1).map((w) => w.id), ['c']);
+  assert.deepEqual(evenMiddle(works, 4).map((w) => w.id), ['a', 'b', 'd', 'e']);
+  assert.deepEqual(evenMiddle(works.slice(0, 2), 4).map((w) => w.id), ['a', 'b']);
 });
 
 test('L6, L7 and M4 are named and say nothing', () => {

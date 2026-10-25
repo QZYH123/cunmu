@@ -2,7 +2,7 @@
  * 长情 L1–L5. L6 and L7 are named so the table is complete; they return nothing.
  * A miss is null — the row is left out, not filled with a softer sentence.
  */
-import { capWorks, byTime, type Facts, type TopicStat } from '../facts';
+import { capWorks, byTime, evenAt, type Facts, type TopicStat } from '../facts';
 import { GATES } from '../gates';
 import { cnYears } from '../num';
 import type { Hit, Seg, TasteWork } from '../types';
@@ -159,10 +159,11 @@ function L4(f: Facts): Hit | null {
   return { slots, evidence, variant: 'full', segs };
 }
 
-function evenMiddle(ws: TasteWork[], n: number): TasteWork[] {
+export function evenMiddle(ws: TasteWork[], n: number): TasteWork[] {
+  if (n <= 0 || ws.length === 0) return [];
   if (ws.length <= n) return ws;
   const out: TasteWork[] = [];
-  for (let i = 0; i < n; i++) out.push(ws[Math.round((i * (ws.length - 1)) / (n - 1))]);
+  for (let i = 0; i < n; i++) out.push(ws[evenAt(ws.length, n, i)]);
   const seen = new Set<string>();
   return out.filter((w) => !seen.has(w.id) && !!seen.add(w.id));
 }

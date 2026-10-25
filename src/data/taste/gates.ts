@@ -33,6 +33,8 @@ export const GATES = {
   Z5: { minYears: 4, minWorks: 20, over: 1.3, kindShare: 0.45 },
   Z6: { leadYears: 3, backYears: 2, perYear: 3 },
   Z7: { gapYears: 3, ratio: 0.1 },
+  H1: { perSide: 3 },
+  H4: { spanYears: 8, heavyGames: 3, heavyMinutes: 6000 },
   ev: { max: 6 },
   numbers: { max: 3 },
   /** a year counts as "you were recording" at this many trusted works */

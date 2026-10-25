@@ -86,10 +86,19 @@ export interface TasteResult {
   missing: Partial<Record<Dim, MissingReason>>;
 }
 
+/** a kept period, the fields 转向 reads. `me.ts` owns the full record. */
+export interface TastePeriod {
+  id: string;
+  name: string;
+  from: string;
+  to: string | null;
+  include: string[];
+  exclude: string[];
+}
+
 export interface TasteInput {
   works: readonly Work[];
-  /** kept for 转向; this version does not read them */
-  periods: readonly { id: string }[];
+  periods: readonly TastePeriod[];
   today: string;
   people: PeopleStatus;
 }
@@ -102,6 +111,8 @@ export interface Hit {
   names?: string[];
   /** when set, the engine uses these for the hit's own variant (names stay linked) */
   segs?: Seg[];
+  /** one summary line above the evidence, for 转向 */
+  head?: string;
 }
 
 export interface RowPref {

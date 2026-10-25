@@ -27,7 +27,23 @@ export const COPY: Record<TemplateId, Record<string, string>> = {
   M2: { full: '{list}' },
   M3: { full: '你和{p}，{firstYear} 年第一次碰上，到 {lastYear} 年还在碰。{span}年。' },
   M4: {}, M5: {}, M6: {},
-  Z1: {}, Z1b: {}, Z2: {}, Z3: {}, Z4: {}, Z5: {}, Z6: {}, Z7: {},
+  Z1: { full: '{from} 到 {to} 年，你记下的多是{nounEarly}；{after} 年以后，多是{nounLate}。' },
+  Z1b: { full: '{from} 到 {to} 年，你是{whoEarly}；{after} 年以后，是{whoLate}。' },
+  Z2: {
+    full: '{year} 年{season}，你一口气记下 {n} 部{noun}。那是你记得最满的一个季节。',
+    noSeason: '{year} 年，你一口气记下 {n} 部{noun}。那是你记得最满的一段日子。',
+  },
+  Z3: {
+    full: '{year} 年，你第一次记下{noun}。从那年起，每年都有。',
+    short: '{year} 年，你第一次记下{noun}。那之后的三年里，每年都有。',
+  },
+  Z4: { full: '『{a}』在 {after} 年以后几乎没再出现，换成了『{b}』。' },
+  Z5: {
+    full: '记得最满的一年是 {year}：{n} 部，{noun}占了一半。',
+    short: '记得最满的一年是 {year}：{n} 部。',
+  },
+  Z6: { full: '{year} 年是个分界：这一年起，你{late}比{early}多了。' },
+  Z7: { full: '{from} 到 {to} 年，几乎没留下记录。' },
 };
 
 export const HEADLINE_COPY = {
@@ -63,6 +79,16 @@ export const SAMPLE: Record<string, string | number> = {
   n: 6,
   list: '伊坂幸太郎 6 部',
   p: '伊坂幸太郎',
+  after: 2022,
+  nounEarly: '番',
+  nounLate: '游戏',
+  whoEarly: '看番的人',
+  whoLate: '玩游戏的人',
+  year: 2019,
+  season: '夏天',
+  noun: '番',
+  late: '看的番',
+  early: '读的书',
 };
 
 export function fill(tpl: string, slots: Record<string, string | number>): string {

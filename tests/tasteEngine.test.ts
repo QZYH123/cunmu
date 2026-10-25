@@ -28,6 +28,11 @@ function voice(result: TasteResult) {
     assert.ok(h.sentence.evidence.length <= 6);
     assert.deepEqual(lintSentence(h.sentence.text), [], h.sentence.text);
   }
+  if (result.hollow) {
+    assert.equal(result.hollow.nums, numbersInCn(result.hollow.text), result.hollow.text);
+    assert.deepEqual(lintSentence(result.hollow.text), [], result.hollow.text);
+    assert.equal(result.rows.turn.some((s) => s.tid === 'Z7'), false);
+  }
 }
 
 function orderWorks(): Work[] {
@@ -273,7 +278,9 @@ test('F14: the reader library computes twice the same way, within 200ms', () => 
   assert.equal(a.missing.met, 'peopleBlocked');
   assert.equal(a.missing.stay, 'noSteam');
   assert.equal(a.rows.stay.length, 0);
-  assert.equal(a.rows.turn.length, 0);
+  assert.deepEqual(a.rows.turn.map((s) => s.tid), ['Z4']);
+  assert.equal(a.rows.turn[0].text, '『小松未歩』在 2013 年以后几乎没再出现，换成了『哆啦A梦』。');
+  assert.equal(a.rows.turn[0].slots.after, 2013);
   assert.equal(a.missing.turn, undefined);
   assert.equal(a.hollow, null);
   voice(a);

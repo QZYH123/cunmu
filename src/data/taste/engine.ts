@@ -6,6 +6,7 @@
 import { plain } from '../lead';
 import { longCalc } from './calc/long';
 import { metCalc } from './calc/met';
+import { turnCalc, type TurnCtx } from './calc/turn';
 import { COPY } from './copy';
 import { byTime, buildFacts, capWorks, toTasteWorks } from './facts';
 import { GATES, ORDER } from './gates';
@@ -14,13 +15,20 @@ import { lintSentence } from './lint';
 import { numbersInCn } from './num';
 import type { Dim, Evidence, Hit, Sentence, TasteInput, TasteResult, TemplateId } from './types';
 
-const STAR = new Set<TemplateId>(['L1', 'L2', 'L4', 'M1', 'M2', 'M3']);
+const STAR = new Set<TemplateId>(['L1', 'L2', 'L4', 'M1', 'M2', 'M3', 'Z1', 'Z1b', 'Z2', 'Z4', 'Z6']);
 
 const EMPTY_ROWS = (): TasteResult['rows'] => ({ long: [], stay: [], met: [], turn: [] });
 
-function hitOf(dim: Dim, tid: TemplateId, facts: ReturnType<typeof buildFacts>): Hit | null {
+function hitOf(dim: Dim, tid: TemplateId, facts: ReturnType<typeof buildFacts>, ctx: TurnCtx): Hit | null {
   if (dim === 'long' && tid in longCalc) return longCalc[tid as keyof typeof longCalc](facts);
   if (dim === 'met' && tid in metCalc) return metCalc[tid as keyof typeof metCalc](facts);
+  if (dim === 'turn' && tid === 'Z2') return turnCalc.Z2(facts, ctx);
+  if (dim === 'turn' && tid === 'Z1') return turnCalc.Z1(facts);
+  if (dim === 'turn' && tid === 'Z1b') return turnCalc.Z1b(facts);
+  if (dim === 'turn' && tid === 'Z3') return turnCalc.Z3(facts);
+  if (dim === 'turn' && tid === 'Z4') return turnCalc.Z4(facts);
+  if (dim === 'turn' && tid === 'Z5') return turnCalc.Z5(facts);
+  if (dim === 'turn' && tid === 'Z6') return turnCalc.Z6(facts);
   return null;
 }
 
@@ -66,6 +74,7 @@ function realize(tid: TemplateId, dim: Dim, hit: Hit): Sentence | null {
         star: STAR.has(tid),
         ...(short ? { short } : null),
         ...(hit.names?.length ? { names: hit.names } : null),
+        ...(hit.head ? { head: hit.head } : null),
       };
     }
     if (problems.some((p) => p !== 'length')) hard = true;
@@ -75,22 +84,24 @@ function realize(tid: TemplateId, dim: Dim, hit: Hit): Sentence | null {
 }
 
 export function computeTaste(input: TasteInput): TasteResult {
-  void input.periods;
   const ws = toTasteWorks(input.works, input.today);
   const trusted = ws.reduce((n, w) => n + (w.year != null ? 1 : 0), 0);
   const gate = { trusted, need: GATES.total.trustedWorks, ok: trusted >= GATES.total.trustedWorks };
   if (!gate.ok) return { gate, rows: EMPTY_ROWS(), headlines: [], hollow: null, missing: {} };
 
   const facts = buildFacts(ws, input.today, input.people);
+  const ctx: TurnCtx = { periods: input.periods, works: input.works, today: input.today };
   const rows = EMPTY_ROWS();
   for (const dim of ['long', 'stay', 'met', 'turn'] as const) {
     for (const tid of ORDER[dim]) {
-      const hit = hitOf(dim, tid, facts);
+      const hit = hitOf(dim, tid, facts, ctx);
       if (!hit) continue;
       const sentence = realize(tid, dim, hit);
       if (sentence) rows[dim].push(sentence);
     }
   }
+  const hollowHit = turnCalc.Z7(facts);
+  const hollow = hollowHit ? realize('Z7', 'turn', hollowHit) : null;
 
   const missing: TasteResult['missing'] = {};
   if (!rows.long.length) missing.long = facts.topics.size === 0 ? 'noTags' : 'none';
@@ -109,5 +120,5 @@ export function computeTaste(input: TasteInput): TasteResult {
     if (h2) headlines.push({ id: 'H2', sentence: h2 });
   }
 
-  return { gate, rows, headlines, hollow: null, missing };
+  return { gate, rows, headlines, hollow, missing };
 }

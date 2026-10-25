@@ -5,7 +5,7 @@
 import { planSync, type BgmCollection } from '../../src/lib/bangumi';
 import { resolveDates } from '../../src/data/resolve';
 import { computeTaste } from '../../src/data/taste/engine';
-import type { PeopleStatus } from '../../src/data/taste/types';
+import type { PeopleStatus, TastePeriod } from '../../src/data/taste/types';
 import type { Credit, EffDate, Work } from '../../src/data/types';
 import type { Play } from '../../src/lib/steam';
 import reader from '../fixtures/bangumi/reader-done-dates.json';
@@ -94,8 +94,13 @@ export function played(year: number, appid: number, tags?: string[]): Work {
   });
 }
 
-export function tasteOf(works: readonly Work[], people: PeopleStatus = READY, today = TODAY) {
-  return computeTaste({ works, periods: [], today, people });
+export function tasteOf(
+  works: readonly Work[],
+  people: PeopleStatus = READY,
+  today = TODAY,
+  periods: readonly TastePeriod[] = [],
+) {
+  return computeTaste({ works, periods, today, people });
 }
 
 /** 推理 leaves for three recorded years, then comes back. Each of those years has three works. */

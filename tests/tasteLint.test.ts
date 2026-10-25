@@ -11,7 +11,9 @@ test('every written variant, filled with the sample slots, passes', () => {
       assert.deepEqual(lintSentence(fill(tpl, SAMPLE)), [], `${tid}/${name}`);
     }
   }
-  assert.deepEqual(lintSentence(fill(HEADLINE_COPY.H2, SAMPLE)), []);
+  for (const [id, tpl] of Object.entries(HEADLINE_COPY)) {
+    assert.deepEqual(lintSentence(fill(tpl, SAMPLE)), [], id);
+  }
 });
 
 test('a generated sentence is dropped for voice, length, or a measure word', () => {

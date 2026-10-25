@@ -47,7 +47,10 @@ export const COPY: Record<TemplateId, Record<string, string>> = {
 };
 
 export const HEADLINE_COPY = {
+  H1: '变过的是{nounEarly}和{nounLate}，没变的是『{topic}』。',
   H2: '{span}年，同一个名字：{p}。',
+  H4: '{span}年绕着『{topic}』转，这几年更多是游戏。',
+  H4lived: '{span}年绕着『{topic}』转，这几年住在游戏里。',
 } as const;
 
 export const HINT = {
@@ -102,6 +105,8 @@ if (process.env.NODE_ENV !== 'production') {
       if (hard.length) throw new Error(`copy ${tid}/${name}: ${hard.join(',')}`);
     }
   }
-  const hardH = lintSentence(fill(HEADLINE_COPY.H2, SAMPLE)).filter((p) => p !== 'length');
-  if (hardH.length) throw new Error(`copy H2: ${hardH.join(',')}`);
+  for (const [id, tpl] of Object.entries(HEADLINE_COPY)) {
+    const hardH = lintSentence(fill(tpl, SAMPLE)).filter((p) => p !== 'length');
+    if (hardH.length) throw new Error(`copy ${id}: ${hardH.join(',')}`);
+  }
 }

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { EMPTY_ME, type Interest, type MeData, type Period } from '../src/data/me';
 import { personId } from '../src/data/derive';
 import { plain } from '../src/data/lead';
-import { headlineH1, headlineH2, headlineH3, headlineH4, pickHeadline } from '../src/data/taste/headline';
+import { headlineH2, headlineH3, pickHeadline } from '../src/data/taste/headline';
 import { lintSentence } from '../src/data/taste/lint';
 import { numbersInCn } from '../src/data/taste/num';
 import { peopleStatus } from '../src/data/taste/people';
@@ -150,9 +150,7 @@ test('常遇见 defaults to M2, and the same person can also head the page', () 
   assert.equal(mine?.text, '我的题句');
   assert.equal(mine?.variant, 'user');
   assert.equal(pickHeadline(r, rows, '这是回忆')?.text, '这是回忆');
-  assert.equal(headlineH1(), null);
   assert.equal(headlineH3(), null);
-  assert.equal(headlineH4(), null);
   assert.equal(headlineH2({ slots: { span: '六', p: '回忆' }, evidence: [] } as Sentence), null);
 });
 

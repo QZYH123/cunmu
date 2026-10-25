@@ -10,7 +10,7 @@ import { turnCalc, type TurnCtx } from './calc/turn';
 import { COPY } from './copy';
 import { byTime, buildFacts, capWorks, toTasteWorks } from './facts';
 import { GATES, ORDER } from './gates';
-import { headlineH2 } from './headline';
+import { headlineH1, headlineH2, headlineH4 } from './headline';
 import { lintSentence } from './lint';
 import { numbersInCn } from './num';
 import type { Dim, Evidence, Hit, Sentence, TasteInput, TasteResult, TemplateId } from './types';
@@ -114,10 +114,23 @@ export function computeTaste(input: TasteInput): TasteResult {
   }
 
   const headlines: TasteResult['headlines'] = [];
+  const z1 = rows.turn.find((s) => s.tid === 'Z1');
+  if (z1) {
+    const h1 = headlineH1(z1, facts);
+    if (h1) headlines.push({ id: 'H1', sentence: h1 });
+  }
   const m3 = rows.met.find((s) => s.tid === 'M3');
   if (m3) {
     const h2 = headlineH2(m3);
     if (h2) headlines.push({ id: 'H2', sentence: h2 });
+  }
+  const gameTurn = rows.turn.some((s) => (s.tid === 'Z1' || s.tid === 'Z1b') && s.slots.kindLate === 'game');
+  if (gameTurn) {
+    for (const src of rows.long) {
+      if (src.tid !== 'L1' && src.tid !== 'L3') continue;
+      const h4 = headlineH4(src, facts);
+      if (h4) headlines.push({ id: 'H4', sentence: h4 });
+    }
   }
 
   return { gate, rows, headlines, hollow, missing };

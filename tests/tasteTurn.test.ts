@@ -1,6 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { plain } from '../src/data/lead';
+import { buildFacts, toTasteWorks } from '../src/data/taste/facts';
+import { headlineH1, headlineH4, pickHeadline } from '../src/data/taste/headline';
 import { COPY } from '../src/data/taste/copy';
 import { lintSentence } from '../src/data/taste/lint';
 import { numbersInCn } from '../src/data/taste/num';
@@ -8,7 +10,7 @@ import { nextTid, resolveRows, sheetDims } from '../src/data/taste/pick';
 import { EMPTY_TASTE } from '../src/data/taste/prefs';
 import type { Sentence, TastePeriod } from '../src/data/taste/types';
 import type { Kind, Work } from '../src/data/types';
-import { TODAY, at, fBooks, manualAdd, mk, played, tasteOf } from './helpers/tasteFixtures';
+import { READY, TODAY, at, fBooks, manualAdd, mk, played, tasteOf } from './helpers/tasteFixtures';
 
 const WHO = new Set(['读书的人', '看番的人', '看片的人', '听专辑的人', '玩游戏的人']);
 
@@ -472,6 +474,59 @@ test('Z7 is an empty stretch for the owner only, and it is not a 转向 row', ()
   assert.equal(both.rows.turn[0].tid, 'Z1');
   assert.equal(both.hollow?.text, '2019 到 2021 年，几乎没留下记录。');
   assert.equal(both.rows.turn.some((s) => s.tid === 'Z7'), false);
+});
+
+test('H1 names what changed and the topic that did not; H4 needs a long topic and a turn toward games', () => {
+  const early = fBooks([2016, 2017, 2018], 4, { kind: 'anime', tags: ['推理'] });
+  const lateBooks = fBooks([2022, 2023], 2, { tags: ['推理'] });
+  const lateGames = fBooks([2022, 2023], 6, { kind: 'game' });
+  const r = tasteOf([...early, ...lateBooks, ...lateGames]);
+  const h1 = r.headlines.find((h) => h.id === 'H1')?.sentence;
+  assert.ok(h1);
+  voice(h1);
+  assert.equal(h1.text, '变过的是番和游戏，没变的是『推理』。');
+  assert.equal(h1.star, true);
+  subset(h1, [...early, ...lateBooks]);
+  const shown = resolveRows(r, EMPTY_TASTE, 'own');
+  assert.equal(pickHeadline(r, shown, '')?.text, h1.text);
+  assert.equal(pickHeadline(r, shown, '  我的题句  ')?.text, '我的题句');
+  const off = resolveRows(r, { on: true, rows: { turn: { off: true } } }, 'own');
+  assert.equal(pickHeadline(r, off, '')?.id, undefined);
+  assert.notEqual(pickHeadline(r, off, '')?.text, h1.text);
+
+  const thin = tasteOf([
+    ...fBooks([2016, 2017, 2018], 4, { kind: 'anime', tags: ['推理'] }),
+    ...fBooks([2022, 2023], 1, { tags: ['推理'] }),
+    ...fBooks([2022, 2023], 6, { kind: 'game' }),
+  ]);
+  assert.equal(thin.headlines.some((h) => h.id === 'H1'), false);
+  assert.ok(thin.rows.turn.some((s) => s.tid === 'Z1'));
+
+  const years = [2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018];
+  const topic = fBooks(years, 2, { tags: ['科幻'] });
+  const games = fBooks([2022, 2023], 6, { kind: 'game' });
+  const h4 = tasteOf([...topic, ...games]);
+  const line = h4.headlines.find((h) => h.id === 'H4')?.sentence;
+  assert.equal(line?.text, '八年绕着『科幻』转，这几年更多是游戏。');
+  voice(line!);
+  assert.equal(pickHeadline(h4, resolveRows(h4, EMPTY_TASTE, 'own'), '')?.text, line?.text);
+
+  const heavyGames = games.map((w, i) => ({ ...w, play: { minutes: 6000, lastPlayed: w.finished, provider: 'steam' as const, appid: 9000 + i } }));
+  const lived = tasteOf([...topic, ...heavyGames]);
+  assert.equal(lived.headlines.find((h) => h.id === 'H4')?.sentence.text, '八年绕着『科幻』转，这几年住在游戏里。');
+
+  const shorter = fBooks([2012, 2013, 2014, 2015, 2016, 2017, 2018], 2, { tags: ['科幻'] });
+  assert.equal(tasteOf([...shorter, ...games]).headlines.some((h) => h.id === 'H4'), false);
+
+  const facts = buildFacts(toTasteWorks([
+    ...fBooks([2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018], 2, { tags: ['科幻'] }),
+    ...fBooks([2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018], 2, { tags: ['推理'] }),
+  ], TODAY), TODAY, READY);
+  const l1 = { tid: 'L1' as const, dim: 'long' as const, segs: [], text: '', evidence: [], nums: 0, slots: { a: '科幻', b: '推理' }, variant: 'full', star: true };
+  assert.equal(headlineH4(l1, facts)?.text, '十年绕着『科幻』转，这几年更多是游戏。');
+  const l3 = { ...l1, tid: 'L3' as const, slots: { topic: '推理' } };
+  assert.equal(headlineH4(l3, facts)?.text, '八年绕着『推理』转，这几年更多是游戏。');
+  assert.equal(headlineH1({ ...l1, tid: 'Z1', slots: {} }, facts), null);
 });
 
 test('every 转向 template, filled the same way the engine fills it, stays inside the voice rules', () => {
